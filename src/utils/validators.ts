@@ -124,13 +124,22 @@ export function validateOtpCode(code: string): { isValid: boolean; errorMessage?
 }
 
 /**
- * Validates store setup details
+ * Validates store setup details (merchant name, business name, domain slug, optional password)
  */
 export function validateStoreDetails(
+  fullName: string,
   storeName: string,
   slug: string,
-  password: string
+  password?: string
 ): { isValid: boolean; errorMessage?: string } {
+  const cleanFullName = (fullName || '').trim();
+  if (!cleanFullName) {
+    return { isValid: false, errorMessage: 'Please enter your merchant / personal name.' };
+  }
+  if (cleanFullName.length < 2) {
+    return { isValid: false, errorMessage: 'Merchant name must be at least 2 characters long.' };
+  }
+
   const cleanStoreName = (storeName || '').trim();
   if (!cleanStoreName) {
     return { isValid: false, errorMessage: 'Please enter your store or business name.' };
@@ -150,8 +159,10 @@ export function validateStoreDetails(
     };
   }
 
-  if (!password || password.length < 6) {
-    return { isValid: false, errorMessage: 'Password must be at least 6 characters long.' };
+  // Password is optional: only validate length if provided
+  const cleanPassword = (password || '').trim();
+  if (cleanPassword.length > 0 && cleanPassword.length < 6) {
+    return { isValid: false, errorMessage: 'Password must be at least 6 characters long if provided.' };
   }
 
   return { isValid: true };

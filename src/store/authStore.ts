@@ -32,6 +32,7 @@ export interface AuthState {
   registerStreamlined: (data: {
     identifier: string;
     storeName: string;
+    slug?: string;
     capabilityMode?: string;
     password?: string;
     fullName?: string;

@@ -82,6 +82,7 @@ export const api = {
   registerStreamlined: (data: {
     identifier: string;
     storeName: string;
+    slug?: string;
     capabilityMode?: string;
     password?: string;
     fullName?: string;

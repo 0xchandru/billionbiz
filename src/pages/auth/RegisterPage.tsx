@@ -9,6 +9,7 @@ import { validateContactInput, validateOtpCode, validateStoreDetails } from '../
 import { getPortalUrl } from '../../utils/subdomain';
 import {
   Store,
+  User,
   Lock,
   Eye,
   EyeOff,
@@ -16,9 +17,6 @@ import {
   ArrowLeft,
   AlertCircle,
   RefreshCw,
-  ShoppingBag,
-  Calendar,
-  Layers,
   CheckCircle2,
   Check,
   ShieldCheck
@@ -47,12 +45,13 @@ export default function RegisterPage() {
   const [otpCode, setOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Phase 3 State (Store Details)
-  const [capabilityMode, setCapabilityMode] = useState<'BOTH' | 'COMMERCE' | 'SERVICES'>('BOTH');
+  // Phase 3 State (Merchant & Store Details - Defaults to Ecommerce)
+  const [fullName, setFullName] = useState('');
   const [storeName, setStoreName] = useState('');
   const [customSlug, setCustomSlug] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const capabilityMode = 'COMMERCE';
 
   // Phase 4 State (Plan Purchasing in INR ₹)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
@@ -146,7 +145,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setUiError(null);
 
-    const validation = validateStoreDetails(storeName, customSlug || derivedSlug, password);
+    const validation = validateStoreDetails(fullName, storeName, customSlug || derivedSlug, password);
     if (!validation.isValid) {
       setUiError(validation.errorMessage || 'Please complete all required fields.');
       return;
@@ -166,9 +165,11 @@ export default function RegisterPage() {
 
     const res = await registerStreamlined({
       storeName: storeName.trim(),
+      slug: (customSlug || derivedSlug).trim().toLowerCase(),
       identifier: finalIdentifier,
       capabilityMode,
-      password: password.trim()
+      fullName: fullName.trim(),
+      password: password.trim() ? password.trim() : undefined
     });
 
     if (res.success) {
@@ -395,7 +396,7 @@ export default function RegisterPage() {
         )}
 
         {/* ======================================================== */}
-        {/* PHASE 3: MUST-NEEDED STORE DETAILS                       */}
+        {/* PHASE 3: COMPACT STORE & MERCHANT DETAILS                */}
         {/* ======================================================== */}
         {phase === 3 && (
           <div>
@@ -411,92 +412,33 @@ export default function RegisterPage() {
             <div className="auth-card-header" style={{ marginTop: '0.5rem' }}>
               <h1 className="auth-card-title">Set Up Your Store</h1>
               <p className="auth-card-desc">
-                Choose what your business offers, name your store, and set a password.
+                Enter your details to configure your online store.
               </p>
             </div>
 
             <form onSubmit={handleStoreDetailsSubmit}>
-              {/* 1. Store Type (Appointments / Products / Both) */}
+              {/* 1. Merchant Full Name */}
               <div className="auth-form-group">
-                <label className="auth-label">What does your store offer?</label>
-                <div className="storefront-type-grid">
-                  {/* Both (Unified) */}
-                  <label
-                    className={`storefront-type-card ${capabilityMode === 'BOTH' ? 'selected' : ''}`}
-                    onClick={() => setCapabilityMode('BOTH')}
-                  >
-                    <input
-                      type="radio"
-                      name="capability"
-                      checked={capabilityMode === 'BOTH'}
-                      onChange={() => setCapabilityMode('BOTH')}
-                      style={{ marginTop: 2 }}
-                    />
-                    <div>
-                      <div className="storefront-type-title">
-                        <Layers style={{ width: 14, height: 14, color: '#064652' }} />
-                        <span>Both (Products & Appointments)</span>
-                        <span style={{ fontSize: '0.65rem', backgroundColor: '#ccfbf1', color: '#0f766e', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>
-                          RECOMMENDED
-                        </span>
-                      </div>
-                      <p className="storefront-type-desc">
-                        Sell physical or digital goods and schedule appointments in a unified store.
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Products Only */}
-                  <label
-                    className={`storefront-type-card ${capabilityMode === 'COMMERCE' ? 'selected' : ''}`}
-                    onClick={() => setCapabilityMode('COMMERCE')}
-                  >
-                    <input
-                      type="radio"
-                      name="capability"
-                      checked={capabilityMode === 'COMMERCE'}
-                      onChange={() => setCapabilityMode('COMMERCE')}
-                      style={{ marginTop: 2 }}
-                    />
-                    <div>
-                      <div className="storefront-type-title">
-                        <ShoppingBag style={{ width: 14, height: 14, color: '#064652' }} />
-                        <span>Products & Retail Only</span>
-                      </div>
-                      <p className="storefront-type-desc">
-                        Catalog, shopping cart, inventory management, and shipping orders.
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Appointments Only */}
-                  <label
-                    className={`storefront-type-card ${capabilityMode === 'SERVICES' ? 'selected' : ''}`}
-                    onClick={() => setCapabilityMode('SERVICES')}
-                  >
-                    <input
-                      type="radio"
-                      name="capability"
-                      checked={capabilityMode === 'SERVICES'}
-                      onChange={() => setCapabilityMode('SERVICES')}
-                      style={{ marginTop: 2 }}
-                    />
-                    <div>
-                      <div className="storefront-type-title">
-                        <Calendar style={{ width: 14, height: 14, color: '#064652' }} />
-                        <span>Appointments & Services Only</span>
-                      </div>
-                      <p className="storefront-type-desc">
-                        Online client booking, staff schedules, calendars, and service menus.
-                      </p>
-                    </div>
-                  </label>
+                <label className="auth-label">Merchant Name</label>
+                <div className="auth-input-wrapper">
+                  <div className="auth-input-icon">
+                    <User style={{ width: 18, height: 18 }} />
+                  </div>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Chandra Prakash"
+                    className="auth-input"
+                    autoFocus
+                    required
+                  />
                 </div>
               </div>
 
-              {/* 2. Store Name */}
+              {/* 2. Business / Store Name */}
               <div className="auth-form-group">
-                <label className="auth-label">Store / Business Name</label>
+                <label className="auth-label">Business / Store Name</label>
                 <div className="auth-input-wrapper">
                   <div className="auth-input-icon">
                     <Store style={{ width: 18, height: 18 }} />
@@ -529,9 +471,12 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* 4. Password */}
+              {/* 4. Password (Optional) */}
               <div className="auth-form-group">
-                <label className="auth-label">Create Password</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <label className="auth-label" style={{ marginBottom: 0 }}>Create Password (Optional)</label>
+                  <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Or log in via email code</span>
+                </div>
                 <div className="auth-input-wrapper">
                   <div className="auth-input-icon">
                     <Lock style={{ width: 18, height: 18 }} />
@@ -540,10 +485,9 @@ export default function RegisterPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min. 6 characters"
+                    placeholder="Leave blank or min. 6 characters"
                     className="auth-input"
                     autoComplete="new-password"
-                    required
                   />
                   <button
                     type="button"
@@ -557,7 +501,7 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={!storeName.trim() || password.length < 6}
+                disabled={!fullName.trim() || !storeName.trim() || (password.length > 0 && password.length < 6)}
                 className="auth-btn-primary"
                 style={{ marginTop: '1.25rem' }}
               >
