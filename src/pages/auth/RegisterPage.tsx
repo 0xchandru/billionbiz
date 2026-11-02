@@ -16,7 +16,6 @@ import {
   ArrowLeft,
   AlertCircle,
   RefreshCw,
-  Sparkles,
   ShoppingBag,
   Calendar,
   Layers,
@@ -47,7 +46,6 @@ export default function RegisterPage() {
   // Phase 2 State (OTP)
   const [otpCode, setOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [devOtpNotification, setDevOtpNotification] = useState<string | null>(null);
 
   // Phase 3 State (Store Details)
   const [capabilityMode, setCapabilityMode] = useState<'BOTH' | 'COMMERCE' | 'SERVICES'>('BOTH');
@@ -98,15 +96,10 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await api.sendOtp({
+      await api.sendOtp({
         identifier: validatedIdentifier,
         type: 'REGISTER'
       });
-
-      if (res.devOtpPreview) {
-        setDevOtpNotification(`[Dev Mode] Verification code: ${res.devOtpPreview}`);
-        setOtpCode(res.devOtpPreview);
-      }
 
       setResendCooldown(45);
       setPhase(2);
@@ -236,14 +229,6 @@ export default function RegisterPage() {
           <div className="auth-alert-error">
             <AlertCircle style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2 }} />
             <span>{uiError || storeError}</span>
-          </div>
-        )}
-
-        {/* Dev OTP Preview */}
-        {devOtpNotification && (
-          <div className="auth-alert-info">
-            <Sparkles style={{ width: 16, height: 16, flexShrink: 0, color: '#2563eb' }} />
-            <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{devOtpNotification}</span>
           </div>
         )}
 

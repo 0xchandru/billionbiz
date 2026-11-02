@@ -15,7 +15,6 @@ import {
   ArrowLeft,
   AlertCircle,
   RefreshCw,
-  Sparkles,
   MessageSquare
 } from 'lucide-react';
 
@@ -50,7 +49,6 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uiError, setUiError] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [devOtpNotification, setDevOtpNotification] = useState<string | null>(null);
 
   // OTP cooldown timer
   useEffect(() => {
@@ -109,15 +107,10 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await api.sendOtp({
+      await api.sendOtp({
         identifier: validation.cleanValue,
         type: 'LOGIN'
       });
-
-      if (res.devOtpPreview) {
-        setDevOtpNotification(`[Dev Mode] Verification code: ${res.devOtpPreview}`);
-        setOtpCode(res.devOtpPreview);
-      }
 
       setResendCooldown(45);
       setView('OTP_VERIFY');
@@ -171,14 +164,6 @@ export default function LoginPage() {
           <div className="auth-alert-error">
             <AlertCircle style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2 }} />
             <span>{uiError || authError}</span>
-          </div>
-        )}
-
-        {/* Dev OTP Preview */}
-        {devOtpNotification && (
-          <div className="auth-alert-info">
-            <Sparkles style={{ width: 16, height: 16, flexShrink: 0, color: '#2563eb' }} />
-            <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{devOtpNotification}</span>
           </div>
         )}
 
