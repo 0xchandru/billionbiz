@@ -2,6 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import Dashboard from './pages/Dashboard';
 import Pages from './pages/Pages';
+import OrdersPage from './pages/Orders';
+import ProductsPage from './pages/Products';
+import AppointmentsPage from './pages/Appointments';
+import POSPage from './pages/POS';
+import SettingsPage from './pages/Settings';
+import ExtensionsPage from './pages/Extensions';
+import TeamPage from './pages/Team';
 import EditorLayout from './pages/editor/EditorLayout';
 
 function App() {
@@ -12,8 +19,15 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="pages" element={<Pages />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
+          <Route path="pos" element={<POSPage />} />
+          <Route path="team" element={<TeamPage />} />
+          <Route path="extensions" element={<ExtensionsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           <Route path="theme" element={<Navigate to="/editor/design" replace />} />
-          <Route path="*" element={<div>Placeholder Page</div>} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
         <Route path="/theme" element={<Navigate to="/editor/design" replace />} />
         {/* Backward compatibility redirects */}

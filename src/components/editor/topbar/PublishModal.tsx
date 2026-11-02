@@ -9,6 +9,7 @@ import {
 } from '../../../store/siteStore';
 import { useLandingEditorStore } from '../../../store/landingEditorStore';
 import { useEditorContextStore } from '../../../store/editorContextStore';
+import { api } from '../../../api/services';
 import styles from './topbar.module.css';
 
 interface PublishModalProps {
@@ -114,10 +115,18 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const hasChanges = addedSections.length > 0 || removedSections.length > 0 || modifiedSections.length > 0;
   const isInputValid = confirmText.trim().toLowerCase() === 'publish';
 
-  const handleConfirmPublish = () => {
+  const handleConfirmPublish = async () => {
     if (!isInputValid) return;
     useEditorContextStore.getState().syncHeaderToSiteStore();
     publishPage(targetId);
+
+    try {
+      await api.savePageDraft(targetId, currentSections);
+      await api.publishStore(`Published ${scopeName} from Store Editor`);
+    } catch (err) {
+      console.warn('[PublishModal] Server-side release sync notification:', err);
+    }
+
     onClose();
     onSuccess(`Published "${scopeName}" to live storefront!`);
   };

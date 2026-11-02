@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   Home, 
@@ -5,33 +6,49 @@ import {
   Inbox, 
   ShoppingBag, 
   Users, 
-  BarChart2, 
-  Megaphone, 
   Palette, 
   Settings,
   HelpCircle,
-  ExternalLink
+  ExternalLink,
+  Calendar,
+  Zap,
+  Store
 } from 'lucide-react';
+import { api } from '../../api/services';
 import styles from './Sidebar.module.css';
 
-const navItems = [
-  { icon: Home, label: 'Dashboard', path: '/dashboard' },
-  { icon: FileText, label: 'Pages', path: '/pages' },
-  { icon: Palette, label: 'Theme / Styles', path: '/editor/theme' },
-  { icon: Inbox, label: 'Orders', path: '/orders' },
-  { icon: ShoppingBag, label: 'Products', path: '/products' },
-  { icon: Users, label: 'Customers', path: '/customers' },
-  { icon: BarChart2, label: 'Analytics', path: '/analytics' },
-  { icon: Megaphone, label: 'Marketing', path: '/marketing' },
-  { icon: Settings, label: 'Settings', path: '/settings' },
-];
-
 const Sidebar = () => {
+  const [storeMode, setStoreMode] = useState<string>('BOTH');
+
+  useEffect(() => {
+    const storeId = localStorage.getItem('billionbiz_store_id') || 'store-shoum-default';
+    api.getStoreDetails(storeId)
+      .then(res => {
+        if (res.store?.storefront_mode) {
+          setStoreMode(res.store.storefront_mode);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const navItems = [
+    { icon: Home, label: 'Dashboard', path: '/dashboard', visible: true },
+    { icon: FileText, label: 'Pages', path: '/pages', visible: true },
+    { icon: Palette, label: 'Theme / Styles', path: '/editor/theme', visible: true },
+    { icon: Inbox, label: 'Orders', path: '/orders', visible: storeMode !== 'SERVICES' },
+    { icon: ShoppingBag, label: 'Products', path: '/products', visible: storeMode !== 'SERVICES' },
+    { icon: Calendar, label: 'Appointments', path: '/appointments', visible: storeMode !== 'COMMERCE' },
+    { icon: Store, label: 'Counter POS', path: '/pos', visible: true },
+    { icon: Users, label: 'Team & Roles', path: '/team', visible: true },
+    { icon: Zap, label: 'Extensions', path: '/extensions', visible: true },
+    { icon: Settings, label: 'Settings', path: '/settings', visible: true },
+  ];
+
   return (
     <aside className={styles.sidebar}>
       <nav className={styles.nav}>
         <ul className={styles.navList}>
-          {navItems.map((item) => (
+          {navItems.filter(item => item.visible).map((item) => (
             <li key={item.label}>
               <NavLink 
                 to={item.path} 
