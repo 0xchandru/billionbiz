@@ -25,7 +25,97 @@ export interface DashboardMetricsResponse {
   }[];
 }
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  isPlatformAdmin?: boolean;
+  emailVerified?: boolean;
+  mfaEnabled?: boolean;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: UserProfile;
+  organization?: { id: string; name: string };
+  store?: { id: string; name: string; slug: string; status: string };
+  organizations?: any[];
+  portalDestination?: { portal: string; url: string; path: string };
+  onboardingChecklist?: any[];
+}
+
 export const api = {
+  // Authentication & Identity
+  login: (credentials: { email: string; password: string }) =>
+    apiClient<AuthResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    }),
+
+  register: (payload: {
+    email: string;
+    password: string;
+    fullName: string;
+    storeName: string;
+    capabilityMode?: string;
+  }) =>
+    apiClient<AuthResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+
+  getMe: () =>
+    apiClient<{
+      user: UserProfile;
+      role: string;
+      storeId?: string;
+      organizationId?: string;
+      onboardingChecklist?: any[];
+      portalDestination?: { portal: string; url: string; path: string };
+      permissions?: string[];
+    }>('/auth/me'),
+
+  verifyEmail: (token: string) =>
+    apiClient<{ message: string; emailVerified: boolean }>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    }),
+
+  forgotPassword: (email: string) =>
+    apiClient<{ message: string }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    }),
+
+  resetPassword: (payload: { token: string; password: string }) =>
+    apiClient<{ message: string }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+
+  enrollMfa: () =>
+    apiClient<{ secret: string; otpauthUrl: string }>('/auth/mfa/enroll', {
+      method: 'POST'
+    }),
+
+  verifyMfa: (token: string) =>
+    apiClient<{ message: string; mfaEnabled: boolean }>('/auth/mfa/verify', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    }),
+
+  getOnboardingChecklist: () =>
+    apiClient<{ checklist: any[] }>('/auth/onboarding-checklist'),
+
+  // Notifications
+  getNotifications: () =>
+    apiClient<{ notifications: any[]; unreadCount: number }>('/notifications'),
+
+  markNotificationRead: (id: string) =>
+    apiClient<{ message: string }>(`/notifications/${id}/read`, {
+      method: 'PATCH'
+    }),
+
   // Dashboard
   getDashboardMetrics: () => apiClient<DashboardMetricsResponse>('/dashboard/metrics'),
 
@@ -33,7 +123,7 @@ export const api = {
   getProducts: (params?: { search?: string; status?: string; categoryId?: string }) =>
     apiClient<{ products: any[]; total: number }>('/catalog/products', { params }),
   createProduct: (product: any) =>
-    apiClient<{ message: string; productId: string }>('/catalog/products', {
+    apiClient<{ message: string; productId: string; variants?: any[] }>('/catalog/products', {
       method: 'POST',
       body: JSON.stringify(product)
     }),

@@ -1,195 +1,350 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { FC } from 'react';
 import { 
-  Menu, Globe, Moon, Sun, Bell, ChevronDown, 
-  RotateCcw, AlertTriangle, X, CheckCircle2 
+  Menu, Bell, ChevronDown, 
+  LogOut, Store, Shield
 } from 'lucide-react';
-import { PLATFORM_VERSION, PLATFORM_RESET_EVENT } from '../../config/version';
-import { resetEntirePlatformStore } from '../../store/siteStore';
+import { useAuthStore } from '../../store/authStore';
+import { api } from '../../api/services';
 import styles from './Header.module.css';
 
-const Header: React.FC = () => {
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+const Header: FC = () => {
+  const { user, role, storeName, organizations, switchStore, logout } = useAuthStore();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isStoreSwitcherOpen, setIsStoreSwitcherOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Check if this was a first-load auto-upgrade reset
+  const profileRef = useRef<HTMLDivElement>(null);
+  const storeRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Close popovers on click outside
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      const justUpgraded = sessionStorage.getItem('billionbiz_version_just_upgraded');
-      if (justUpgraded === 'true') {
-        sessionStorage.removeItem('billionbiz_version_just_upgraded');
-        setToastMessage(`Platform upgraded to v${PLATFORM_VERSION}: siteStore automatically reset to factory new.`);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false);
       }
-    }
-
-    // Listen to external reset events (e.g. from developer console or other triggers)
-    const handlePlatformReset = (e: Event) => {
-      const customEvent = e as CustomEvent<{ version: string }>;
-      const ver = customEvent.detail?.version || PLATFORM_VERSION;
-      setToastMessage(`siteStore has been completely reset to factory new (v${ver}).`);
+      if (storeRef.current && !storeRef.current.contains(e.target as Node)) {
+        setIsStoreSwitcherOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
     };
-
-    window.addEventListener(PLATFORM_RESET_EVENT, handlePlatformReset);
-    return () => window.removeEventListener(PLATFORM_RESET_EVENT, handlePlatformReset);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Auto-dismiss toast
+  // Fetch in-app notifications
   useEffect(() => {
-    if (!toastMessage) return;
-    const timer = setTimeout(() => {
-      setToastMessage(null);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [toastMessage]);
+    api.getNotifications()
+      .then((res) => {
+        setNotifications(res.notifications || []);
+        setUnreadCount(res.unreadCount || 0);
+      })
+      .catch(() => {});
+  }, []);
 
-  const handleConfirmReset = () => {
-    try {
-      resetEntirePlatformStore();
-      setIsResetModalOpen(false);
-      setToastMessage(`siteStore successfully reset to factory new (v${PLATFORM_VERSION})!`);
-    } catch (err) {
-      console.error('Failed to reset platform store:', err);
-    }
+  const handleMarkRead = (id: string) => {
+    api.markNotificationRead(id).then(() => {
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    }).catch(() => {});
   };
 
   return (
-    <>
-      <header className={styles.header}>
-        <div className={styles.left}>
-          <button className={styles.iconBtn} aria-label="Toggle menu">
-            <Menu size={20} />
+    <header className={styles.header}>
+      <div className={styles.left}>
+        <button className={styles.iconBtn} aria-label="Toggle menu">
+          <Menu size={20} />
+        </button>
+
+        <div className={styles.logo}>
+          <div className={styles.logoMark}>B</div>
+          <span className={styles.logoText}>BillionBiz</span>
+          <span className={styles.versionBadge} title="BillionBiz V2 Enterprise">
+            V2
+          </span>
+        </div>
+
+        {/* Store & Workspace Switcher */}
+        <div ref={storeRef} style={{ position: 'relative', marginLeft: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => setIsStoreSwitcherOpen(!isStoreSwitcherOpen)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              backgroundColor: '#f1f5f9',
+              border: '1px solid #cbd5e1',
+              borderRadius: '6px',
+              padding: '0.35rem 0.75rem',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              color: '#064652',
+              cursor: 'pointer'
+            }}
+          >
+            <Store size={15} color="#064652" />
+            <span>{storeName || 'Primary Store'}</span>
+            <ChevronDown size={14} color="#64748b" />
           </button>
-          <div className={styles.logo}>
-            <div className={styles.logoMark}>B</div>
-            <span className={styles.logoText}>BillionBiz</span>
-            <span className={styles.versionBadge} title={`BillionBiz Platform v${PLATFORM_VERSION}`}>
-              v{PLATFORM_VERSION}
-            </span>
-          </div>
+
+          {isStoreSwitcherOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: '0.4rem',
+                width: '240px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                zIndex: 100,
+                padding: '0.5rem 0'
+              }}
+            >
+              <div style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                Active Workspaces
+              </div>
+              {organizations && organizations.length > 0 ? (
+                organizations.map((org: any, idx: number) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      switchStore(org.store_id, org.organization_id);
+                      setIsStoreSwitcherOpen(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      padding: '0.5rem 0.85rem',
+                      border: 'none',
+                      backgroundColor: 'transparent',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '0.85rem'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{org.store_name || org.organization_name}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Role: {org.role || 'OWNER'}</span>
+                  </button>
+                ))
+              ) : (
+                <div style={{ padding: '0.5rem 0.85rem', fontSize: '0.85rem', color: '#64748b' }}>
+                  {storeName || 'Default Store'}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className={styles.right}>
+        {/* Realtime Live Pulse Indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: '#447515', fontWeight: 600, padding: '0.2rem 0.6rem', backgroundColor: '#f0fdf4', borderRadius: '9999px', border: '1px solid #bbf7d0' }}>
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span>
+          <span>Live Sync</span>
+        </div>
+
+        {/* Notifications Popover */}
+        <div ref={notifRef} style={{ position: 'relative' }}>
+          <button 
+            className={styles.notificationBtn} 
+            aria-label="Notifications"
+            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+          >
+            <Bell size={20} />
+            {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
+          </button>
+
+          {isNotificationsOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '0.5rem',
+                width: '320px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                boxShadow: '0 12px 25px -5px rgba(0,0,0,0.12)',
+                zIndex: 100,
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#064652' }}>Notifications</span>
+                {unreadCount > 0 && (
+                  <span style={{ fontSize: '0.75rem', backgroundColor: '#e6fffa', color: '#064652', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 600 }}>
+                    {unreadCount} unread
+                  </span>
+                )}
+              </div>
+              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    No notifications yet. Honest zeros active.
+                  </div>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={() => handleMarkRead(n.id)}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        borderBottom: '1px solid #f8fafc',
+                        backgroundColor: n.is_read ? '#ffffff' : '#f0fdfa',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>{n.title}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.2rem' }}>{n.body}</div>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.35rem' }}>
+                        {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
         
-        <div className={styles.right}>
-          {/* Topbar Reset siteStore Action Button */}
-          <button 
-            type="button"
-            className={styles.resetSiteStoreBtn}
-            onClick={() => setIsResetModalOpen(true)}
-            title="Reset siteStore and restore platform to brand new state"
-            aria-label="Reset siteStore"
+        {/* User Profile & Secure Sign Out Dropdown */}
+        <div ref={profileRef} style={{ position: 'relative' }}>
+          <div 
+            className={styles.profile} 
+            tabIndex={0} 
+            role="button" 
+            aria-label="User profile"
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
           >
-            <RotateCcw size={14} />
-            <span className={styles.resetBtnText}>Reset siteStore</span>
-          </button>
-
-          <button className={styles.langSelector} aria-label="Select language">
-            <Globe size={16} />
-            <span>English</span>
-            <ChevronDown size={14} />
-          </button>
-          
-          <div className={styles.themeToggle}>
-            <button className={styles.iconBtnSmall} aria-label="Switch to dark theme">
-              <Moon size={16} />
-            </button>
-            <button className={styles.iconBtnSmall} aria-label="Switch to light theme">
-              <Sun size={16} />
-            </button>
-          </div>
-          
-          <div className={styles.proPlanBadge}>
-            Pro Plan
-          </div>
-          
-          <button className={styles.notificationBtn} aria-label="Notifications">
-            <Bell size={20} />
-            <span className={styles.badge}>3</span>
-          </button>
-          
-          <div className={styles.profile} tabIndex={0} role="button" aria-label="User profile">
-            <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="John D." className={styles.avatar} />
-            <span className={styles.profileName}>John D.</span>
-            <ChevronDown size={14} />
-          </div>
-        </div>
-      </header>
-
-      {/* Confirmation Modal */}
-      {isResetModalOpen && (
-        <div 
-          className={styles.modalOverlay} 
-          onClick={() => setIsResetModalOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="reset-modal-title"
-        >
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <div className={styles.modalTitle} id="reset-modal-title">
-                <RotateCcw size={18} className={styles.modalTitleIcon} />
-                <span>Reset siteStore to Factory New</span>
-              </div>
-              <button 
-                type="button"
-                className={styles.modalCloseBtn}
-                onClick={() => setIsResetModalOpen(false)}
-                aria-label="Close modal"
-              >
-                <X size={18} />
-              </button>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: '#064652',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '0.9rem'
+              }}
+            >
+              {user?.fullName?.charAt(0) || 'M'}
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', lineHeight: 1.2 }}>
+              <span className={styles.profileName}>{user?.fullName || 'Merchant Admin'}</span>
+              <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
+                {role || 'OWNER'}
+              </span>
+            </div>
+            <ChevronDown size={14} />
+          </div>
 
-            <div className={styles.modalBody}>
-              <p>
-                This will completely reset <strong>siteStore</strong> and browser storage for version{' '}
-                <strong>v{PLATFORM_VERSION}</strong>. All storefront pages, layouts, global theme styling,
-                header/footer navigation, and store settings will be restored to clean factory defaults.
-              </p>
-
-              <div className={styles.modalWarningBox}>
-                <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-                <div>
-                  <strong>Warning:</strong> Any customized page layouts, published snapshots, or drafts
-                  in siteStore will be erased. The entire platform will be returned to a brand-new state.
+          {isProfileOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '0.5rem',
+                width: '230px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                boxShadow: '0 10px 20px -5px rgba(0,0,0,0.1)',
+                zIndex: 100,
+                overflow: 'hidden',
+                padding: '0.5rem 0'
+              }}
+            >
+              <div style={{ padding: '0.65rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>{user?.fullName || 'Merchant'}</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email || 'admin@chandraprakash.codes'}</div>
+                <div style={{ display: 'inline-block', marginTop: '0.35rem', backgroundColor: '#e6fffa', color: '#064652', fontSize: '0.68rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                  ROLE: {role || 'OWNER'}
                 </div>
               </div>
-            </div>
 
-            <div className={styles.modalFooter}>
-              <button 
-                type="button"
-                className={styles.modalCancelBtn}
-                onClick={() => setIsResetModalOpen(false)}
+              <a
+                href="/settings"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.6rem 1rem',
+                  fontSize: '0.85rem',
+                  color: '#334155',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                Cancel
-              </button>
-              <button 
-                type="button"
-                className={styles.modalConfirmBtn}
-                onClick={handleConfirmReset}
+                <Store size={15} /> Store Settings
+              </a>
+
+              <a
+                href="/pos"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.6rem 1rem',
+                  fontSize: '0.85rem',
+                  color: '#334155',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                <RotateCcw size={14} />
-                <span>Reset to Like New</span>
+                <Shield size={15} /> Open Cashier POS
+              </a>
+
+              <div style={{ height: '1px', backgroundColor: '#f1f5f9', margin: '0.3rem 0' }}></div>
+
+              {/* Secure Sign Out Button */}
+              <button
+                type="button"
+                onClick={() => logout()}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.6rem 1rem',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#dc2626',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'left'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fef2f2')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                <LogOut size={15} /> Sign out of workspace
               </button>
             </div>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* Toast Notification Banner */}
-      {toastMessage && (
-        <div className={styles.topbarToast} role="status" aria-live="polite">
-          <CheckCircle2 size={16} color="#34d399" style={{ flexShrink: 0 }} />
-          <span>{toastMessage}</span>
-          <button 
-            type="button"
-            className={styles.toastCloseBtn}
-            onClick={() => setToastMessage(null)}
-            aria-label="Dismiss notification"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
-    </>
+      </div>
+    </header>
   );
 };
 
