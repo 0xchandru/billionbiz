@@ -21,10 +21,17 @@ import {
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginUnified, isLoading: isAuthLoading, error: authError, clearError } = useAuthStore();
+  const { loginUnified, isAuthenticated, isLoading: isAuthLoading, error: authError, clearError } = useAuthStore();
 
   // Read return url if redirected from protected route
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+
+  // If already authenticated, redirect straight to target portal
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   // Phases: 1 = Single Input (Email or Mobile), 2 = Authentication (Password or OTP)
   const [phase, setPhase] = useState<1 | 2>(1);

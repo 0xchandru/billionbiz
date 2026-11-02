@@ -22,7 +22,14 @@ import {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { registerStreamlined, isLoading: isStoreLoading, error: storeError, clearError } = useAuthStore();
+  const { registerStreamlined, isAuthenticated, isLoading: isStoreLoading, error: storeError, clearError } = useAuthStore();
+
+  // If already authenticated, redirect straight to dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   // Wizard Phases: 1 = Contact Input, 1.5 = OTP Verification, 2 = Store Details, 3 = Password Setup
   const [phase, setPhase] = useState<1 | 1.5 | 2 | 3>(1);
