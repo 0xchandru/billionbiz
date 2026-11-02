@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/authStore';
 // Layout & Route Guards
 import AppLayout from '../layout/AppLayout';
 import ProtectedRoute from '../layout/ProtectedRoute';
+import AnimatedLoader from '../common/AnimatedLoader';
 
 // 404 Not Found Page
 import NotFoundPage from '../../pages/NotFoundPage';
@@ -13,7 +14,7 @@ import NotFoundPage from '../../pages/NotFoundPage';
 // Marketing App (chandraprakash.codes / www)
 import LandingPage from '../../pages/LandingPage';
 
-// Auth Pages (Dedicated to admin.chandraprakash.codes)
+// Auth Pages (Register on main domain, Login on admin)
 import LoginPage from '../../pages/auth/LoginPage';
 import RegisterPage from '../../pages/auth/RegisterPage';
 import ForgotPasswordPage from '../../pages/auth/ForgotPasswordPage';
@@ -40,20 +41,21 @@ import POSPage from '../../pages/POS';
 import StorefrontPage from '../../pages/StorefrontPage';
 
 /**
- * Clean silent redirect component for cross-origin domain hops
+ * Animated redirect component for cross-origin domain hops
  */
 const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {
   React.useEffect(() => {
     window.location.replace(to);
   }, [to]);
 
-  return null;
+  return <AnimatedLoader message="Navigating to portal..." />;
 };
 
 /**
  * Strict Page-Based & Host-Dispatched Routing Architecture
  *
  * Rules:
+ * - Create Store / Register is hosted on the MAIN domain (chandraprakash.codes/register).
  * - Admin Login & Admin Dashboard are ONLY accessible on the `admin` subdomain.
  * - On local/preview environments, routing is seamless with zero intermediate flashing screens.
  * - Marketing apex redirects /login to admin.chandraprakash.codes/login, and 404s on admin routes.
@@ -68,9 +70,10 @@ export const HostDispatcher: React.FC = () => {
     return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        {/* Auth entrypoints redirect cleanly to the official admin subdomain */}
+        {/* CREATE STORE IS HOSTED DIRECTLY ON MAIN DOMAIN! */}
+        <Route path="/register" element={<RegisterPage />} />
+        {/* Login is on admin subdomain */}
         <Route path="/login" element={<ExternalRedirect to={getPortalUrl('admin', '/login')} />} />
-        <Route path="/register" element={<ExternalRedirect to={getPortalUrl('admin', '/register')} />} />
         <Route path="/forgot-password" element={<ExternalRedirect to={getPortalUrl('admin', '/forgot-password')} />} />
 
         {/* Admin workspace routes are strictly NOT accessible on marketing apex -> 404 */}

@@ -572,3 +572,61 @@
   color: #94a3b8;
 }
 
+/* Plan Selection Cards in Register */
+.auth-plan-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.auth-plan-card {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem 1.15rem;
+  cursor: pointer;
+  background-color: #ffffff;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.auth-plan-card:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+.auth-plan-card.selected {
+  border-color: #064652;
+  background-color: #f0fdfa;
+  box-shadow: 0 0 0 1.5px #064652;
+}
+
+.auth-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.auth-plan-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.auth-plan-price {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #064652;
+}
+
+.auth-plan-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+

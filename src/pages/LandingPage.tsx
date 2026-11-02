@@ -18,7 +18,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const loginUrl = getPortalUrl('admin', '/login');
-  const registerUrl = getPortalUrl('admin', '/register');
+  const registerUrl = getPortalUrl('root', '/register');
   const forgotPasswordUrl = getPortalUrl('admin', '/forgot-password');
   const adminUrl = getPortalUrl('admin', '/dashboard');
   const posUrl = getPortalUrl('pos', '/');
@@ -279,7 +279,7 @@ export default function LandingPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.75rem' }}>
               <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                 <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>GROSS SALES (LIVE)</span>
-                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#064652', marginTop: '0.25rem' }}>$4,892.50</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#064652', marginTop: '0.25rem' }}>₹48,920</div>
                 <span style={{ fontSize: '0.75rem', color: '#447515', fontWeight: 600 }}>↑ +18.4% today</span>
               </div>
               <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
@@ -425,7 +425,8 @@ export default function LandingPage() {
                 Perfect for solo founders, independent stylists, and boutique stores launching their first store.
               </p>
               <div style={{ fontSize: '2.8rem', fontWeight: 900, color: '#064652', marginBottom: '1.5rem' }}>
-                $0 <span style={{ fontSize: '1rem', fontWeight: 500, color: '#64748b' }}>/ forever</span>
+                {billingCycle === 'monthly' ? '₹999' : '₹799'}{' '}
+                <span style={{ fontSize: '1rem', fontWeight: 500, color: '#64748b' }}>/ month</span>
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1 }}>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.95rem', color: '#334155' }}>
@@ -496,7 +497,7 @@ export default function LandingPage() {
                 For growing omnichannel retailers, salons, and multi-staff service businesses.
               </p>
               <div style={{ fontSize: '2.8rem', fontWeight: 900, color: '#064652', marginBottom: '1.5rem' }}>
-                {billingCycle === 'monthly' ? '$29' : '$24'}{' '}
+                {billingCycle === 'monthly' ? '₹2,499' : '₹1,999'}{' '}
                 <span style={{ fontSize: '1rem', fontWeight: 500, color: '#64748b' }}>/ month</span>
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1 }}>
@@ -543,7 +544,7 @@ export default function LandingPage() {
                 For multi-location retailers, franchise operations, and high-volume merchant groups.
               </p>
               <div style={{ fontSize: '2.8rem', fontWeight: 900, color: '#064652', marginBottom: '1.5rem' }}>
-                {billingCycle === 'monthly' ? '$99' : '$79'}{' '}
+                {billingCycle === 'monthly' ? '₹7,999' : '₹6,499'}{' '}
                 <span style={{ fontSize: '1rem', fontWeight: 500, color: '#64748b' }}>/ month</span>
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1 }}>
