@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FC } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   ShoppingCart, 
@@ -8,10 +8,15 @@ import {
   Package, 
   Users, 
   Wallet, 
+  Store,
   Palette,
+  Zap,
+  Settings as SettingsIcon,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  LogOut
 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 import styles from './Sidebar.module.css';
 
 interface SubItem {
@@ -19,6 +24,7 @@ interface SubItem {
   label: string;
   path: string;
   searchParam?: string;
+  isExternal?: boolean;
 }
 
 interface NavSection {
@@ -83,7 +89,17 @@ const navSections: NavSection[] = [
       { id: 'transactions', label: 'Transactions', path: '/finance' },
       { id: 'payouts', label: 'Payouts', path: '/finance?tab=payouts', searchParam: 'tab=payouts' },
       { id: 'invoices', label: 'Invoices', path: '/orders?tab=invoices', searchParam: 'tab=invoices' },
-      { id: 'taxes', label: 'Taxes', path: '/settings?tab=taxes', searchParam: 'tab=taxes' },
+      { id: 'finance-taxes', label: 'Taxes', path: '/settings?tab=taxes', searchParam: 'tab=taxes' },
+    ]
+  },
+  {
+    id: 'pos',
+    label: 'POS & Counters',
+    icon: Store,
+    items: [
+      { id: 'pos-counters', label: 'POS Registers', path: '/pos-counters' },
+      { id: 'open-pos', label: 'Open Cashier Terminal', path: '/pos' },
+      { id: 'pos-shifts', label: 'Cash Shifts & Floats', path: '/pos-counters?tab=shifts', searchParam: 'tab=shifts' },
     ]
   },
   {
@@ -94,28 +110,60 @@ const navSections: NavSection[] = [
       { id: 'store-editor', label: 'Store Editor', path: '/editor' },
       { id: 'pages', label: 'Pages', path: '/pages' },
       { id: 'themes', label: 'Themes', path: '/editor?tab=theme', searchParam: 'tab=theme' },
-      { id: 'domains', label: 'Domains', path: '/settings?tab=domains', searchParam: 'tab=domains' },
-      { id: 'preferences', label: 'Preferences', path: '/settings' },
+      { id: 'navigation', label: 'Navigation', path: '/editor?tab=navigation', searchParam: 'tab=navigation' },
+      { id: 'store-domains', label: 'Domains', path: '/settings?tab=domains', searchParam: 'tab=domains' },
+      { id: 'store-preferences', label: 'Preferences', path: '/settings' },
+    ]
+  },
+  {
+    id: 'extensions',
+    label: 'Extensions',
+    icon: Zap,
+    items: [
+      { id: 'all-extensions', label: 'All Extensions', path: '/extensions' },
+      { id: 'payment-gateways', label: 'Payment Gateways', path: '/extensions?category=payments', searchParam: 'category=payments' },
+      { id: 'shipping-couriers', label: 'Shipping Couriers', path: '/extensions?category=shipping', searchParam: 'category=shipping' },
+    ]
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: SettingsIcon,
+    items: [
+      { id: 'set-general', label: 'General & Mode', path: '/settings?tab=general', searchParam: 'tab=general' },
+      { id: 'set-locations', label: 'Locations & Warehouses', path: '/settings?tab=locations', searchParam: 'tab=locations' },
+      { id: 'set-payments', label: 'Payments & Razorpay', path: '/settings?tab=payments', searchParam: 'tab=payments' },
+      { id: 'set-shipping', label: 'Shipping & Delivery', path: '/settings?tab=shipping', searchParam: 'tab=shipping' },
+      { id: 'set-taxes', label: 'Taxes & GSTIN', path: '/settings?tab=taxes', searchParam: 'tab=taxes' },
+      { id: 'set-domains', label: 'Custom Domains', path: '/settings?tab=domains', searchParam: 'tab=domains' },
+      { id: 'set-notifications', label: 'Notifications & Emails', path: '/settings?tab=notifications', searchParam: 'tab=notifications' },
+      { id: 'set-security', label: 'Security & Staff Access', path: '/settings?tab=security', searchParam: 'tab=security' },
     ]
   }
 ];
 
 const Sidebar: FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, storeName, logout } = useAuthStore();
 
-  // Accordion state: Orders is expanded by default matching Image 2
+  // Accordion state: Orders is expanded by default matching visual sample
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     orders: true,
     appointments: false,
     catalogue: false,
     people: false,
     finance: false,
+    pos: false,
     'online-store': false,
+    extensions: false,
+    settings: false,
   });
 
   // Automatically expand accordion if the user navigates directly into one of its routes
   useEffect(() => {
     const currentPath = location.pathname;
+
     if (currentPath.startsWith('/orders')) {
       setOpenSections(prev => ({ ...prev, orders: true }));
     } else if (currentPath.startsWith('/appointments')) {
@@ -126,10 +174,16 @@ const Sidebar: FC = () => {
       setOpenSections(prev => ({ ...prev, people: true }));
     } else if (currentPath.startsWith('/finance')) {
       setOpenSections(prev => ({ ...prev, finance: true }));
+    } else if (currentPath.startsWith('/pos-counters') || currentPath.startsWith('/pos')) {
+      setOpenSections(prev => ({ ...prev, pos: true }));
     } else if (currentPath.startsWith('/editor') || currentPath.startsWith('/pages')) {
       setOpenSections(prev => ({ ...prev, 'online-store': true }));
+    } else if (currentPath.startsWith('/extensions')) {
+      setOpenSections(prev => ({ ...prev, extensions: true }));
+    } else if (currentPath.startsWith('/settings')) {
+      setOpenSections(prev => ({ ...prev, settings: true }));
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   const toggleSection = (id: string) => {
     setOpenSections(prev => ({
@@ -148,15 +202,20 @@ const Sidebar: FC = () => {
       return currentPath === item.path.split('?')[0] && currentSearch.includes(item.searchParam);
     }
 
-    // Default top item of path when no specific searchParam
     if (item.path.includes('?')) {
       return false;
     }
     return currentPath === item.path && (!currentSearch || currentSearch === '?');
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <aside className={styles.sidebar}>
+      {/* Scrollable Navigation Items */}
       <nav className={styles.navContainer}>
         {/* 1. Home Direct Link */}
         <div className={styles.sectionHeaderWrap}>
@@ -171,7 +230,7 @@ const Sidebar: FC = () => {
           </Link>
         </div>
 
-        {/* 2. Dropdown Accordion Sections */}
+        {/* 2. All Dropdown Accordion Sections */}
         {navSections.map((section) => {
           const isOpen = Boolean(openSections[section.id]);
           const Icon = section.icon;
@@ -217,6 +276,27 @@ const Sidebar: FC = () => {
           );
         })}
       </nav>
+
+      {/* DOCKED BOTTOM FOOTER: Store Info & Direct Logout Feature */}
+      <div className={styles.bottomFooter}>
+        <div className={styles.storePill}>
+          <div className={styles.storePillLeft}>
+            <span className={styles.storeNameText}>{storeName || 'Primary Store'}</span>
+            <span className={styles.merchantEmail}>{user?.email || 'admin@chandraprakash.codes'}</span>
+          </div>
+        </div>
+
+        {/* Direct Logout Button */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className={styles.logoutBtn}
+          title="Sign out of BillionBiz Merchant Admin"
+        >
+          <LogOut size={16} className={styles.logoutIcon} />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 };

@@ -291,6 +291,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload)
     }),
+  toggleIntegrationConnection: (providerKey: string, enabled: boolean) =>
+    apiClient<any>(`/extensions/connections/${providerKey}/toggle`, {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled })
+    }),
+  installExtension: (providerKey: string) =>
+    apiClient<any>(`/extensions/connections/${providerKey}/install`, {
+      method: 'POST'
+    }),
+  uninstallExtension: (providerKey: string) =>
+    apiClient<any>(`/extensions/connections/${providerKey}/uninstall`, {
+      method: 'POST'
+    }),
   getExtensionsConfig: () => apiClient<{ extensions: any[] }>('/extensions/config'),
   createRazorpayOrder: (payload: { amountMinor: number; currency?: string; referenceId?: string; purpose?: string }) =>
     apiClient<any>('/extensions/razorpay/create-order', {
