@@ -6,7 +6,6 @@ import {
   Inbox, 
   ShoppingBag, 
   Users, 
-  Palette, 
   Settings,
   HelpCircle,
   ExternalLink,
@@ -32,15 +31,15 @@ const Sidebar = () => {
   }, []);
 
   const navItems = [
-    { icon: Home, label: 'Dashboard', path: '/dashboard', visible: true },
-    { icon: FileText, label: 'Pages', path: '/pages', visible: true },
-    { icon: Palette, label: 'Theme / Styles', path: '/editor/theme', visible: true },
+    { icon: Home, label: 'Home', path: '/dashboard', visible: true },
     { icon: Inbox, label: 'Orders', path: '/orders', visible: storeMode !== 'SERVICES' },
-    { icon: ShoppingBag, label: 'Products', path: '/products', visible: storeMode !== 'SERVICES' },
     { icon: Calendar, label: 'Appointments', path: '/appointments', visible: storeMode !== 'COMMERCE' },
-    { icon: Store, label: 'Counter POS', path: '/pos', visible: true },
-    { icon: Users, label: 'Team & Roles', path: '/team', visible: true },
+    { icon: ShoppingBag, label: 'Catalogue', path: '/products', visible: storeMode !== 'SERVICES' },
+    { icon: Users, label: 'People', path: '/people', visible: true },
+    { icon: FileText, label: 'Online Store', path: '/pages', visible: true },
+    { icon: Store, label: 'POS & Counters', path: '/pos-counters', visible: true },
     { icon: Zap, label: 'Extensions', path: '/extensions', visible: true },
+    { icon: Users, label: 'Team', path: '/team', visible: true },
     { icon: Settings, label: 'Settings', path: '/settings', visible: true },
   ];
 

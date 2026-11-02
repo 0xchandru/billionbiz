@@ -5,6 +5,7 @@ import {
   LogOut, Store, Shield
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useRealtime } from '../../hooks/useRealtime';
 import { api } from '../../api/services';
 import styles from './Header.module.css';
 
@@ -37,15 +38,25 @@ const Header: FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch in-app notifications
-  useEffect(() => {
+  // In-app notifications & Realtime live pulse
+  const fetchNotifs = () => {
     api.getNotifications()
       .then((res) => {
         setNotifications(res.notifications || []);
         setUnreadCount(res.unreadCount || 0);
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchNotifs();
   }, []);
+
+  const { isConnected } = useRealtime((event) => {
+    if (event.type === 'notification.created') {
+      fetchNotifs();
+    }
+  });
 
   const handleMarkRead = (id: string) => {
     api.markNotificationRead(id).then(() => {
@@ -152,9 +163,30 @@ const Header: FC = () => {
       
       <div className={styles.right}>
         {/* Realtime Live Pulse Indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: '#447515', fontWeight: 600, padding: '0.2rem 0.6rem', backgroundColor: '#f0fdf4', borderRadius: '9999px', border: '1px solid #bbf7d0' }}>
-          <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span>
-          <span>Live Sync</span>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            fontSize: '0.8rem',
+            color: isConnected ? '#447515' : '#b45309',
+            fontWeight: 600,
+            padding: '0.2rem 0.6rem',
+            backgroundColor: isConnected ? '#f0fdf4' : '#fffbeb',
+            borderRadius: '9999px',
+            border: `1px solid ${isConnected ? '#bbf7d0' : '#fde68a'}`
+          }}
+          title={isConnected ? 'Connected to BillionBiz Realtime WebSocket' : 'Connecting to Realtime stream...'}
+        >
+          <span
+            style={{
+              width: '7px',
+              height: '7px',
+              borderRadius: '50%',
+              backgroundColor: isConnected ? '#22c55e' : '#f59e0b'
+            }}
+          />
+          <span>{isConnected ? 'Live Sync' : 'Connecting'}</span>
         </div>
 
         {/* Notifications Popover */}

@@ -25,6 +25,7 @@ import {
 } from 'recharts';
 import { api, type DashboardMetricsResponse } from '../api/services';
 import { useAuthStore } from '../store/authStore';
+import { useRealtime } from '../hooks/useRealtime';
 import styles from './Dashboard.module.css';
 
 const formatCurrency = (minor: number) => {
@@ -73,6 +74,12 @@ const Dashboard = () => {
   useEffect(() => {
     loadMetrics();
   }, []);
+
+  useRealtime((event) => {
+    if (['order.created', 'order.fulfilled', 'booking.created', 'payment.captured', 'inventory.updated'].includes(event.type)) {
+      loadMetrics();
+    }
+  });
 
   const totalOrders = data?.metrics?.totalOrders || 0;
   const totalRevenue = data?.metrics?.totalRevenueMinor || 0;

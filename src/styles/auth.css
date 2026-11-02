@@ -390,6 +390,25 @@
   border-color: #94a3b8;
 }
 
+.auth-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 0.5rem;
+  transition: color 0.15s ease;
+}
+
+.auth-back-btn:hover {
+  color: #0f172a;
+}
+
 .auth-divider {
   position: relative;
   margin: 1.25rem 0;
@@ -552,3 +571,4 @@
   font-size: 0.75rem;
   color: #94a3b8;
 }
+

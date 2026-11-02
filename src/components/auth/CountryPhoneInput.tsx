@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mail, ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 export interface Country {
   code: string;
@@ -34,30 +34,33 @@ interface CountryPhoneInputProps {
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  id?: string;
 }
 
 export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
   value,
   onChange,
-  placeholder = 'name@business.com or mobile number',
+  placeholder = 'Email or mobile number',
   autoFocus = false,
   disabled = false,
-  className = ''
+  className = '',
+  id
 }) => {
-  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default India
+  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default India (+91)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Determine if input is email or phone
-  const hasLetters = /[a-zA-Z@]/.test(value);
-  const isEmail = hasLetters || value.includes('@');
+  // Strict Phone detection: ONLY when value has numeric digits and no alphabet / @ characters
+  const trimmed = value.trim();
+  const hasDigits = /[0-9]/.test(trimmed);
+  const hasLettersOrAt = /[a-zA-Z@]/.test(trimmed);
+  const isPhone = !hasLettersOrAt && hasDigits;
 
-  // Detect country code from user typing
+  // Auto-detect country code if typed with +
   useEffect(() => {
-    if (!isEmail && value.length > 0) {
-      const trimmed = value.trim();
+    if (isPhone && trimmed.startsWith('+')) {
       for (const country of COUNTRIES) {
         if (trimmed.startsWith(country.code)) {
           setSelectedCountry(country);
@@ -65,7 +68,7 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
         }
       }
     }
-  }, [value, isEmail]);
+  }, [trimmed, isPhone]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -80,12 +83,15 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    const isNowEmail = /[a-zA-Z@]/.test(raw) || raw.includes('@');
+    const curTrimmed = raw.trim();
+    const curHasDigits = /[0-9]/.test(curTrimmed);
+    const curHasLettersOrAt = /[a-zA-Z@]/.test(curTrimmed);
+    const curIsPhone = !curHasLettersOrAt && curHasDigits;
+    const curIsEmail = !curIsPhone;
 
-    let formatted = raw.trim();
-    if (!isNowEmail && raw.length > 0) {
-      // If user typed raw digits without +, prepend selected country code
-      const cleanDigits = raw.replace(/[^0-9+]/g, '');
+    let formatted = curTrimmed;
+    if (curIsPhone && curTrimmed.length > 0) {
+      const cleanDigits = curTrimmed.replace(/[^0-9+]/g, '');
       if (cleanDigits.startsWith('+')) {
         formatted = cleanDigits;
       } else {
@@ -93,17 +99,15 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
       }
     }
 
-    onChange(raw, isNowEmail, formatted);
+    onChange(raw, curIsEmail, formatted);
   };
 
   const selectCountry = (country: Country) => {
     setSelectedCountry(country);
     setIsDropdownOpen(false);
 
-    // If already typed numbers, reformat with new country code
-    if (!isEmail && value.length > 0) {
-      const cleanDigits = value.replace(/[^0-9]/g, '');
-      // Strip old country code digits if present
+    if (isPhone && trimmed.length > 0) {
+      const cleanDigits = trimmed.replace(/[^0-9]/g, '');
       let phoneBody = cleanDigits;
       for (const c of COUNTRIES) {
         const codeDigits = c.code.replace('+', '');
@@ -127,25 +131,22 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
   return (
     <div style={{ position: 'relative', width: '100%' }} className={className}>
       <div className="auth-input-wrapper">
-        {/* Left Side: Country Selector or Mail Icon */}
-        {isEmail ? (
-          <div className="auth-input-icon">
-            <Mail className="w-5 h-5" style={{ width: 18, height: 18, color: '#94a3b8' }} />
-          </div>
-        ) : (
+        {/* Country code prefix & selector: ONLY rendered when typing mobile numbers */}
+        {isPhone && (
           <div style={{ position: 'relative' }} ref={dropdownRef}>
             <button
               type="button"
               disabled={disabled}
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="country-select-btn"
+              title="Select country code"
             >
-              <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{selectedCountry.flag}</span>
-              <span>{selectedCountry.code}</span>
+              <span style={{ fontSize: '1.05rem', lineHeight: 1 }}>{selectedCountry.flag}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{selectedCountry.code}</span>
               <ChevronDown style={{ width: 14, height: 14, color: '#94a3b8' }} />
             </button>
 
-            {/* Country Dropdown */}
+            {/* Dropdown Menu */}
             {isDropdownOpen && (
               <div className="country-dropdown-menu">
                 <div className="country-search-box">
@@ -153,7 +154,7 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search country or code..."
+                    placeholder="Search country..."
                     className="country-search-input"
                     autoFocus
                   />
@@ -165,8 +166,8 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                     onClick={() => selectCountry(c)}
                     className="country-item"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <span style={{ fontSize: '1.1rem' }}>{c.flag}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '1.05rem' }}>{c.flag}</span>
                       <span style={{ color: '#0f172a', fontWeight: 500 }}>{c.name}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#64748b', fontSize: '0.75rem' }}>
@@ -182,28 +183,21 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
           </div>
         )}
 
-        {/* Input Field */}
+        {/* Clean Input Field */}
         <input
           ref={inputRef}
-          type={isEmail ? 'email' : 'tel'}
+          id={id}
+          type={isPhone ? 'tel' : 'text'}
           value={value}
           onChange={handleInputChange}
           placeholder={placeholder}
           autoFocus={autoFocus}
           disabled={disabled}
           className="auth-input"
+          style={!isPhone ? { paddingLeft: '1rem' } : undefined}
+          autoComplete="username"
         />
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.35rem', padding: '0 0.25rem' }}>
-        <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
-          {isEmail ? 'Entering Email address' : `Detected mobile (${selectedCountry.name})`}
-        </span>
-        <span style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 600 }}>
-          {isEmail ? 'Code via Email' : 'Code via SMS'}
-        </span>
       </div>
     </div>
   );
 };
-

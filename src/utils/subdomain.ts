@@ -5,8 +5,8 @@
  * to support multi-subdomain routing on chandraprakash.codes:
  *
  * - chandraprakash.codes / www.chandraprakash.codes -> Root Marketing Website
- * - admin.chandraprakash.codes                      -> Merchant Admin Workspace
- * - accounts.chandraprakash.codes                   -> Centralized Authentication (Login / Register)
+ * - admin.chandraprakash.codes                      -> Merchant Admin Workspace & Admin Login
+ * - accounts.chandraprakash.codes                   -> Redirects to admin.chandraprakash.codes/login
  * - pos.chandraprakash.codes                        -> Dedicated Cashier & Counter POS
  * - staff.chandraprakash.codes                      -> Staff Appointments & Shifts
  * - ops.chandraprakash.codes                        -> Platform Administration
@@ -29,7 +29,7 @@ export function parseSubdomain(): SubdomainInfo {
 
   const hostname = window.location.hostname.toLowerCase();
 
-  // 1. Support local testing via query parameter: e.g. http://localhost:5173/?subdomain=admin
+  // 1. Support query parameter testing: e.g. ?subdomain=admin (works on localhost, preview URLs, etc.)
   const params = new URLSearchParams(window.location.search);
   const override = params.get('subdomain')?.toLowerCase();
   if (override) {
@@ -94,10 +94,12 @@ export function getPortalUrl(type: 'root' | 'admin' | 'accounts' | 'pos' | 'staf
   const baseDomain = import.meta.env.VITE_PUBLIC_DOMAIN || 'chandraprakash.codes';
   const protocol = window.location.protocol;
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isVercelPreview = window.location.hostname.endsWith('.vercel.app');
 
-  if (isLocal) {
+  if (isLocal || isVercelPreview) {
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return type === 'root' ? cleanPath : `${cleanPath}?subdomain=${type}`;
+    const separator = cleanPath.includes('?') ? '&' : '?';
+    return type === 'root' ? cleanPath : `${cleanPath}${separator}subdomain=${type}`;
   }
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -107,4 +109,3 @@ export function getPortalUrl(type: 'root' | 'admin' | 'accounts' | 'pos' | 'staf
 
   return `${protocol}//${type}.${baseDomain}${normalizedPath}`;
 }
-

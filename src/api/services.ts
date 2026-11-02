@@ -179,7 +179,9 @@ export const api = {
       body: JSON.stringify(payload)
     }),
 
-  // Orders
+  // Orders & Customers (People)
+  getCustomers: (params?: { search?: string }) =>
+    apiClient<{ customers: any[]; total: number }>('/orders/customers', { params }),
   getOrders: (params?: { status?: string; search?: string }) =>
     apiClient<{ orders: any[]; total: number }>('/orders', { params }),
   getOrderById: (id: string) => apiClient<any>(`/orders/${id}`),
@@ -271,7 +273,23 @@ export const api = {
       method: 'POST'
     }),
 
-  // Extensions
+  // Extensions & Provider Connections (Tenant-Scoped Encrypted Records, REQ-INT-001)
+  getIntegrationConnections: () => apiClient<{ connections: any[] }>('/extensions/connections'),
+  saveIntegrationConnection: (payload: { providerKey: string; environment: 'TEST' | 'LIVE'; credentials: any; settings?: any }) =>
+    apiClient<any>('/extensions/connections', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  testIntegrationConnection: (providerKey: string, payload: { environment?: 'TEST' | 'LIVE' } = {}) =>
+    apiClient<any>(`/extensions/connections/${providerKey}/test`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  disconnectIntegrationConnection: (providerKey: string, payload: { environment?: 'TEST' | 'LIVE' } = {}) =>
+    apiClient<any>(`/extensions/connections/${providerKey}/disconnect`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
   getExtensionsConfig: () => apiClient<{ extensions: any[] }>('/extensions/config'),
   createRazorpayOrder: (payload: { amountMinor: number; currency?: string; referenceId?: string; purpose?: string }) =>
     apiClient<any>('/extensions/razorpay/create-order', {
