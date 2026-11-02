@@ -178,3 +178,4 @@ export const StorefrontPage: React.FC<StorefrontProps> = ({ slug = 'store' }) =>
 };
 
 export default StorefrontPage;
+

@@ -125,36 +125,36 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
   );
 
   return (
-    <div className={`relative ${className}`}>
-      <div className="relative flex items-center rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all overflow-hidden">
+    <div style={{ position: 'relative', width: '100%' }} className={className}>
+      <div className="auth-input-wrapper">
         {/* Left Side: Country Selector or Mail Icon */}
         {isEmail ? (
-          <div className="pl-3.5 pr-2 flex items-center justify-center text-gray-400">
-            <Mail className="w-5 h-5" />
+          <div className="auth-input-icon">
+            <Mail className="w-5 h-5" style={{ width: 18, height: 18, color: '#94a3b8' }} />
           </div>
         ) : (
-          <div className="relative" ref={dropdownRef}>
+          <div style={{ position: 'relative' }} ref={dropdownRef}>
             <button
               type="button"
               disabled={disabled}
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-1.5 pl-3.5 pr-2 py-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-700 transition text-sm font-medium text-gray-700 dark:text-gray-200"
+              className="country-select-btn"
             >
-              <span className="text-lg leading-none">{selectedCountry.flag}</span>
+              <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{selectedCountry.flag}</span>
               <span>{selectedCountry.code}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              <ChevronDown style={{ width: 14, height: 14, color: '#94a3b8' }} />
             </button>
 
             {/* Country Dropdown */}
             {isDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-60 overflow-y-auto py-1">
-                <div className="p-2 sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+              <div className="country-dropdown-menu">
+                <div className="country-search-box">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search country or code..."
-                    className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="country-search-input"
                     autoFocus
                   />
                 </div>
@@ -163,16 +163,16 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                     key={`${c.iso}-${c.code}`}
                     type="button"
                     onClick={() => selectCountry(c)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60 transition text-sm"
+                    className="country-item"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-base">{c.flag}</span>
-                      <span className="text-gray-900 dark:text-gray-100 font-medium">{c.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <span style={{ fontSize: '1.1rem' }}>{c.flag}</span>
+                      <span style={{ color: '#0f172a', fontWeight: 500 }}>{c.name}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#64748b', fontSize: '0.75rem' }}>
                       <span>{c.code}</span>
                       {selectedCountry.iso === c.iso && (
-                        <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <Check style={{ width: 14, height: 14, color: '#2563eb' }} />
                       )}
                     </div>
                   </button>
@@ -191,16 +191,16 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
           placeholder={placeholder}
           autoFocus={autoFocus}
           disabled={disabled}
-          className="w-full px-3.5 py-3 text-sm text-gray-900 dark:text-gray-100 bg-transparent placeholder-gray-400 focus:outline-none"
+          className="auth-input"
         />
       </div>
 
-      <div className="flex items-center justify-between mt-1 px-1">
-        <span className="text-[11px] text-gray-400 dark:text-gray-500">
-          {isEmail ? 'Entering Email address' : `Detected mobile number (${selectedCountry.name})`}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.35rem', padding: '0 0.25rem' }}>
+        <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+          {isEmail ? 'Entering Email address' : `Detected mobile (${selectedCountry.name})`}
         </span>
-        <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">
-          {isEmail ? 'OTP via Email' : 'OTP via SMS'}
+        <span style={{ fontSize: '0.7rem', color: '#2563eb', fontWeight: 600 }}>
+          {isEmail ? 'Code via Email' : 'Code via SMS'}
         </span>
       </div>
     </div>

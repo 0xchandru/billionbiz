@@ -143,51 +143,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center px-4 py-8 text-slate-900 dark:text-slate-100 font-sans">
+    <div className="auth-wrapper">
       {/* Brand Header */}
-      <Link to="/" className="flex items-center gap-2.5 mb-6 text-decoration-none group">
-        <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition">
-          <Store className="w-5 h-5" />
+      <Link to="/" className="auth-brand">
+        <div className="auth-brand-logo">
+          <Store style={{ width: 22, height: 22 }} />
         </div>
-        <div className="flex flex-col">
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">BillionBiz</span>
-          <span className="text-[10px] text-blue-600 font-semibold uppercase tracking-wider">Merchant Portal</span>
+        <div className="auth-brand-text">
+          <span className="auth-brand-title">BillionBiz</span>
+          <span className="auth-brand-subtitle">Merchant Portal</span>
         </div>
       </Link>
 
       {/* Main Login Card */}
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 transition-all">
+      <div className="auth-card">
         {/* Error Alert */}
         {(uiError || authError) && (
-          <div className="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 flex items-start gap-2.5 text-red-600 dark:text-red-400 text-xs">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="auth-alert-error">
+            <AlertCircle style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2 }} />
             <span>{uiError || authError}</span>
           </div>
         )}
 
         {/* Dev OTP Preview */}
         {devOtpNotification && (
-          <div className="mb-5 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
-            <span className="font-mono font-medium">{devOtpNotification}</span>
+          <div className="auth-alert-info">
+            <Sparkles style={{ width: 16, height: 16, flexShrink: 0, color: '#2563eb' }} />
+            <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{devOtpNotification}</span>
           </div>
         )}
 
         {/* PHASE 1: SINGLE INPUT FIELD (MOBILE NUMBER OR EMAIL) */}
         {phase === 1 && (
           <div>
-            <div className="mb-5">
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">Sign In to Your Store</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <div className="auth-card-header">
+              <h1 className="auth-card-title">Sign In to Your Store</h1>
+              <p className="auth-card-desc">
                 Enter your mobile number or email address to access your merchant dashboard.
               </p>
             </div>
 
-            <form onSubmit={handleIdentifierSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  Mobile Number or Email
-                </label>
+            <form onSubmit={handleIdentifierSubmit}>
+              <div className="auth-form-group">
+                <label className="auth-label">Mobile Number or Email</label>
                 <CountryPhoneInput
                   value={rawIdentifier}
                   onChange={(raw, isMail, formatted) => {
@@ -203,23 +201,17 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={!rawIdentifier.trim()}
-                className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-500/20 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                className="auth-btn-primary"
               >
                 <span>Continue</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight style={{ width: 16, height: 16 }} />
               </button>
             </form>
 
             {/* Social Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200 dark:border-slate-800" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-slate-900 px-3 text-slate-400 font-medium tracking-wider">
-                  Or continue with
-                </span>
-              </div>
+            <div className="auth-divider">
+              <div className="auth-divider-line" />
+              <span className="auth-divider-text">Or continue with</span>
             </div>
 
             {/* Continue with Google */}
@@ -228,9 +220,9 @@ export default function LoginPage() {
               onClick={() => {
                 setUiError('Google Sign-In ready. In production, configure Google Client ID.');
               }}
-              className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition flex items-center justify-center gap-3 shadow-sm"
+              className="auth-google-btn"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -257,10 +249,10 @@ export default function LoginPage() {
         {phase === 2 && (
           <div>
             {/* Account pill with change button */}
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 mb-5 text-xs">
-              <div className="flex items-center gap-2 truncate">
-                <span className="text-slate-500 dark:text-slate-400">Signing in as:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+            <div className="auth-account-pill">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                <span style={{ color: '#64748b' }}>Signing in as:</span>
+                <span style={{ fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                   {formattedIdentifier || rawIdentifier}
                 </span>
               </div>
@@ -271,7 +263,7 @@ export default function LoginPage() {
                   setPassword('');
                   setOtpCode('');
                 }}
-                className="text-blue-600 dark:text-blue-400 font-semibold hover:underline shrink-0 pl-2"
+                style={{ color: '#2563eb', fontWeight: 600, border: 'none', background: 'none', cursor: 'pointer' }}
               >
                 Change
               </button>
@@ -279,37 +271,35 @@ export default function LoginPage() {
 
             {/* Mode A: Password Authentication */}
             {authMode === 'PASSWORD' && (
-              <form onSubmit={handleAuthSubmit} className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                      Password
-                    </label>
+              <form onSubmit={handleAuthSubmit}>
+                <div className="auth-form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <label className="auth-label" style={{ marginBottom: 0 }}>Password</label>
                     <Link
                       to="/forgot-password"
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                      style={{ fontSize: '0.75rem', color: '#2563eb', fontWeight: 500 }}
                     >
                       Forgot password?
                     </Link>
                   </div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
+                  <div className="auth-input-wrapper">
+                    <div className="auth-input-icon">
+                      <Lock style={{ width: 18, height: 18 }} />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
-                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="auth-input"
                       autoFocus
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600"
+                      style={{ paddingRight: '0.85rem', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff style={{ width: 18, height: 18 }} /> : <Eye style={{ width: 18, height: 18 }} />}
                     </button>
                   </div>
                 </div>
@@ -317,54 +307,50 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isAuthLoading || !password}
-                  className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-500/20 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                  className="auth-btn-primary"
                 >
                   {isAuthLoading ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
                       Signing In...
                     </>
                   ) : (
                     <>
                       Sign In with Password
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight style={{ width: 16, height: 16 }} />
                     </>
                   )}
                 </button>
 
                 {/* Login via OTP instead button */}
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    disabled={isSubmitting}
-                    onClick={handleSwitchToOtp}
-                    className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                        <span>Sending OTP Code...</span>
-                      </>
-                    ) : (
-                      <>
-                        <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Login via OTP instead</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={handleSwitchToOtp}
+                  className="auth-btn-secondary"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw style={{ width: 16, height: 16, color: '#2563eb' }} className="animate-spin" />
+                      <span>Sending OTP Code...</span>
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare style={{ width: 16, height: 16, color: '#2563eb' }} />
+                      <span>Login via OTP instead</span>
+                    </>
+                  )}
+                </button>
               </form>
             )}
 
             {/* Mode B: OTP Authentication */}
             {authMode === 'OTP' && (
-              <form onSubmit={handleAuthSubmit} className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                      Enter 6-Digit OTP Code
-                    </label>
-                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+              <form onSubmit={handleAuthSubmit}>
+                <div className="auth-form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <label className="auth-label" style={{ marginBottom: 0 }}>Enter 6-Digit OTP Code</label>
+                    <span style={{ fontSize: '0.75rem', color: '#2563eb', fontWeight: 600 }}>
                       Sent via {isEmail ? 'Email' : 'SMS'}
                     </span>
                   </div>
@@ -374,16 +360,16 @@ export default function LoginPage() {
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
                     placeholder="123456"
-                    className="w-full text-center text-2xl font-mono tracking-widest py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="auth-otp-input"
                     autoFocus
                   />
-                  <div className="flex items-center justify-between text-xs mt-2 px-1">
-                    <span className="text-slate-400">Code expires in 10 minutes</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', marginTop: '0.5rem', color: '#64748b' }}>
+                    <span>Code expires in 10 mins</span>
                     <button
                       type="button"
                       disabled={resendCooldown > 0}
                       onClick={handleResendOtp}
-                      className="text-blue-600 font-semibold disabled:opacity-50 disabled:text-slate-400 hover:underline"
+                      style={{ color: '#2563eb', fontWeight: 600, cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer' }}
                     >
                       {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
                     </button>
@@ -393,61 +379,56 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isAuthLoading || otpCode.length < 4}
-                  className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-500/20 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                  className="auth-btn-primary"
                 >
                   {isAuthLoading ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
                       Verifying & Signing In...
                     </>
                   ) : (
                     <>
                       Verify & Sign In
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight style={{ width: 16, height: 16 }} />
                     </>
                   )}
                 </button>
 
                 {/* Login with Password instead button */}
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMode('PASSWORD');
-                      setOtpCode('');
-                    }}
-                    className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <KeyRound className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Login with password instead</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('PASSWORD');
+                    setOtpCode('');
+                  }}
+                  className="auth-btn-secondary"
+                >
+                  <KeyRound style={{ width: 16, height: 16, color: '#2563eb' }} />
+                  <span>Login with password instead</span>
+                </button>
               </form>
             )}
           </div>
         )}
 
         {/* Security Assurance */}
-        <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+        <div className="auth-security-footer">
+          <ShieldCheck style={{ width: 16, height: 16, color: '#10b981' }} />
           <span>Encrypted with TLS 1.3 & Multi-Tenant Data Isolation</span>
         </div>
       </div>
 
       {/* DISTINCT CARD BELOW LOGIN FORM: REGISTER STORE / GET STARTED */}
-      <div className="w-full max-w-md mt-5 p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-center sm:text-left">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Don't have a store yet?</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+      <div className="auth-bottom-card">
+        <div>
+          <h2 className="auth-bottom-card-title">Don't have a store yet?</h2>
+          <p className="auth-bottom-card-desc">
             Launch your store or booking platform in 2 minutes.
           </p>
         </div>
-        <Link
-          to="/register"
-          className="shrink-0 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
-        >
+        <Link to="/register" className="auth-bottom-card-btn">
           <span>Get Started</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ArrowRight style={{ width: 14, height: 14 }} />
         </Link>
       </div>
     </div>

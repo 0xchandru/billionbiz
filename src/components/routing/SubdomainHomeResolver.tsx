@@ -78,3 +78,4 @@ export const SubdomainHomeResolver: React.FC = () => {
 };
 
 export default SubdomainHomeResolver;
+

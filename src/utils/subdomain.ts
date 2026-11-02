@@ -107,3 +107,4 @@ export function getPortalUrl(type: 'root' | 'admin' | 'accounts' | 'pos' | 'staf
 
   return `${protocol}//${type}.${baseDomain}${normalizedPath}`;
 }
+
