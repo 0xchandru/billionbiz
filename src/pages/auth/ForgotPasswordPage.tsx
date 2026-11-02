@@ -12,13 +12,23 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    const trimmed = (email || '').trim();
+    if (!trimmed) {
+      setError('Please enter your registered email address.');
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+    if (!emailRegex.test(trimmed) || !trimmed.includes('.')) {
+      setError('Please enter a valid email address (e.g. name@example.com).');
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      await api.forgotPassword(email);
+      await api.forgotPassword(trimmed);
       setSubmitted(true);
     } catch (err: any) {
       setError(err.message || 'Unable to process reset request. Please verify your email address.');

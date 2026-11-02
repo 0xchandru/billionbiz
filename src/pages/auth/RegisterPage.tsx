@@ -3,7 +3,9 @@ import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../api/services';
-import { CountryPhoneInput } from '../../components/auth/CountryPhoneInput';
+import { CountryPhoneInput, COUNTRIES } from '../../components/auth/CountryPhoneInput';
+import type { Country } from '../../components/auth/CountryPhoneInput';
+import { validateContactInput, validateOtpCode, validateStoreDetails } from '../../utils/validators';
 import { getPortalUrl } from '../../utils/subdomain';
 import {
   Store,
@@ -40,6 +42,7 @@ export default function RegisterPage() {
   // Phase 1 State (Contact)
   const [rawIdentifier, setRawIdentifier] = useState('');
   const [formattedIdentifier, setFormattedIdentifier] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
 
   // Phase 2 State (OTP)
   const [otpCode, setOtpCode] = useState('');
@@ -84,15 +87,19 @@ export default function RegisterPage() {
     setUiError(null);
     clearError();
 
-    if (!targetIdentifier) {
-      setUiError('Please enter your email or mobile number.');
+    const validation = validateContactInput(rawIdentifier, selectedCountry.code);
+    if (!validation.isValid) {
+      setUiError(validation.errorMessage || 'Please enter a valid mobile number or email.');
       return;
     }
+
+    const validatedIdentifier = validation.cleanValue;
+    setFormattedIdentifier(validatedIdentifier);
 
     setIsSubmitting(true);
     try {
       const res = await api.sendOtp({
-        identifier: targetIdentifier,
+        identifier: validatedIdentifier,
         type: 'REGISTER'
       });
 
@@ -115,15 +122,19 @@ export default function RegisterPage() {
     e.preventDefault();
     setUiError(null);
 
-    if (!otpCode || otpCode.trim().length < 4) {
-      setUiError('Please enter the verification code.');
+    const otpValidation = validateOtpCode(otpCode);
+    if (!otpValidation.isValid) {
+      setUiError(otpValidation.errorMessage || 'Please enter the 6-digit verification code.');
       return;
     }
+
+    const contactValidation = validateContactInput(rawIdentifier, selectedCountry.code);
+    const identifierToVerify = contactValidation.isValid ? contactValidation.cleanValue : targetIdentifier;
 
     setIsSubmitting(true);
     try {
       await api.verifyOtp({
-        identifier: targetIdentifier,
+        identifier: identifierToVerify,
         code: otpCode.trim(),
         type: 'REGISTER'
       });
@@ -142,13 +153,9 @@ export default function RegisterPage() {
     e.preventDefault();
     setUiError(null);
 
-    if (!storeName.trim()) {
-      setUiError('Please enter your store or business name.');
-      return;
-    }
-
-    if (!password || password.trim().length < 6) {
-      setUiError('Please create a password of at least 6 characters.');
+    const validation = validateStoreDetails(storeName, customSlug || derivedSlug, password);
+    if (!validation.isValid) {
+      setUiError(validation.errorMessage || 'Please complete all required fields.');
       return;
     }
 
@@ -161,9 +168,12 @@ export default function RegisterPage() {
     setUiError(null);
     clearError();
 
+    const contactValidation = validateContactInput(rawIdentifier, selectedCountry.code);
+    const finalIdentifier = contactValidation.isValid ? contactValidation.cleanValue : targetIdentifier;
+
     const res = await registerStreamlined({
       storeName: storeName.trim(),
-      identifier: targetIdentifier,
+      identifier: finalIdentifier,
       capabilityMode,
       password: password.trim()
     });
@@ -254,11 +264,13 @@ export default function RegisterPage() {
                 <label className="auth-label">Mobile Number or Email</label>
                 <CountryPhoneInput
                   value={rawIdentifier}
-                  onChange={(raw, _isMail, formatted) => {
+                  onChange={(raw, _isMail, formatted, country) => {
                     setRawIdentifier(raw);
                     setFormattedIdentifier(formatted);
+                    if (country) setSelectedCountry(country);
                   }}
-                  placeholder="name@business.com or mobile number"
+                  onCountryChange={setSelectedCountry}
+                  placeholder="Enter your mobile number or email"
                   autoFocus
                   required
                 />
@@ -266,7 +278,7 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !targetIdentifier}
+                disabled={isSubmitting || !rawIdentifier.trim()}
                 className="auth-btn-primary"
               >
                 {isSubmitting ? (
@@ -378,7 +390,7 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting || otpCode.length < 4}
+                disabled={isSubmitting || otpCode.replace(/[^0-9]/g, '').length !== 6}
                 className="auth-btn-primary"
               >
                 {isSubmitting ? (
