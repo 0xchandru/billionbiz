@@ -40,31 +40,14 @@ import POSPage from '../../pages/POS';
 import StorefrontPage from '../../pages/StorefrontPage';
 
 /**
- * Helper to perform full window redirection for cross-subdomain hops
+ * Clean silent redirect component for cross-origin domain hops
  */
 const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {
   React.useEffect(() => {
-    window.location.href = to;
+    window.location.replace(to);
   }, [to]);
 
-  return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f8fafc',
-        color: '#0f172a',
-        fontFamily: "'Inter', system-ui, sans-serif"
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <span style={{ fontSize: '14px', fontWeight: 500 }}>Redirecting to BillionBiz portal...</span>
-      </div>
-    </div>
-  );
+  return null;
 };
 
 /**
@@ -72,41 +55,20 @@ const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {
  *
  * Rules:
  * - Admin Login & Admin Dashboard are ONLY accessible on the `admin` subdomain.
- * - Other subdomains show dedicated 404s or redirect to admin login if appropriate.
+ * - On local/preview environments, routing is seamless with zero intermediate flashing screens.
  * - Marketing apex redirects /login to admin.chandraprakash.codes/login, and 404s on admin routes.
  * - Storefronts (*.stores) strictly serve store pages; admin login routes 404 here.
  */
 export const HostDispatcher: React.FC = () => {
   const subInfo = parseSubdomain();
-  const { isAuthenticated, isCheckingAuth } = useAuthStore();
-
-  if (isCheckingAuth && subInfo.type !== 'root' && subInfo.type !== 'store') {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#f8fafc',
-          color: '#0f172a',
-          fontFamily: "'Inter', system-ui, sans-serif"
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <span style={{ fontSize: '14px', fontWeight: 600 }}>Securing session...</span>
-        </div>
-      </div>
-    );
-  }
+  const { isAuthenticated } = useAuthStore();
 
   // 1. PUBLIC MARKETING WEBSITE (chandraprakash.codes / www)
   if (subInfo.type === 'root') {
     return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        {/* Auth entrypoints redirect to the official admin subdomain */}
+        {/* Auth entrypoints redirect cleanly to the official admin subdomain */}
         <Route path="/login" element={<ExternalRedirect to={getPortalUrl('admin', '/login')} />} />
         <Route path="/register" element={<ExternalRedirect to={getPortalUrl('admin', '/register')} />} />
         <Route path="/forgot-password" element={<ExternalRedirect to={getPortalUrl('admin', '/forgot-password')} />} />
@@ -159,7 +121,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 2. CENTRAL ACCOUNTS / IDENTITY -> Redirects to official Admin login
+  // 2. CENTRAL ACCOUNTS / IDENTITY -> Redirects cleanly to official Admin login
   if (subInfo.type === 'accounts') {
     return (
       <Routes>

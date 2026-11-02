@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   portalDestination: null,
   isAuthenticated: !!localStorage.getItem('billionbiz_token'),
   isLoading: false,
-  isCheckingAuth: true,
+  isCheckingAuth: false,
   error: null,
 
   login: async (email, password) => {
@@ -258,6 +258,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       return false;
     }
 
+    set({ isCheckingAuth: true });
     try {
       const res = await api.getMe();
       set({

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getPortalUrl } from '../utils/subdomain';
 import {
   Calendar,
   CreditCard,
@@ -15,6 +16,37 @@ import {
 export default function LandingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const loginUrl = getPortalUrl('admin', '/login');
+  const registerUrl = getPortalUrl('admin', '/register');
+  const forgotPasswordUrl = getPortalUrl('admin', '/forgot-password');
+  const adminUrl = getPortalUrl('admin', '/dashboard');
+  const posUrl = getPortalUrl('pos', '/');
+  const staffUrl = getPortalUrl('staff', '/');
+  const opsUrl = getPortalUrl('ops', '/');
+
+  const ActionLink = ({
+    to,
+    style,
+    children
+  }: {
+    to: string;
+    style?: React.CSSProperties;
+    children: React.ReactNode;
+  }) => {
+    if (to.startsWith('http')) {
+      return (
+        <a href={to} style={style}>
+          {children}
+        </a>
+      );
+    }
+    return (
+      <Link to={to} style={style}>
+        {children}
+      </Link>
+    );
+  };
 
   const toggleFaq = (idx: number) => {
     setOpenFaq(openFaq === idx ? null : idx);
@@ -85,8 +117,8 @@ export default function LandingPage() {
 
           {/* Action CTAs */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <Link
-              to="/login"
+            <ActionLink
+              to={loginUrl}
               style={{
                 padding: '0.55rem 1.15rem',
                 fontSize: '0.9rem',
@@ -100,9 +132,9 @@ export default function LandingPage() {
               }}
             >
               Log in
-            </Link>
-            <Link
-              to="/register"
+            </ActionLink>
+            <ActionLink
+              to={registerUrl}
               style={{
                 padding: '0.55rem 1.25rem',
                 fontSize: '0.9rem',
@@ -118,7 +150,7 @@ export default function LandingPage() {
               }}
             >
               Start free <ArrowRight size={16} />
-            </Link>
+            </ActionLink>
           </div>
         </div>
       </header>
@@ -179,8 +211,8 @@ export default function LandingPage() {
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
-            <Link
-              to="/register"
+            <ActionLink
+              to={registerUrl}
               style={{
                 backgroundColor: '#064652',
                 color: '#ffffff',
@@ -196,7 +228,7 @@ export default function LandingPage() {
               }}
             >
               Get started free <ArrowRight size={18} />
-            </Link>
+            </ActionLink>
             <a
               href="#plans"
               style={{
@@ -412,8 +444,8 @@ export default function LandingPage() {
                   <CheckCircle2 size={18} color="#447515" /> Standard Email Notifications
                 </li>
               </ul>
-              <Link
-                to="/register"
+              <ActionLink
+                to={registerUrl}
                 style={{
                   textAlign: 'center',
                   backgroundColor: '#ffffff',
@@ -426,7 +458,7 @@ export default function LandingPage() {
                 }}
               >
                 Register free store
-              </Link>
+              </ActionLink>
             </div>
 
             {/* Plan 2: Growth (Highlighted) */}
@@ -487,8 +519,8 @@ export default function LandingPage() {
                   <CheckCircle2 size={18} color="#447515" /> Transactional Outbox Email & SMS Alerts
                 </li>
               </ul>
-              <Link
-                to="/register"
+              <ActionLink
+                to={registerUrl}
                 style={{
                   textAlign: 'center',
                   backgroundColor: '#064652',
@@ -501,7 +533,7 @@ export default function LandingPage() {
                 }}
               >
                 Start 14-day free trial
-              </Link>
+              </ActionLink>
             </div>
 
             {/* Plan 3: Enterprise */}
@@ -531,8 +563,8 @@ export default function LandingPage() {
                   <CheckCircle2 size={18} color="#447515" /> Dedicated Priority Account Manager
                 </li>
               </ul>
-              <Link
-                to="/register"
+              <ActionLink
+                to={registerUrl}
                 style={{
                   textAlign: 'center',
                   backgroundColor: '#ffffff',
@@ -545,7 +577,7 @@ export default function LandingPage() {
                 }}
               >
                 Scale with Enterprise
-              </Link>
+              </ActionLink>
             </div>
           </div>
         </div>
@@ -627,8 +659,8 @@ export default function LandingPage() {
           <p style={{ fontSize: '1.15rem', color: '#99f6e4', marginBottom: '2.25rem', lineHeight: 1.6 }}>
             Join thousands of ambitious business owners operating on the official platform at chandraprakash.codes. Setup takes under 60 seconds.
           </p>
-          <Link
-            to="/register"
+          <ActionLink
+            to={registerUrl}
             style={{
               backgroundColor: '#447515',
               color: '#ffffff',
@@ -644,7 +676,7 @@ export default function LandingPage() {
             }}
           >
             Start free now <ArrowRight size={20} />
-          </Link>
+          </ActionLink>
         </div>
       </section>
 
@@ -669,10 +701,10 @@ export default function LandingPage() {
           <div>
             <h4 style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.85rem' }}>Platform Portals</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
-              <li><Link to="/dashboard" style={{ color: '#94a3b8', textDecoration: 'none' }}>Merchant Admin (admin)</Link></li>
-              <li><Link to="/pos" style={{ color: '#94a3b8', textDecoration: 'none' }}>Cashier POS (pos)</Link></li>
-              <li><Link to="/staff" style={{ color: '#94a3b8', textDecoration: 'none' }}>Staff Portal (staff)</Link></li>
-              <li><Link to="/ops" style={{ color: '#94a3b8', textDecoration: 'none' }}>Platform Operations (ops)</Link></li>
+              <li><ActionLink to={adminUrl} style={{ color: '#94a3b8', textDecoration: 'none' }}>Merchant Admin (admin)</ActionLink></li>
+              <li><ActionLink to={posUrl} style={{ color: '#94a3b8', textDecoration: 'none' }}>Cashier POS (pos)</ActionLink></li>
+              <li><ActionLink to={staffUrl} style={{ color: '#94a3b8', textDecoration: 'none' }}>Staff Portal (staff)</ActionLink></li>
+              <li><ActionLink to={opsUrl} style={{ color: '#94a3b8', textDecoration: 'none' }}>Platform Operations (ops)</ActionLink></li>
             </ul>
           </div>
 
@@ -689,9 +721,9 @@ export default function LandingPage() {
           <div>
             <h4 style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.85rem' }}>Authentication</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
-              <li><Link to="/login" style={{ color: '#94a3b8', textDecoration: 'none' }}>Merchant Sign In</Link></li>
-              <li><Link to="/register" style={{ color: '#94a3b8', textDecoration: 'none' }}>Register New Store</Link></li>
-              <li><Link to="/forgot-password" style={{ color: '#94a3b8', textDecoration: 'none' }}>Password Recovery</Link></li>
+              <li><ActionLink to={loginUrl} style={{ color: '#94a3b8', textDecoration: 'none' }}>Merchant Sign In</ActionLink></li>
+              <li><ActionLink to={registerUrl} style={{ color: '#94a3b8', textDecoration: 'none' }}>Register New Store</ActionLink></li>
+              <li><ActionLink to={forgotPasswordUrl} style={{ color: '#94a3b8', textDecoration: 'none' }}>Password Recovery</ActionLink></li>
             </ul>
           </div>
         </div>
