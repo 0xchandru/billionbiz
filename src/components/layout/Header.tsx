@@ -1,34 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { 
-  Menu, Bell, ChevronDown, 
+  Search, Globe, HelpCircle, Bell, ChevronDown, 
   LogOut, Store, Shield
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { useRealtime } from '../../hooks/useRealtime';
 import { api } from '../../api/services';
 import styles from './Header.module.css';
 
 const Header: FC = () => {
-  const { user, role, storeName, organizations, switchStore, logout } = useAuthStore();
+  const { user, role, logout } = useAuthStore();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isStoreSwitcherOpen, setIsStoreSwitcherOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [activeVersion, setActiveVersion] = useState<'v1' | 'v2'>('v2');
+  const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const profileRef = useRef<HTMLDivElement>(null);
-  const storeRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Close popovers on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setIsProfileOpen(false);
-      }
-      if (storeRef.current && !storeRef.current.contains(e.target as Node)) {
-        setIsStoreSwitcherOpen(false);
       }
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setIsNotificationsOpen(false);
@@ -38,7 +35,7 @@ const Header: FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // In-app notifications & Realtime live pulse
+  // Fetch In-app notifications
   const fetchNotifs = () => {
     api.getNotifications()
       .then((res) => {
@@ -52,11 +49,17 @@ const Header: FC = () => {
     fetchNotifs();
   }, []);
 
-  const { isConnected } = useRealtime((event) => {
-    if (event.type === 'notification.created') {
-      fetchNotifs();
-    }
-  });
+  // Keyboard shortcut Ctrl/Cmd+K to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleMarkRead = (id: string) => {
     api.markNotificationRead(id).then(() => {
@@ -65,161 +68,108 @@ const Header: FC = () => {
     }).catch(() => {});
   };
 
+  const displayName = user?.fullName || 'Chandru';
+  const roleDisplay = role === 'OWNER' ? 'Super Admin' : (role || 'Super Admin');
+  const userInitial = displayName.charAt(0).toUpperCase() || 'C';
+
   return (
     <header className={styles.header}>
+      {/* LEFT: BillionBiz Brand Logo */}
       <div className={styles.left}>
-        <button className={styles.iconBtn} aria-label="Toggle menu">
-          <Menu size={20} />
-        </button>
-
-        <div className={styles.logo}>
-          <div className={styles.logoMark}>B</div>
-          <span className={styles.logoText}>BillionBiz</span>
-          <span className={styles.versionBadge} title="BillionBiz V2 Enterprise">
-            V2
+        <a href="/dashboard" className={styles.logoLink}>
+          <div className={styles.logoMark}>
+            {/* Store Awning & 'b' Brand Icon matching attached design */}
+            <svg width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Lower Stem & Outer 'b' Bowl */}
+              <path d="M6 4V24" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
+              {/* Awning Yellow Canopy Arch */}
+              <path d="M6 14C6 10.5 9 8 14 8C19 8 22 10.5 22 14L21 16C21 17 19.5 17.5 18 17C16.5 16.5 15.5 17.5 14 17.5C12.5 17.5 11.5 16.5 10 17C8.5 17.5 7 17 7 16L6 14Z" fill="#eab308" />
+              {/* Bottom Green Curve */}
+              <path d="M6 18C8 21.5 11 23 15 23C19.5 23 22 20.5 22 17.5" stroke="#74c043" strokeWidth="2.8" strokeLinecap="round" />
+            </svg>
+          </div>
+          <span className={styles.logoText}>
+            <span className={styles.logoBillion}>billion</span>
+            <span className={styles.logoBiz}>biz</span>
           </span>
-        </div>
+        </a>
+      </div>
 
-        {/* Store & Workspace Switcher */}
-        <div ref={storeRef} style={{ position: 'relative', marginLeft: '1rem' }}>
-          <button
-            type="button"
-            onClick={() => setIsStoreSwitcherOpen(!isStoreSwitcherOpen)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              backgroundColor: '#f1f5f9',
-              border: '1px solid #cbd5e1',
-              borderRadius: '6px',
-              padding: '0.35rem 0.75rem',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              color: '#064652',
-              cursor: 'pointer'
-            }}
-          >
-            <Store size={15} color="#064652" />
-            <span>{storeName || 'Primary Store'}</span>
-            <ChevronDown size={14} color="#64748b" />
-          </button>
-
-          {isStoreSwitcherOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                marginTop: '0.4rem',
-                width: '240px',
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
-                zIndex: 100,
-                padding: '0.5rem 0'
-              }}
-            >
-              <div style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
-                Active Workspaces
-              </div>
-              {organizations && organizations.length > 0 ? (
-                organizations.map((org: any, idx: number) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      switchStore(org.store_id, org.organization_id);
-                      setIsStoreSwitcherOpen(false);
-                    }}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      padding: '0.5rem 0.85rem',
-                      border: 'none',
-                      backgroundColor: 'transparent',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '0.85rem'
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                  >
-                    <span style={{ fontWeight: 600, color: '#0f172a' }}>{org.store_name || org.organization_name}</span>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Role: {org.role || 'OWNER'}</span>
-                  </button>
-                ))
-              ) : (
-                <div style={{ padding: '0.5rem 0.85rem', fontSize: '0.85rem', color: '#64748b' }}>
-                  {storeName || 'Default Store'}
-                </div>
-              )}
-            </div>
-          )}
+      {/* CENTER: Rounded Quick Find Search Pill with ⌘K Badge */}
+      <div className={styles.center}>
+        <div className={styles.searchBar} onClick={() => searchInputRef.current?.focus()}>
+          <Search size={15} className={styles.searchIcon} />
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Quick find..."
+            className={styles.searchInput}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <kbd className={styles.kbdBadge}>⌘K</kbd>
         </div>
       </div>
-      
+
+      {/* RIGHT: Topbar Controls matching attached design */}
       <div className={styles.right}>
-        {/* Realtime Live Pulse Indicator */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            fontSize: '0.8rem',
-            color: isConnected ? '#447515' : '#b45309',
-            fontWeight: 600,
-            padding: '0.2rem 0.6rem',
-            backgroundColor: isConnected ? '#f0fdf4' : '#fffbeb',
-            borderRadius: '9999px',
-            border: `1px solid ${isConnected ? '#bbf7d0' : '#fde68a'}`
-          }}
-          title={isConnected ? 'Connected to BillionBiz Realtime WebSocket' : 'Connecting to Realtime stream...'}
-        >
-          <span
-            style={{
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              backgroundColor: isConnected ? '#22c55e' : '#f59e0b'
-            }}
-          />
-          <span>{isConnected ? 'Live Sync' : 'Connecting'}</span>
+        {/* Divider */}
+        <div className={styles.divider} />
+
+        {/* Version Switcher Pill (v1 / v2) */}
+        <div className={styles.versionPill} role="group" aria-label="Version switcher">
+          <button
+            type="button"
+            className={`${styles.vBtn} ${activeVersion === 'v1' ? styles.vActive : ''}`}
+            onClick={() => setActiveVersion('v1')}
+          >
+            v1
+          </button>
+          <button
+            type="button"
+            className={`${styles.vBtn} ${activeVersion === 'v2' ? styles.vActive : ''}`}
+            onClick={() => setActiveVersion('v2')}
+          >
+            v2
+          </button>
         </div>
 
-        {/* Notifications Popover */}
+        {/* Language Selector */}
+        <button type="button" className={styles.langBtn} title="Language selector">
+          <Globe size={16} className={styles.iconWhite} />
+          <span className={styles.langText}>EN</span>
+          <ChevronDown size={13} className={styles.iconMuted} />
+        </button>
+
+        {/* Help Button */}
+        <button
+          type="button"
+          className={styles.iconBtn}
+          title="Help & Documentation"
+          onClick={() => window.open('https://billionbiz.codes', '_blank')}
+          aria-label="Help"
+        >
+          <HelpCircle size={18} className={styles.iconWhite} />
+        </button>
+
+        {/* Notifications Popover Button */}
         <div ref={notifRef} style={{ position: 'relative' }}>
           <button 
-            className={styles.notificationBtn} 
+            type="button"
+            className={styles.iconBtn} 
             aria-label="Notifications"
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
           >
-            <Bell size={20} />
+            <Bell size={18} className={styles.iconWhite} />
             {unreadCount > 0 && <span className={styles.badge}>{unreadCount}</span>}
           </button>
 
           {isNotificationsOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: '0.5rem',
-                width: '320px',
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '10px',
-                boxShadow: '0 12px 25px -5px rgba(0,0,0,0.12)',
-                zIndex: 100,
-                overflow: 'hidden'
-              }}
-            >
-              <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#064652' }}>Notifications</span>
+            <div className={styles.notificationsMenu}>
+              <div className={styles.notifHeader}>
+                <span className={styles.notifTitle}>Notifications</span>
                 {unreadCount > 0 && (
-                  <span style={{ fontSize: '0.75rem', backgroundColor: '#e6fffa', color: '#064652', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 600 }}>
+                  <span className={styles.notifBadge}>
                     {unreadCount} unread
                   </span>
                 )}
@@ -253,96 +203,51 @@ const Header: FC = () => {
             </div>
           )}
         </div>
-        
-        {/* User Profile & Secure Sign Out Dropdown */}
+
+        {/* Divider */}
+        <div className={styles.divider} />
+
+        {/* User Profile Pill matching attached image */}
         <div ref={profileRef} style={{ position: 'relative' }}>
           <div 
-            className={styles.profile} 
+            className={styles.profileBtn} 
             tabIndex={0} 
             role="button" 
             aria-label="User profile"
             onClick={() => setIsProfileOpen(!isProfileOpen)}
           >
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#064652',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '0.9rem'
-              }}
-            >
-              {user?.fullName?.charAt(0) || 'M'}
+            <div className={styles.avatarCircle}>
+              {userInitial}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', lineHeight: 1.2 }}>
-              <span className={styles.profileName}>{user?.fullName || 'Merchant Admin'}</span>
-              <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
-                {role || 'OWNER'}
-              </span>
+            <div className={styles.userTextCol}>
+              <div className={styles.userNameRow}>
+                <span className={styles.userName}>{displayName}</span>
+                <ChevronDown size={13} className={styles.iconMuted} />
+              </div>
+              <span className={styles.userRole}>{roleDisplay}</span>
             </div>
-            <ChevronDown size={14} />
           </div>
 
           {isProfileOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: '0.5rem',
-                width: '230px',
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '10px',
-                boxShadow: '0 10px 20px -5px rgba(0,0,0,0.1)',
-                zIndex: 100,
-                overflow: 'hidden',
-                padding: '0.5rem 0'
-              }}
-            >
-              <div style={{ padding: '0.65rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>{user?.fullName || 'Merchant'}</div>
+            <div className={styles.profileMenu}>
+              <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>{displayName}</div>
                 <div style={{ fontSize: '0.75rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email || 'admin@chandraprakash.codes'}</div>
-                <div style={{ display: 'inline-block', marginTop: '0.35rem', backgroundColor: '#e6fffa', color: '#064652', fontSize: '0.68rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
-                  ROLE: {role || 'OWNER'}
+                <div style={{ display: 'inline-block', marginTop: '0.35rem', backgroundColor: '#e6fffa', color: '#083e47', fontSize: '0.68rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                  ROLE: {roleDisplay}
                 </div>
               </div>
 
               <a
                 href="/settings"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.6rem 1rem',
-                  fontSize: '0.85rem',
-                  color: '#334155',
-                  textDecoration: 'none'
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                className={styles.menuItem}
               >
                 <Store size={15} /> Store Settings
               </a>
 
               <a
                 href="/pos"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.6rem 1rem',
-                  fontSize: '0.85rem',
-                  color: '#334155',
-                  textDecoration: 'none'
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                className={styles.menuItem}
               >
                 <Shield size={15} /> Open Cashier POS
               </a>
@@ -353,24 +258,9 @@ const Header: FC = () => {
               <button
                 type="button"
                 onClick={() => logout()}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.6rem 1rem',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  color: '#dc2626',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  textAlign: 'left'
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fef2f2')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                className={styles.signOutBtn}
               >
-                <LogOut size={15} /> Sign out of workspace
+                <LogOut size={15} /> Sign out
               </button>
             </div>
           )}
