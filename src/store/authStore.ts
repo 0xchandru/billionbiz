@@ -21,12 +21,20 @@ export interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<{ success: boolean; destination?: string; error?: string }>;
+  loginUnified: (identifier: string, authFactor: { password?: string; otp?: string }) => Promise<{ success: boolean; destination?: string; error?: string }>;
   register: (payload: {
     fullName: string;
     email: string;
     password: string;
     storeName: string;
     capabilityMode?: string;
+  }) => Promise<{ success: boolean; destination?: string; error?: string }>;
+  registerStreamlined: (data: {
+    identifier: string;
+    storeName: string;
+    capabilityMode?: string;
+    password?: string;
+    fullName?: string;
   }) => Promise<{ success: boolean; destination?: string; error?: string }>;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
@@ -89,6 +97,90 @@ export const useAuthStore = create<AuthState>((set) => ({
       return { success: true, destination: portalDestination?.path || '/dashboard' };
     } catch (err: any) {
       const message = err.message || 'Login failed. Please check your credentials.';
+      set({ isLoading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
+  loginUnified: async (identifier, authFactor) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res: AuthResponse = await api.loginUnified({
+        identifier,
+        password: authFactor.password,
+        otp: authFactor.otp
+      });
+      const { token, user, organizations, portalDestination } = res;
+
+      const primaryOrg = organizations && organizations.length > 0 ? organizations[0] : null;
+      const orgId = primaryOrg?.organization_id || 'org-billionbiz-default';
+      const storeId = primaryOrg?.store_id || 'store-shoum-default';
+      const storeName = primaryOrg?.store_name || 'My Store';
+      const storeSlug = primaryOrg?.store_slug || 'my-store';
+      const role = primaryOrg?.role || 'OWNER';
+
+      localStorage.setItem('billionbiz_token', token);
+      localStorage.setItem('billionbiz_org_id', orgId);
+      localStorage.setItem('billionbiz_store_id', storeId);
+
+      set({
+        token,
+        user,
+        role,
+        organizationId: orgId,
+        organizationName: primaryOrg?.organization_name || 'Default Organization',
+        storeId,
+        storeName,
+        storeSlug,
+        organizations: organizations || [],
+        portalDestination: portalDestination || null,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      });
+
+      return { success: true, destination: portalDestination?.path || '/dashboard' };
+    } catch (err: any) {
+      const message = err.message || 'Login failed. Please check your details.';
+      set({ isLoading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
+  registerStreamlined: async (payload) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res: AuthResponse = await api.registerStreamlined(payload);
+      const { token, user, organization, store, portalDestination } = res;
+
+      const orgId = organization?.id || 'org-billionbiz-default';
+      const storeId = store?.id || 'store-shoum-default';
+      const storeName = store?.name || payload.storeName;
+      const storeSlug = store?.slug || payload.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+      localStorage.setItem('billionbiz_token', token);
+      localStorage.setItem('billionbiz_org_id', orgId);
+      localStorage.setItem('billionbiz_store_id', storeId);
+
+      set({
+        token,
+        user,
+        role: 'OWNER',
+        organizationId: orgId,
+        organizationName: organization?.name || payload.storeName,
+        storeId,
+        storeName,
+        storeSlug,
+        organizations: [{ organization_id: orgId, organization_name: payload.storeName, store_id: storeId, store_name: storeName }],
+        portalDestination: portalDestination || null,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      });
+
+      return { success: true, destination: '/dashboard' };
+    } catch (err: any) {
+      const message = err.message || 'Registration failed. Please try again.';
       set({ isLoading: false, error: message });
       return { success: false, error: message };
     }

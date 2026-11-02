@@ -45,7 +45,52 @@ export interface AuthResponse {
 }
 
 export const api = {
-  // Authentication & Identity
+  // Authentication & Identity (Streamlined & Multi-Factor)
+  sendOtp: (data: { identifier: string; type?: 'REGISTER' | 'LOGIN' }) =>
+    apiClient<{
+      success: boolean;
+      message: string;
+      channel: 'EMAIL' | 'SMS';
+      identifier: string;
+      expiresInSeconds: number;
+      devOtpPreview?: string;
+    }>('/auth/otp/send', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  verifyOtp: (data: { identifier: string; code: string; type?: 'REGISTER' | 'LOGIN' }) =>
+    apiClient<{
+      success: boolean;
+      verified?: boolean;
+      token?: string;
+      user?: UserProfile;
+      organizations?: any[];
+      portalDestination?: { portal: string; url: string; path: string };
+      message: string;
+    }>('/auth/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  loginUnified: (data: { identifier: string; password?: string; otp?: string }) =>
+    apiClient<AuthResponse>('/auth/login-unified', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  registerStreamlined: (data: {
+    identifier: string;
+    storeName: string;
+    capabilityMode?: string;
+    password?: string;
+    fullName?: string;
+  }) =>
+    apiClient<AuthResponse>('/auth/register-streamlined', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
   login: (credentials: { email: string; password: string }) =>
     apiClient<AuthResponse>('/auth/login', {
       method: 'POST',

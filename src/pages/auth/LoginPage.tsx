@@ -1,288 +1,446 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { api } from '../../api/services';
+import { CountryPhoneInput } from '../../components/auth/CountryPhoneInput';
+import {
+  Store,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ShieldCheck,
+  AlertCircle,
+  RefreshCw,
+  Sparkles,
+  KeyRound,
+  MessageSquare
+} from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading, error, clearError } = useAuthStore();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const { loginUnified, isLoading: isAuthLoading, error: authError, clearError } = useAuthStore();
 
   // Read return url if redirected from protected route
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
-  const handleSubmit = async (e: FormEvent) => {
+  // Phases: 1 = Single Input (Email or Mobile), 2 = Authentication (Password or OTP)
+  const [phase, setPhase] = useState<1 | 2>(1);
+  const [authMode, setAuthMode] = useState<'PASSWORD' | 'OTP'>('PASSWORD');
+
+  // Input states
+  const [rawIdentifier, setRawIdentifier] = useState('');
+  const [isEmail, setIsEmail] = useState(true);
+  const [formattedIdentifier, setFormattedIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // UI states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uiError, setUiError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [devOtpNotification, setDevOtpNotification] = useState<string | null>(null);
+
+  // Countdown timer for resending OTP
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  // Phase 1: Submit identifier to proceed to authentication phase
+  const handleIdentifierSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setUiError(null);
     clearError();
 
-    if (!email || !password) return;
+    const target = formattedIdentifier || rawIdentifier;
+    if (!target || target.trim().length === 0) {
+      setUiError('Please enter your email or mobile number.');
+      return;
+    }
 
-    const res = await login(email, password);
-    if (res.success) {
-      navigate(res.destination || from, { replace: true });
+    setPhase(2);
+    setAuthMode('PASSWORD'); // Default to password
+  };
+
+  // Switch to OTP login mode and send OTP
+  const handleSwitchToOtp = async () => {
+    setUiError(null);
+    clearError();
+    setIsSubmitting(true);
+
+    const target = formattedIdentifier || rawIdentifier;
+    try {
+      const res = await api.sendOtp({
+        identifier: target,
+        type: 'LOGIN'
+      });
+
+      if (res.devOtpPreview) {
+        setDevOtpNotification(`[Dev Mode] Verification code: ${res.devOtpPreview}`);
+        setOtpCode(res.devOtpPreview);
+      }
+
+      setResendCooldown(45);
+      setAuthMode('OTP');
+    } catch (err: any) {
+      setUiError(err.message || 'Failed to send OTP code. Please check your credentials.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Resend OTP code
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    await handleSwitchToOtp();
+  };
+
+  // Phase 2: Submit password or OTP to authenticate
+  const handleAuthSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setUiError(null);
+    clearError();
+
+    const target = formattedIdentifier || rawIdentifier;
+
+    if (authMode === 'PASSWORD') {
+      if (!password) {
+        setUiError('Please enter your account password.');
+        return;
+      }
+      const res = await loginUnified(target, { password });
+      if (res.success) {
+        navigate(res.destination || from, { replace: true });
+      } else if (res.error) {
+        setUiError(res.error);
+      }
+    } else {
+      if (!otpCode || otpCode.trim().length < 4) {
+        setUiError('Please enter the verification code sent to your device.');
+        return;
+      }
+      const res = await loginUnified(target, { otp: otpCode.trim() });
+      if (res.success) {
+        navigate(res.destination || from, { replace: true });
+      } else if (res.error) {
+        setUiError(res.error);
+      }
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f8fafc',
-        padding: '1.5rem',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}
-    >
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center px-4 py-8 text-slate-900 dark:text-slate-100 font-sans">
       {/* Brand Header */}
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', marginBottom: '2rem' }}>
-        <div
-          style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            backgroundColor: '#064652',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ffffff',
-            fontWeight: 800,
-            fontSize: '1.3rem',
-            boxShadow: '0 4px 10px rgba(6, 70, 82, 0.25)'
-          }}
-        >
-          B
+      <Link to="/" className="flex items-center gap-2.5 mb-6 text-decoration-none group">
+        <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition">
+          <Store className="w-5 h-5" />
         </div>
-        <div>
-          <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#064652', letterSpacing: '-0.02em' }}>
-            Billion<span style={{ color: '#447515' }}>Biz</span>
-          </span>
-          <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
-            ACCOUNTS & SECURE SIGN IN
-          </span>
+        <div className="flex flex-col">
+          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">BillionBiz</span>
+          <span className="text-[10px] text-blue-600 font-semibold uppercase tracking-wider">Merchant Portal</span>
         </div>
       </Link>
 
       {/* Main Login Card */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '440px',
-          backgroundColor: '#ffffff',
-          borderRadius: '16px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)',
-          padding: '2.5rem 2rem'
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#064652' }}>Welcome back</h1>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            Sign in to access your BillionBiz workspaces
-          </p>
-        </div>
-
-        {error && (
-          <div
-            style={{
-              backgroundColor: '#fef2f2',
-              color: '#991b1b',
-              padding: '0.75rem 1rem',
-              borderRadius: '8px',
-              border: '1px solid #fecaca',
-              fontSize: '0.875rem',
-              marginBottom: '1.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            <AlertCircle size={18} />
-            <span>{error}</span>
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 transition-all">
+        {/* Error Alert */}
+        {(uiError || authError) && (
+          <div className="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 flex items-start gap-2.5 text-red-600 dark:text-red-400 text-xs">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{uiError || authError}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {/* Email input */}
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '0.4rem' }}>
-              Work Email
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@business.com"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-              <Mail size={18} color="#94a3b8" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-            </div>
+        {/* Dev OTP Preview */}
+        {devOtpNotification && (
+          <div className="mb-5 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+            <span className="font-mono font-medium">{devOtpNotification}</span>
           </div>
+        )}
 
-          {/* Password input */}
+        {/* PHASE 1: SINGLE INPUT FIELD (MOBILE NUMBER OR EMAIL) */}
+        {phase === 1 && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                Password
-              </label>
-              <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: '#064652', fontWeight: 600, textDecoration: 'none' }}>
-                Forgot password?
-              </Link>
+            <div className="mb-5">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">Sign In to Your Store</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Enter your mobile number or email address to access your merchant dashboard.
+              </p>
             </div>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 2.5rem 0.75rem 2.5rem',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.95rem',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-              <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+
+            <form onSubmit={handleIdentifierSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Mobile Number or Email
+                </label>
+                <CountryPhoneInput
+                  value={rawIdentifier}
+                  onChange={(raw, isMail, formatted) => {
+                    setRawIdentifier(raw);
+                    setIsEmail(isMail);
+                    setFormattedIdentifier(formatted);
+                  }}
+                  placeholder="name@business.com or mobile number"
+                  autoFocus
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={!rawIdentifier.trim()}
+                className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-500/20 disabled:opacity-50 transition flex items-center justify-center gap-2"
+              >
+                <span>Continue</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+
+            {/* Social Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-slate-900 px-3 text-slate-400 font-medium tracking-wider">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            {/* Continue with Google */}
+            <button
+              type="button"
+              onClick={() => {
+                setUiError('Google Sign-In ready. In production, configure Google Client ID.');
+              }}
+              className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition flex items-center justify-center gap-3 shadow-sm"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+          </div>
+        )}
+
+        {/* PHASE 2: PASSWORD OR OTP AUTHENTICATION */}
+        {phase === 2 && (
+          <div>
+            {/* Account pill with change button */}
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 mb-5 text-xs">
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-slate-500 dark:text-slate-400">Signing in as:</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                  {formattedIdentifier || rawIdentifier}
+                </span>
+              </div>
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '0.85rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#94a3b8'
+                onClick={() => {
+                  setPhase(1);
+                  setPassword('');
+                  setOtpCode('');
                 }}
+                className="text-blue-600 dark:text-blue-400 font-semibold hover:underline shrink-0 pl-2"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                Change
               </button>
             </div>
+
+            {/* Mode A: Password Authentication */}
+            {authMode === 'PASSWORD' && (
+              <form onSubmit={handleAuthSubmit} className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                      Password
+                    </label>
+                    <Link
+                      to="/forgot-password"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isAuthLoading || !password}
+                  className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-500/20 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                >
+                  {isAuthLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    <>
+                      Sign In with Password
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+
+                {/* Login via OTP instead button */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={handleSwitchToOtp}
+                    className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                        <span>Sending OTP Code...</span>
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Login via OTP instead</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Mode B: OTP Authentication */}
+            {authMode === 'OTP' && (
+              <form onSubmit={handleAuthSubmit} className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                      Enter 6-Digit OTP Code
+                    </label>
+                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+                      Sent via {isEmail ? 'Email' : 'SMS'}
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="123456"
+                    className="w-full text-center text-2xl font-mono tracking-widest py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    autoFocus
+                  />
+                  <div className="flex items-center justify-between text-xs mt-2 px-1">
+                    <span className="text-slate-400">Code expires in 10 minutes</span>
+                    <button
+                      type="button"
+                      disabled={resendCooldown > 0}
+                      onClick={handleResendOtp}
+                      className="text-blue-600 font-semibold disabled:opacity-50 disabled:text-slate-400 hover:underline"
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isAuthLoading || otpCode.length < 4}
+                  className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-500/20 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                >
+                  {isAuthLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Verifying & Signing In...
+                    </>
+                  ) : (
+                    <>
+                      Verify & Sign In
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+
+                {/* Login with Password instead button */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('PASSWORD');
+                      setOtpCode('');
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <KeyRound className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Login with password instead</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
+        )}
 
-          {/* Remember Me */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <input
-              type="checkbox"
-              id="remember"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              style={{ accentColor: '#064652', width: '16px', height: '16px' }}
-            />
-            <label htmlFor="remember" style={{ fontSize: '0.85rem', color: '#64748b', cursor: 'pointer' }}>
-              Keep me signed in on this device
-            </label>
-          </div>
-
-          {/* Sign In Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            style={{
-              marginTop: '0.5rem',
-              backgroundColor: '#064652',
-              color: '#ffffff',
-              padding: '0.85rem',
-              borderRadius: '8px',
-              border: 'none',
-              fontSize: '1rem',
-              fontWeight: 700,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 10px rgba(6, 70, 82, 0.25)',
-              opacity: isLoading ? 0.75 : 1
-            }}
-          >
-            {isLoading ? 'Authenticating...' : 'Sign in to workspace'} <ArrowRight size={18} />
-          </button>
-        </form>
-
-        {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', margin: '1.75rem 0', color: '#94a3b8' }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }}></div>
-          <span style={{ padding: '0 0.75rem', fontSize: '0.8rem', textTransform: 'uppercase' }}>or continue with</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#e2e8f0' }}></div>
-        </div>
-
-        {/* Google OIDC Sign in */}
-        <button
-          type="button"
-          onClick={() => alert('Google OIDC is active. Please authenticate using email credentials or verified enterprise identity.')}
-          style={{
-            width: '100%',
-            backgroundColor: '#ffffff',
-            border: '1px solid #cbd5e1',
-            borderRadius: '8px',
-            padding: '0.75rem',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            color: '#334155',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.6rem'
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 9.99 0 12s.45 3.83 1.25 5.42l4.03-3.15z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-            />
-          </svg>
-          Google Workspace Account
-        </button>
-
-        {/* Security Badge */}
-        <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-          <ShieldCheck size={16} color="#447515" /> Protected by 256-bit encryption & TLS 1.3
+        {/* Security Assurance */}
+        <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Encrypted with TLS 1.3 & Multi-Tenant Data Isolation</span>
         </div>
       </div>
 
-      {/* Switch to Register */}
-      <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: '#64748b' }}>
-        Don't have a BillionBiz store yet?{' '}
-        <Link to="/register" style={{ color: '#064652', fontWeight: 700, textDecoration: 'none' }}>
-          Start free
+      {/* DISTINCT CARD BELOW LOGIN FORM: REGISTER STORE / GET STARTED */}
+      <div className="w-full max-w-md mt-5 p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-center sm:text-left">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Don't have a store yet?</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Launch your store or booking platform in 2 minutes.
+          </p>
+        </div>
+        <Link
+          to="/register"
+          className="shrink-0 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+        >
+          <span>Get Started</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     </div>
