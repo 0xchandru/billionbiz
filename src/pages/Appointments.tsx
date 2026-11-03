@@ -18,7 +18,7 @@ const formatCurrency = (minor: number) => {
 };
 
 export const AppointmentsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'timeline' | 'list' | 'upcoming' | 'completed' | 'cancelled'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'list'>('timeline');
 
   // Bookings & Catalog State
   const [bookings, setBookings] = useState<any[]>([]);
@@ -168,16 +168,10 @@ export const AppointmentsPage: React.FC = () => {
     return bDate === selectedDate;
   });
 
-  const filteredBookings = bookings.filter((b) => {
-    if (activeTab === 'upcoming') return b.status === 'CONFIRMED' || b.status === 'PENDING';
-    if (activeTab === 'completed') return b.status === 'COMPLETED';
-    if (activeTab === 'cancelled') return b.status === 'CANCELLED';
-    return true;
-  });
+  const filteredBookings = bookings;
 
   const countUpcoming = bookings.filter((b) => b.status === 'CONFIRMED' || b.status === 'PENDING').length;
   const countCompleted = bookings.filter((b) => b.status === 'COMPLETED').length;
-  const countCancelled = bookings.filter((b) => b.status === 'CANCELLED').length;
 
   return (
     <div style={{ padding: '28px 32px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
@@ -273,7 +267,7 @@ export const AppointmentsPage: React.FC = () => {
             cursor: 'pointer'
           }}
         >
-          Timeline Grid (IST)
+          Timeline Schedule Grid (IST)
         </button>
         <button
           onClick={() => setActiveTab('list')}
@@ -288,52 +282,7 @@ export const AppointmentsPage: React.FC = () => {
             cursor: 'pointer'
           }}
         >
-          All Bookings List ({bookings.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('upcoming')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'upcoming' ? 600 : 500,
-            color: activeTab === 'upcoming' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'upcoming' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Upcoming ({countUpcoming})
-        </button>
-        <button
-          onClick={() => setActiveTab('completed')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'completed' ? 600 : 500,
-            color: activeTab === 'completed' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'completed' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Completed ({countCompleted})
-        </button>
-        <button
-          onClick={() => setActiveTab('cancelled')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'cancelled' ? 600 : 500,
-            color: activeTab === 'cancelled' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'cancelled' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Cancelled ({countCancelled})
+          Bookings Directory ({bookings.length})
         </button>
       </div>
 
@@ -522,7 +471,7 @@ export const AppointmentsPage: React.FC = () => {
           {filteredBookings.length === 0 ? (
             <EmptyState
               icon={CalendarDays}
-              title={`No ${activeTab} bookings found`}
+              title="No bookings recorded yet"
               description="When appointments are scheduled by clients or counter staff, they will list here."
               actionLabel="Create Booking"
               onAction={() => setIsBookModalOpen(true)}

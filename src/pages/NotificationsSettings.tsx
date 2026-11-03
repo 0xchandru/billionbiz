@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 
 export const NotificationsSettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'customer' | 'merchant' | 'sender'>('customer');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [testSent, setTestSent] = useState(false);
 
@@ -44,7 +43,7 @@ export const NotificationsSettingsPage: React.FC = () => {
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1100px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       {/* Breadcrumb & Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748b', marginBottom: '6px' }}>
             <span>Settings</span>
@@ -119,83 +118,17 @@ export const NotificationsSettingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Local Page Sub-tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '6px',
-        borderBottom: '1px solid #e2e8f0',
-        marginBottom: '24px'
-      }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('customer')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'customer' ? 700 : 500,
-            color: activeTab === 'customer' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'customer' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Mail size={15} />
-          <span>Customer Notifications</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('merchant')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'merchant' ? 700 : 500,
-            color: activeTab === 'merchant' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'merchant' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Bell size={15} />
-          <span>Merchant Alerts</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('sender')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'sender' ? 700 : 500,
-            color: activeTab === 'sender' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'sender' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Send size={15} />
-          <span>Email Sender & Domain</span>
-        </button>
-      </div>
-
-      {/* TAB 1: CUSTOMER NOTIFICATIONS */}
-      {activeTab === 'customer' && (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Section 1: Customer Notifications */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-            Automated Customer Transactional Emails
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Mail size={18} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+              Automated Customer Transactional Emails
+            </h3>
+          </div>
           <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
             Real-time messages sent to buyers automatically via <strong>Resend</strong> when order or booking statuses change.
           </p>
@@ -254,14 +187,17 @@ export const NotificationsSettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
 
-      {/* TAB 2: MERCHANT ALERTS */}
-      {activeTab === 'merchant' && (
+        {/* Section 2: Merchant Alerts */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-            Merchant Operational Alerts
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Bell size={18} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+              Merchant Operational Alerts
+            </h3>
+          </div>
           <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
             Receive instant alerts to fulfill orders promptly and keep inventory in stock.
           </p>
@@ -319,18 +255,21 @@ export const NotificationsSettingsPage: React.FC = () => {
             </label>
           </div>
         </div>
-      )}
 
-      {/* TAB 3: SENDER DOMAIN */}
-      {activeTab === 'sender' && (
+        {/* Section 3: Sender Domain */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
             <div>
-              <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-                Sender Identity & DKIM/SPF Verification
-              </h3>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '13.5px' }}>
-                Outbound emails are dispatched securely via <strong>Resend</strong> infrastructure with 100% deliverability.
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Send size={18} />
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+                  Sender Identity & DKIM/SPF Verification
+                </h3>
+              </div>
+              <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13.5px' }}>
+                Outbound emails are dispatched securely via <strong>Resend</strong> infrastructure with high deliverability.
               </p>
             </div>
 
@@ -356,7 +295,7 @@ export const NotificationsSettingsPage: React.FC = () => {
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                 Sender From Name
@@ -401,7 +340,31 @@ export const NotificationsSettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+
+        {/* Bottom Save Bar */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '8px' }}>
+          <button
+            onClick={handleSave}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: '#083e47',
+              color: '#ffffff',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}
+          >
+            <Save size={16} />
+            <span>Save Notification Settings</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -9,7 +9,6 @@ import {
 import EmptyState from '../components/common/EmptyState';
 
 export const QuotesPage: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'draft' | 'sent' | 'accepted' | 'expired'>('all');
   const [quotes, setQuotes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -70,13 +69,7 @@ export const QuotesPage: FC = () => {
       q.quote_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       q.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       q.customer_email?.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (activeTab === 'draft') return q.status === 'DRAFT';
-    if (activeTab === 'sent') return q.status === 'SENT';
-    if (activeTab === 'accepted') return q.status === 'ACCEPTED';
-    if (activeTab === 'expired') return q.status === 'EXPIRED';
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -84,6 +77,11 @@ export const QuotesPage: FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
+            <span>Orders</span>
+            <span>/</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Quotes & Estimates</span>
+          </div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <FileText size={26} color="#0d9488" />
             Quotes & Price Estimates
@@ -112,70 +110,6 @@ export const QuotesPage: FC = () => {
         >
           <Plus size={16} />
           Create Quote
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
-        <button
-          onClick={() => setActiveTab('all')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'all' ? 600 : 500,
-            color: activeTab === 'all' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'all' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          All Quotes ({quotes.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('sent')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'sent' ? 600 : 500,
-            color: activeTab === 'sent' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'sent' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Sent to Client
-        </button>
-        <button
-          onClick={() => setActiveTab('accepted')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'accepted' ? 600 : 500,
-            color: activeTab === 'accepted' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'accepted' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Accepted
-        </button>
-        <button
-          onClick={() => setActiveTab('draft')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'draft' ? 600 : 500,
-            color: activeTab === 'draft' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'draft' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Drafts
         </button>
       </div>
 

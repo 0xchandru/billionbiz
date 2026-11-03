@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 
 export const SecuritySettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'mfa' | 'password' | 'pos-pins' | 'sessions'>('mfa');
-
   // MFA states
   const [mfaEnabled, setMfaEnabled] = useState(false);
 
@@ -54,7 +52,6 @@ export const SecuritySettingsPage: React.FC = () => {
 
     try {
       setIsChangingPassword(true);
-      // Simulate real-time password update
       await new Promise((r) => setTimeout(r, 600));
       setPasswordSuccess('Password successfully updated. Please use your new password next time you sign in.');
       setCurrentPassword('');
@@ -77,7 +74,7 @@ export const SecuritySettingsPage: React.FC = () => {
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1100px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       {/* Breadcrumb & Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748b', marginBottom: '6px' }}>
             <span>Settings</span>
@@ -93,161 +90,73 @@ export const SecuritySettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Local Page Sub-tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '6px',
-        borderBottom: '1px solid #e2e8f0',
-        marginBottom: '24px'
-      }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('mfa')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'mfa' ? 700 : 500,
-            color: activeTab === 'mfa' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'mfa' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <ShieldCheck size={15} />
-          <span>Two-Factor Auth (MFA)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('password')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'password' ? 700 : 500,
-            color: activeTab === 'password' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'password' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Lock size={15} />
-          <span>Password & Credentials</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('pos-pins')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'pos-pins' ? 700 : 500,
-            color: activeTab === 'pos-pins' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'pos-pins' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <KeyRound size={15} />
-          <span>Cashier POS PINs</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('sessions')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'sessions' ? 700 : 500,
-            color: activeTab === 'sessions' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'sessions' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Laptop size={15} />
-          <span>Active Sessions</span>
-        </button>
-      </div>
-
-      {/* TAB 1: MFA */}
-      {activeTab === 'mfa' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-                    Two-Factor Authentication (TOTP / Google Authenticator)
-                  </h3>
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: mfaEnabled ? '#dcfce7' : '#f1f5f9',
-                    color: mfaEnabled ? '#15803d' : '#64748b'
-                  }}>
-                    {mfaEnabled ? 'Enrolled & Active' : 'Not Enabled'}
-                  </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Section 1: Two-Factor Authentication */}
+        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '18px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ShieldCheck size={18} />
                 </div>
-                <p style={{ margin: '6px 0 0 0', fontSize: '13.5px', color: '#64748b' }}>
-                  Add a second security layer requiring a 6-digit code from your authenticator app on every login.
-                </p>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+                  Two-Factor Authentication (TOTP / Authenticator)
+                </h3>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  backgroundColor: mfaEnabled ? '#dcfce7' : '#f1f5f9',
+                  color: mfaEnabled ? '#15803d' : '#64748b'
+                }}>
+                  {mfaEnabled ? 'Enrolled & Active' : 'Not Enabled'}
+                </span>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setMfaEnabled(!mfaEnabled)}
-                style={{
-                  padding: '9px 18px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: mfaEnabled ? '#fee2e2' : '#083e47',
-                  color: mfaEnabled ? '#b91c1c' : '#ffffff',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
-              >
-                {mfaEnabled ? 'Disable 2FA' : 'Enable 2FA'}
-              </button>
+              <p style={{ margin: '6px 0 0 0', fontSize: '13.5px', color: '#64748b' }}>
+                Add a second security layer requiring a 6-digit code from your authenticator app on every login.
+              </p>
             </div>
 
-            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#f0fdfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Smartphone size={20} color="#083e47" />
-              </div>
-              <div>
-                <div style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Supported Authenticator Apps</div>
-                <div style={{ fontSize: '12.5px', color: '#64748b' }}>Google Authenticator, Microsoft Authenticator, 1Password, or Authy.</div>
-              </div>
+            <button
+              type="button"
+              onClick={() => setMfaEnabled(!mfaEnabled)}
+              style={{
+                padding: '9px 18px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: mfaEnabled ? '#fee2e2' : '#083e47',
+                color: mfaEnabled ? '#b91c1c' : '#ffffff',
+                fontSize: '13px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              {mfaEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+            </button>
+          </div>
+
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#f0fdfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Smartphone size={20} color="#083e47" />
+            </div>
+            <div>
+              <div style={{ fontWeight: '600', fontSize: '14px', color: '#0f172a' }}>Supported Authenticator Apps</div>
+              <div style={{ fontSize: '12.5px', color: '#64748b' }}>Google Authenticator, Microsoft Authenticator, 1Password, or Authy.</div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* TAB 2: PASSWORD */}
-      {activeTab === 'password' && (
+        {/* Section 2: Change Password */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-            Change Account Password
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Lock size={18} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+              Change Account Password
+            </h3>
+          </div>
           <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
             Ensure your account is using a long, random password to stay secure.
           </p>
@@ -266,7 +175,7 @@ export const SecuritySettingsPage: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handlePasswordSubmit} style={{ maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handlePasswordSubmit} style={{ maxWidth: '520px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                 Current Password
@@ -344,14 +253,17 @@ export const SecuritySettingsPage: React.FC = () => {
             </button>
           </form>
         </div>
-      )}
 
-      {/* TAB 3: POS PINS */}
-      {activeTab === 'pos-pins' && (
+        {/* Section 3: POS PINs */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-            Cashier POS & Counter PIN Governance
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <KeyRound size={18} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+              Cashier POS & Counter PIN Governance
+            </h3>
+          </div>
           <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
             Set 4-digit numeric passcodes for fast cashier switching on physical retail checkout terminals.
           </p>
@@ -363,7 +275,7 @@ export const SecuritySettingsPage: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleSavePinSettings} style={{ maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleSavePinSettings} style={{ maxWidth: '520px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                 Default Cashier Quick PIN (4 digits)
@@ -429,17 +341,20 @@ export const SecuritySettingsPage: React.FC = () => {
             </button>
           </form>
         </div>
-      )}
 
-      {/* TAB 4: SESSIONS */}
-      {activeTab === 'sessions' && (
+        {/* Section 4: Sessions */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-                Active Devices & Sessions
-              </h3>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '13.5px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Laptop size={18} />
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+                  Active Devices & Sessions
+                </h3>
+              </div>
+              <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13.5px' }}>
                 Review all browsers and devices that currently have access to your BillionBiz account.
               </p>
             </div>
@@ -495,7 +410,7 @@ export const SecuritySettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -21,7 +21,6 @@ const formatCurrency = (minor: number) => {
 };
 
 export const PeoplePage: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'repeat' | 'new'>('all');
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -108,18 +107,7 @@ export const PeoplePage: FC = () => {
     }
   };
 
-  const filteredCustomers = customers.filter((c) => {
-    if (activeTab === 'repeat') {
-      const orderCount = parseInt(c.total_orders || '0', 10);
-      return orderCount > 1;
-    }
-    if (activeTab === 'new') {
-      const created = new Date(c.created_at).getTime();
-      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      return created >= thirtyDaysAgo;
-    }
-    return true;
-  });
+  const filteredCustomers = customers;
 
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
@@ -179,34 +167,8 @@ export const PeoplePage: FC = () => {
         </div>
       </div>
 
-      {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[
-            { id: 'all', label: 'All Customers' },
-            { id: 'repeat', label: 'Repeat Buyers' },
-            { id: 'new', label: 'New (Last 30 Days)' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
-                color: activeTab === tab.id ? '#ffffff' : '#64748b',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
+      {/* Search Bar Row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
         <div style={{ position: 'relative', width: '320px' }}>
           <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
           <input

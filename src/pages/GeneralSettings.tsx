@@ -12,7 +12,6 @@ import { api } from '../api/services';
 import { TableSkeleton } from '../components/common/SkeletonLoader';
 
 export const GeneralSettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'mode' | 'capabilities' | 'identity'>('mode');
   const [store, setStore] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -97,7 +96,7 @@ export const GeneralSettingsPage: React.FC = () => {
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1100px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       {/* Breadcrumb & Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748b', marginBottom: '6px' }}>
             <span>Settings</span>
@@ -108,7 +107,7 @@ export const GeneralSettingsPage: React.FC = () => {
             General Settings
           </h1>
           <p style={{ color: '#64748b', marginTop: '4px', fontSize: '14px' }}>
-            Configure storefront operating mode, primary customer layout, and core business engine entitlements.
+            Configure storefront operating mode, primary customer layout, brand identity, and core engine entitlements.
           </p>
         </div>
 
@@ -147,364 +146,325 @@ export const GeneralSettingsPage: React.FC = () => {
           alignItems: 'center',
           gap: '8px',
           border: '1px solid #bbf7d0',
-          marginBottom: '20px'
+          marginBottom: '24px'
         }}>
           <CheckCircle2 size={18} />
           <span>General settings saved successfully! Changes are applied across your storefront and administrative dashboard.</span>
         </div>
       )}
 
-      {/* Local Page Sub-tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '6px',
-        borderBottom: '1px solid #e2e8f0',
-        marginBottom: '24px'
-      }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('mode')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'mode' ? 700 : 500,
-            color: activeTab === 'mode' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'mode' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Store size={15} />
-          <span>Storefront Mode & Layout</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('capabilities')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'capabilities' ? 700 : 500,
-            color: activeTab === 'capabilities' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'capabilities' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Layers size={15} />
-          <span>Engine Capabilities</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('identity')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'identity' ? 700 : 500,
-            color: activeTab === 'identity' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'identity' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Building2 size={15} />
-          <span>Store Identity & Profile</span>
-        </button>
-      </div>
-
       {loading ? (
         <TableSkeleton rows={4} columns={3} />
       ) : (
-        <>
-          {/* TAB 1: STOREFRONT MODE & LAYOUT */}
-          {activeTab === 'mode' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-                  Customer Storefront Operating Mode
-                </h3>
-                <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
-                  Choose how your online storefront presents your business to buyers. BillionBiz automatically adjusts navigation, cart, and checkout flow.
-                </p>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                  <div
-                    onClick={() => {
-                      setMode('COMMERCE');
-                      if (!prodCommerce) setProdCommerce(true);
-                    }}
-                    style={{
-                      padding: '18px',
-                      borderRadius: '10px',
-                      border: mode === 'COMMERCE' ? '2px solid #083e47' : '1px solid #cbd5e1',
-                      background: mode === 'COMMERCE' ? '#f0fdfa' : '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '6px' }}>
-                      Commerce Store
-                    </div>
-                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
-                      Physical and digital product catalogue, product variants, shopping cart, checkout, delivery dispatch, and order fulfillment.
-                    </p>
-                  </div>
-
-                  <div
-                    onClick={() => {
-                      setMode('SERVICES');
-                      if (!appointments) setAppointments(true);
-                      setHomePage('BOOKING');
-                    }}
-                    style={{
-                      padding: '18px',
-                      borderRadius: '10px',
-                      border: mode === 'SERVICES' ? '2px solid #083e47' : '1px solid #cbd5e1',
-                      background: mode === 'SERVICES' ? '#f0fdfa' : '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '6px' }}>
-                      Services & Appointments
-                    </div>
-                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
-                      Appointment scheduling, service offerings, calendar booking, staff availability, and reservation deposits. Hides product cart.
-                    </p>
-                  </div>
-
-                  <div
-                    onClick={() => {
-                      setMode('BOTH');
-                      if (!prodCommerce) setProdCommerce(true);
-                      if (!appointments) setAppointments(true);
-                    }}
-                    style={{
-                      padding: '18px',
-                      borderRadius: '10px',
-                      border: mode === 'BOTH' ? '2px solid #083e47' : '1px solid #cbd5e1',
-                      background: mode === 'BOTH' ? '#f0fdfa' : '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '6px' }}>
-                      Unified Hybrid (Both)
-                    </div>
-                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
-                      Full unified commerce: sell products and book services side by side with shared customers, unified cart, and unified reporting.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Default Landing Experience */}
-                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '18px' }}>
-                  <label style={{ display: 'block', fontSize: '13.5px', fontWeight: '600', color: '#0f172a', marginBottom: '8px' }}>
-                    Default Storefront Entry Page
-                  </label>
-                  <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', cursor: 'pointer' }}>
-                      <input
-                        type="radio"
-                        name="homepage"
-                        checked={homePage === 'LANDING'}
-                        onChange={() => setHomePage('LANDING')}
-                      />
-                      <span>Store Landing Page (Hero banner, Collections, Featured Products)</span>
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', cursor: 'pointer' }}>
-                      <input
-                        type="radio"
-                        name="homepage"
-                        checked={homePage === 'BOOKING'}
-                        onChange={() => setHomePage('BOOKING')}
-                      />
-                      <span>Direct Booking Funnel (Instant calendar and service slot picker)</span>
-                    </label>
-                  </div>
-                </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Section 1: Store Identity & Profile */}
+          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Building2 size={18} />
               </div>
-
-              {/* Live Preview Card */}
-              <div style={{ background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '18px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span style={{ fontWeight: '600', color: '#0f172a', fontSize: '14px' }}>Active Storefront Preview</span>
-                  <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '2px' }}>Mode: <strong>{mode}</strong> • Entry: <strong>{homePage}</strong></div>
-                </div>
-                <a
-                  href={liveStoreUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600', color: '#083e47', textDecoration: 'none' }}
-                >
-                  <span>Visit Storefront</span>
-                  <ExternalLink size={14} />
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: ENGINE CAPABILITIES */}
-          {activeTab === 'capabilities' && (
-            <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-              <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-                Core Engine Entitlements
-              </h3>
-              <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
-                Toggle backend feature engines and administrative dashboard navigation for your workspace.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', cursor: 'pointer', border: '1px solid #e2e8f0' }}>
-                  <div>
-                    <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Product Commerce Engine</div>
-                    <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Inventory management, product variants, price lists, and shipping dispatch.</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={prodCommerce}
-                    onChange={(e) => setProdCommerce(e.target.checked)}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', cursor: 'pointer', border: '1px solid #e2e8f0' }}>
-                  <div>
-                    <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Appointments & Booking Engine</div>
-                    <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Staff scheduling, customer booking calendar, and service slots.</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={appointments}
-                    onChange={(e) => setAppointments(e.target.checked)}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', cursor: 'pointer', border: '1px solid #e2e8f0' }}>
-                  <div>
-                    <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Cashier POS & Counters</div>
-                    <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Physical retail checkout terminal, cash drawers, shifts, and barcode scanner.</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={restaurantPos}
-                    onChange={(e) => setRestaurantPos(e.target.checked)}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: STORE IDENTITY & PROFILE */}
-          {activeTab === 'identity' && (
-            <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-              <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
                 Store Identity & Contact Details
               </h3>
-              <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
-                Business profile details printed on invoices, customer receipts, and notifications.
-              </p>
+            </div>
+            <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
+              Business profile details printed on invoices, customer receipts, and notifications.
+            </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                    Display Store Name
-                  </label>
-                  <input
-                    type="text"
-                    value={storeName}
-                    onChange={(e) => setStoreName(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
-                    placeholder="Chandru Store"
-                  />
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                  Display Store Name
+                </label>
+                <input
+                  type="text"
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
+                  placeholder="Chandru Store"
+                />
+              </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                    Legal Business Name
-                  </label>
-                  <input
-                    type="text"
-                    value={legalName}
-                    onChange={(e) => setLegalName(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
-                    placeholder="Chandru Commerce Pvt Ltd"
-                  />
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                  Legal Business Name
+                </label>
+                <input
+                  type="text"
+                  value={legalName}
+                  onChange={(e) => setLegalName(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
+                  placeholder="Chandru Commerce Pvt Ltd"
+                />
+              </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                    Customer Support Email
-                  </label>
-                  <input
-                    type="email"
-                    value={supportEmail}
-                    onChange={(e) => setSupportEmail(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
-                    placeholder="support@chandraprakash.codes"
-                  />
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                  Customer Support Email
+                </label>
+                <input
+                  type="email"
+                  value={supportEmail}
+                  onChange={(e) => setSupportEmail(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
+                  placeholder="support@chandraprakash.codes"
+                />
+              </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                    Customer Support Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={supportPhone}
-                    onChange={(e) => setSupportPhone(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
-                    placeholder="+91 98765 43210"
-                  />
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                  Customer Support Phone
+                </label>
+                <input
+                  type="tel"
+                  value={supportPhone}
+                  onChange={(e) => setSupportPhone(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
+                  placeholder="+91 98765 43210"
+                />
+              </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                    Operating Currency
-                  </label>
-                  <select
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
-                  >
-                    <option value="INR">INR (₹) - Indian Rupee</option>
-                    <option value="USD">USD ($) - US Dollar</option>
-                    <option value="EUR">EUR (€) - Euro</option>
-                    <option value="GBP">GBP (£) - British Pound</option>
-                  </select>
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                  Operating Currency
+                </label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
+                >
+                  <option value="INR">INR (₹) - Indian Rupee</option>
+                  <option value="USD">USD ($) - US Dollar</option>
+                  <option value="EUR">EUR (€) - Euro</option>
+                  <option value="GBP">GBP (£) - British Pound</option>
+                </select>
+              </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                    Registered Business Address
-                  </label>
-                  <input
-                    type="text"
-                    value={businessAddress}
-                    onChange={(e) => setBusinessAddress(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
-                    placeholder="Bengaluru, Karnataka, India"
-                  />
-                </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                  Registered Business Address
+                </label>
+                <input
+                  type="text"
+                  value={businessAddress}
+                  onChange={(e) => setBusinessAddress(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
+                  placeholder="Bengaluru, Karnataka, India"
+                />
               </div>
             </div>
-          )}
-        </>
+          </div>
+
+          {/* Section 2: Storefront Mode & Layout */}
+          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Store size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+                Customer Storefront Operating Mode
+              </h3>
+            </div>
+            <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
+              Choose how your online storefront presents your business to buyers. BillionBiz automatically adjusts navigation, cart, and checkout flow.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+              <div
+                onClick={() => {
+                  setMode('COMMERCE');
+                  if (!prodCommerce) setProdCommerce(true);
+                }}
+                style={{
+                  padding: '18px',
+                  borderRadius: '10px',
+                  border: mode === 'COMMERCE' ? '2px solid #083e47' : '1px solid #cbd5e1',
+                  background: mode === 'COMMERCE' ? '#f0fdfa' : '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '6px' }}>
+                  Commerce Store
+                </div>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
+                  Physical and digital product catalogue, product variants, shopping cart, checkout, delivery dispatch, and order fulfillment.
+                </p>
+              </div>
+
+              <div
+                onClick={() => {
+                  setMode('SERVICES');
+                  if (!appointments) setAppointments(true);
+                  setHomePage('BOOKING');
+                }}
+                style={{
+                  padding: '18px',
+                  borderRadius: '10px',
+                  border: mode === 'SERVICES' ? '2px solid #083e47' : '1px solid #cbd5e1',
+                  background: mode === 'SERVICES' ? '#f0fdfa' : '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '6px' }}>
+                  Services & Appointments
+                </div>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
+                  Appointment scheduling, service offerings, calendar booking, staff availability, and reservation deposits. Hides product cart.
+                </p>
+              </div>
+
+              <div
+                onClick={() => {
+                  setMode('BOTH');
+                  if (!prodCommerce) setProdCommerce(true);
+                  if (!appointments) setAppointments(true);
+                }}
+                style={{
+                  padding: '18px',
+                  borderRadius: '10px',
+                  border: mode === 'BOTH' ? '2px solid #083e47' : '1px solid #cbd5e1',
+                  background: mode === 'BOTH' ? '#f0fdfa' : '#ffffff',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <div style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '6px' }}>
+                  Unified Hybrid (Both)
+                </div>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
+                  Full unified commerce: sell products and book services side by side with shared customers, unified cart, and unified reporting.
+                </p>
+              </div>
+            </div>
+
+            {/* Default Landing Experience */}
+            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '18px', marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '13.5px', fontWeight: '600', color: '#0f172a', marginBottom: '8px' }}>
+                Default Storefront Entry Page
+              </label>
+              <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="homepage"
+                    checked={homePage === 'LANDING'}
+                    onChange={() => setHomePage('LANDING')}
+                  />
+                  <span>Store Landing Page (Hero banner, Collections, Featured Products)</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="homepage"
+                    checked={homePage === 'BOOKING'}
+                    onChange={() => setHomePage('BOOKING')}
+                  />
+                  <span>Direct Booking Funnel (Instant calendar and service slot picker)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Live Preview Bar */}
+            <div style={{ background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontWeight: '600', color: '#0f172a', fontSize: '14px' }}>Active Storefront Preview</span>
+                <div style={{ fontSize: '12.5px', color: '#64748b', marginTop: '2px' }}>Mode: <strong>{mode}</strong> • Entry: <strong>{homePage}</strong></div>
+              </div>
+              <a
+                href={liveStoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '600', color: '#083e47', textDecoration: 'none' }}
+              >
+                <span>Visit Storefront</span>
+                <ExternalLink size={14} />
+              </a>
+            </div>
+          </div>
+
+          {/* Section 3: Core Capabilities */}
+          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Layers size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+                Core Engine Entitlements
+              </h3>
+            </div>
+            <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
+              Toggle backend feature engines and administrative dashboard navigation for your workspace.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', cursor: 'pointer', border: '1px solid #e2e8f0' }}>
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Product Commerce Engine</div>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Inventory management, product variants, price lists, and shipping dispatch.</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={prodCommerce}
+                  onChange={(e) => setProdCommerce(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', cursor: 'pointer', border: '1px solid #e2e8f0' }}>
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Appointments & Booking Engine</div>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Staff scheduling, customer booking calendar, and service slots.</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={appointments}
+                  onChange={(e) => setAppointments(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', cursor: 'pointer', border: '1px solid #e2e8f0' }}>
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Cashier POS & Counters</div>
+                  <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Physical retail checkout terminal, cash drawers, shifts, and barcode scanner.</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={restaurantPos}
+                  onChange={(e) => setRestaurantPos(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Bottom Save Bar */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '8px' }}>
+            <button
+              disabled={saving || loading}
+              onClick={() => handleSaveAll()}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#083e47',
+                color: '#ffffff',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              }}
+            >
+              <Save size={16} />
+              <span>{saving ? 'Saving Changes...' : 'Save Configuration'}</span>
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

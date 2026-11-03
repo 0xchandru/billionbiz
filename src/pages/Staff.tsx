@@ -13,7 +13,6 @@ import { TableSkeleton } from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const StaffPage: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'roster'>('all');
   const [staffList, setStaffList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,10 +78,7 @@ export const StaffPage: FC = () => {
       s.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.phone?.includes(searchQuery);
-    if (!matchesSearch) return false;
-
-    if (activeTab === 'active') return s.is_active;
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -90,6 +86,11 @@ export const StaffPage: FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
+            <span>Appointments</span>
+            <span>/</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Staff & Specialists</span>
+          </div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Users size={26} color="#0d9488" />
             Staff Profiles & Service Specialists
@@ -118,55 +119,6 @@ export const StaffPage: FC = () => {
         >
           <Plus size={16} />
           Add Staff Member
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
-        <button
-          onClick={() => setActiveTab('all')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'all' ? 600 : 500,
-            color: activeTab === 'all' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'all' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          All Specialists ({staffList.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('active')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'active' ? 600 : 500,
-            color: activeTab === 'active' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'active' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Active on Duty
-        </button>
-        <button
-          onClick={() => setActiveTab('roster')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'roster' ? 600 : 500,
-            color: activeTab === 'roster' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'roster' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Shift Roster
         </button>
       </div>
 

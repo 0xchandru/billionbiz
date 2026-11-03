@@ -3,15 +3,13 @@ import type { FC, FormEvent } from 'react';
 import {
   Layers,
   Plus,
-  Search,
-  ArrowUpDown
+  Search
 } from 'lucide-react';
 import { api } from '../api/services';
 import { TableSkeleton } from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const InventoryPage: FC = () => {
-  const [activeTab, setActiveTab] = useState<'levels' | 'low_stock' | 'movements'>('levels');
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,10 +96,7 @@ export const InventoryPage: FC = () => {
     const matchesSearch =
       v.productName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       v.sku?.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (activeTab === 'low_stock') return (v.available || 0) < 5;
-    return true;
+    return matchesSearch;
   });
 
   const totalOnHand = allVariants.reduce((acc, v) => acc + (v.available || 0), 0);
@@ -113,6 +108,11 @@ export const InventoryPage: FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
+            <span>Catalogue</span>
+            <span>/</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Stock & Inventory</span>
+          </div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Layers size={26} color="#0d9488" />
             Stock Reconciliation & Inventory
@@ -170,55 +170,6 @@ export const InventoryPage: FC = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
-        <button
-          onClick={() => setActiveTab('levels')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'levels' ? 600 : 500,
-            color: activeTab === 'levels' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'levels' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Stock Levels ({allVariants.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('low_stock')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'low_stock' ? 600 : 500,
-            color: activeTab === 'low_stock' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'low_stock' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Low Stock Alerts ({lowStockCount})
-        </button>
-        <button
-          onClick={() => setActiveTab('movements')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'movements' ? 600 : 500,
-            color: activeTab === 'movements' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'movements' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Movement Audit Log
-        </button>
-      </div>
-
       {/* Toolbar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
         <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
@@ -256,7 +207,7 @@ export const InventoryPage: FC = () => {
               : 'Add products and variants to manage real-time inventory balances and stock reordering.'
           }
         />
-      ) : activeTab !== 'movements' ? (
+      ) : (
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
             <thead>
@@ -328,16 +279,6 @@ export const InventoryPage: FC = () => {
               ))}
             </tbody>
           </table>
-        </div>
-      ) : (
-        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '32px', textAlign: 'center', color: '#64748b' }}>
-          <ArrowUpDown size={28} color="#0d9488" style={{ margin: '0 auto 12px auto' }} />
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
-            Immutable Stock Movement Ledger
-          </h3>
-          <p style={{ margin: 0, fontSize: '13px' }}>
-            Every purchase, sale, damage, and manual count reconciliation writes an audit log here.
-          </p>
         </div>
       )}
 

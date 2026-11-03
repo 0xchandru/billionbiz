@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Users, 
-  ShieldCheck, 
-  Briefcase, 
   Plus, 
   RefreshCw, 
+  Search,
   X, 
   Trash2 
 } from 'lucide-react';
@@ -12,19 +11,7 @@ import { api } from '../api/services';
 import { TableSkeleton } from '../components/common/SkeletonLoader';
 import { EmptyState } from '../components/common/EmptyState';
 
-interface TeamPageProps {
-  defaultTab?: 'members' | 'roles' | 'responsibilities';
-}
-
-export const TeamPage: React.FC<TeamPageProps> = ({ defaultTab = 'members' }) => {
-  const [activeTab, setActiveTab] = useState<'members' | 'roles' | 'responsibilities'>(defaultTab);
-
-  useEffect(() => {
-    if (defaultTab) {
-      setActiveTab(defaultTab);
-    }
-  }, [defaultTab]);
-
+export const TeamPage: React.FC = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [responsibilities, setResponsibilities] = useState<any[]>([
@@ -35,6 +22,7 @@ export const TeamPage: React.FC<TeamPageProps> = ({ defaultTab = 'members' }) =>
     { id: 'FULFILLMENT_STAFF', name: 'Fulfillment Specialist', description: 'Order packing, courier dispatch, and shipments' }
   ]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   // Invite / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -172,13 +160,31 @@ export const TeamPage: React.FC<TeamPageProps> = ({ defaultTab = 'members' }) =>
     }
   };
 
+  const filteredMembers = members.filter((m) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      m.display_name?.toLowerCase().includes(q) ||
+      m.member_email?.toLowerCase().includes(q) ||
+      m.email?.toLowerCase().includes(q) ||
+      m.phone?.includes(q) ||
+      m.role_name?.toLowerCase().includes(q) ||
+      m.role_code?.toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'inherit' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
+            <span>Team</span>
+            <span>/</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Team Members</span>
+          </div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-            Team & Organizational Roles
+            Team Members
           </h1>
           <p style={{ color: '#64748b', marginTop: '4px', fontSize: '14px' }}>
             Universal team management: assign multi-operational responsibilities (appointments + cashier) without duplicate profiles.
@@ -227,64 +233,40 @@ export const TeamPage: React.FC<TeamPageProps> = ({ defaultTab = 'members' }) =>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '8px',
-          borderBottom: '1px solid #e2e8f0',
-          marginBottom: '24px',
-          overflowX: 'auto',
-          paddingBottom: '2px'
-        }}
-      >
-        {[
-          { id: 'members', label: 'Team Members', icon: Users },
-          { id: 'roles', label: 'Roles & Permissions', icon: ShieldCheck },
-          { id: 'responsibilities', label: 'Operational Profiles', icon: Briefcase }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 16px',
-                border: 'none',
-                background: 'transparent',
-                borderBottom: isActive ? '2px solid #0d9488' : '2px solid transparent',
-                color: isActive ? '#0d9488' : '#64748b',
-                fontWeight: isActive ? 600 : 500,
-                fontSize: '14px',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <Icon size={16} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Search Bar */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: '420px' }}>
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
+          <input
+            type="text"
+            placeholder="Search team members by name, email, or role..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 12px 10px 38px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              backgroundColor: '#ffffff'
+            }}
+          />
+        </div>
       </div>
 
-      {/* TAB 1: TEAM MEMBERS */}
-      {activeTab === 'members' && (
-        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      {/* TEAM MEMBERS TABLE */}
+      <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           {loading ? (
             <div style={{ padding: '24px' }}>
               <TableSkeleton rows={4} columns={6} />
             </div>
-          ) : members.length === 0 ? (
+          ) : filteredMembers.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="No team members added"
-              description="Invite employees, assign operational responsibilities (stylist, cashier, manager), and configure cashier PINs."
-              actionLabel="Add Team Member"
-              onAction={openAddModal}
+              title={search ? 'No team members match your search' : 'No team members added'}
+              description={search ? 'Try adjusting your search criteria.' : 'Invite employees, assign operational responsibilities (stylist, cashier, manager), and configure cashier PINs.'}
+              actionLabel={search ? undefined : 'Add Team Member'}
+              onAction={search ? undefined : openAddModal}
             />
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
@@ -299,7 +281,7 @@ export const TeamPage: React.FC<TeamPageProps> = ({ defaultTab = 'members' }) =>
                 </tr>
               </thead>
               <tbody>
-                {members.map((m) => {
+                {filteredMembers.map((m) => {
                   let memberResp: string[] = [];
                   if (m.responsibilities) {
                     memberResp = Array.isArray(m.responsibilities)
@@ -399,78 +381,6 @@ export const TeamPage: React.FC<TeamPageProps> = ({ defaultTab = 'members' }) =>
             </table>
           )}
         </div>
-      )}
-
-      {/* TAB 2: ROLES & PERMISSIONS */}
-      {activeTab === 'roles' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-          {roles.map((r) => (
-            <div
-              key={r.id}
-              style={{
-                background: '#ffffff',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0',
-                padding: '24px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>{r.name}</h3>
-                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#475569' }}>
-                  {r.code}
-                </span>
-              </div>
-              <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#64748b' }}>
-                {r.description || 'Pre-configured access tier for platform governance.'}
-              </p>
-              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', fontSize: '12px', color: '#0d9488', fontWeight: 600 }}>
-                ✓ Granted tenant-isolated permissions
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* TAB 3: OPERATIONAL PROFILES */}
-      {activeTab === 'responsibilities' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-          {responsibilities.map((resp) => {
-            const b = getBadgeStyle(resp.id);
-            return (
-              <div
-                key={resp.id}
-                style={{
-                  background: '#ffffff',
-                  borderRadius: '12px',
-                  border: '1px solid #e2e8f0',
-                  padding: '24px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      background: b.bg,
-                      color: b.color
-                    }}
-                  >
-                    {resp.name}
-                  </span>
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Universal Profile</span>
-                </div>
-                <p style={{ margin: 0, fontSize: '13px', color: '#64748b', lineHeight: 1.5 }}>
-                  {resp.description}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* ADD / EDIT MODAL */}
       {isModalOpen && (

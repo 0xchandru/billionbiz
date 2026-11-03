@@ -13,7 +13,6 @@ import { api } from '../api/services';
 
 export const AccountSettingsPage: React.FC = () => {
   const { user, role, organizationName, storeName, checkAuth } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'profile' | 'subscription' | 'exports'>('profile');
 
   // Profile Form States
   const [fullName, setFullName] = useState(user?.fullName || 'Chandru');
@@ -29,7 +28,6 @@ export const AccountSettingsPage: React.FC = () => {
     try {
       setSaving(true);
       setSavedSuccess(false);
-      // Simulate profile sync or reload
       if (checkAuth) await checkAuth();
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
@@ -83,7 +81,7 @@ export const AccountSettingsPage: React.FC = () => {
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1100px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       {/* Breadcrumb & Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748b', marginBottom: '6px' }}>
             <span>Settings</span>
@@ -98,29 +96,27 @@ export const AccountSettingsPage: React.FC = () => {
           </p>
         </div>
 
-        {activeTab === 'profile' && (
-          <button
-            disabled={saving}
-            onClick={handleSaveProfile}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '9px 18px',
-              borderRadius: '8px',
-              border: 'none',
-              background: '#083e47',
-              color: '#ffffff',
-              fontSize: '13.5px',
-              fontWeight: '600',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-            }}
-          >
-            <Save size={16} />
-            <span>{saving ? 'Updating...' : 'Save Profile'}</span>
-          </button>
-        )}
+        <button
+          disabled={saving}
+          onClick={handleSaveProfile}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '9px 18px',
+            borderRadius: '8px',
+            border: 'none',
+            background: '#083e47',
+            color: '#ffffff',
+            fontSize: '13.5px',
+            fontWeight: '600',
+            cursor: saving ? 'not-allowed' : 'pointer',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}
+        >
+          <Save size={16} />
+          <span>{saving ? 'Updating...' : 'Save Profile'}</span>
+        </button>
       </div>
 
       {savedSuccess && (
@@ -135,87 +131,16 @@ export const AccountSettingsPage: React.FC = () => {
           alignItems: 'center',
           gap: '8px',
           border: '1px solid #bbf7d0',
-          marginBottom: '20px'
+          marginBottom: '24px'
         }}>
           <CheckCircle2 size={18} />
           <span>Profile changes updated successfully!</span>
         </div>
       )}
 
-      {/* Local Page Sub-tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '6px',
-        borderBottom: '1px solid #e2e8f0',
-        marginBottom: '24px'
-      }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('profile')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'profile' ? 700 : 500,
-            color: activeTab === 'profile' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'profile' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <User size={15} />
-          <span>Merchant Profile</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('subscription')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'subscription' ? 700 : 500,
-            color: activeTab === 'subscription' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'subscription' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <CreditCard size={15} />
-          <span>Plan & Subscription</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('exports')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'exports' ? 700 : 500,
-            color: activeTab === 'exports' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'exports' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Download size={15} />
-          <span>Data & Exports</span>
-        </button>
-      </div>
-
-      {/* TAB 1: PROFILE */}
-      {activeTab === 'profile' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Section 1: Merchant Profile */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Identity Header Card */}
           <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
             <div style={{
@@ -247,14 +172,19 @@ export const AccountSettingsPage: React.FC = () => {
 
           {/* Edit Form */}
           <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-              Personal & Business Information
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <User size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+                Personal & Business Information
+              </h3>
+            </div>
             <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
               Update your account details and business contact information.
             </p>
 
-            <form onSubmit={handleSaveProfile} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <form onSubmit={handleSaveProfile} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                   Full Legal Name
@@ -307,74 +237,76 @@ export const AccountSettingsPage: React.FC = () => {
             </form>
           </div>
         </div>
-      )}
 
-      {/* TAB 2: SUBSCRIPTION */}
-      {activeTab === 'subscription' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>
-                    Professional Merchant Tier
-                  </h3>
-                  <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#dcfce7', color: '#15803d' }}>
-                    Active Plan
-                  </span>
+        {/* Section 2: Subscription & Growth Plan */}
+        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CreditCard size={18} />
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '13.5px', color: '#64748b' }}>
-                  Full multi-tenant commerce, appointment scheduling, POS terminal, and dedicated schema isolation.
-                </p>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>
+                  Professional Merchant Tier
+                </h3>
+                <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#dcfce7', color: '#15803d' }}>
+                  Active Plan
+                </span>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#083e47' }}>₹2,499</span>
-                <span style={{ fontSize: '13px', color: '#64748b' }}> / month</span>
-              </div>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13.5px', color: '#64748b' }}>
+                Full multi-tenant commerce, appointment scheduling, POS terminal, and dedicated schema isolation.
+              </p>
             </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: '24px', fontWeight: '700', color: '#083e47' }}>₹2,499</span>
+              <span style={{ fontSize: '13px', color: '#64748b' }}> / month</span>
+            </div>
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
-                <CheckCircle2 size={16} color="#15803d" />
-                <span>Unlimited Products & Variants</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
-                <CheckCircle2 size={16} color="#15803d" />
-                <span>Real-Time Online Storefront</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
-                <CheckCircle2 size={16} color="#15803d" />
-                <span>Cashier POS & Shifts</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
-                <CheckCircle2 size={16} color="#15803d" />
-                <span>Resend Transactional Email</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
-                <CheckCircle2 size={16} color="#15803d" />
-                <span>Razorpay & Shiprocket Webhooks</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
-                <CheckCircle2 size={16} color="#15803d" />
-                <span>Free SSL & Custom Subdomain</span>
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #f1f5f9' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
+              <CheckCircle2 size={16} color="#15803d" />
+              <span>Unlimited Products & Variants</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
+              <CheckCircle2 size={16} color="#15803d" />
+              <span>Real-Time Online Storefront</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
+              <CheckCircle2 size={16} color="#15803d" />
+              <span>Cashier POS & Shifts</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
+              <CheckCircle2 size={16} color="#15803d" />
+              <span>Resend Transactional Email</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
+              <CheckCircle2 size={16} color="#15803d" />
+              <span>Razorpay & Shiprocket Webhooks</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', color: '#334155' }}>
+              <CheckCircle2 size={16} color="#15803d" />
+              <span>Free SSL & Custom Subdomain</span>
             </div>
           </div>
         </div>
-      )}
 
-      {/* TAB 3: EXPORTS */}
-      {activeTab === 'exports' && (
+        {/* Section 3: Data Exports */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-            Data Portability & Secure Exports
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Download size={18} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+              Data Portability & Secure Exports
+            </h3>
+          </div>
           <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
             Download live operational data in CSV format at any time with complete data isolation guarantee.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
               <div>
                 <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Catalogue & Products Directory</div>
                 <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Download all active items, SKUs, inventory counts, and price tags.</div>
@@ -402,7 +334,7 @@ export const AccountSettingsPage: React.FC = () => {
               </button>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
               <div>
                 <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Customers & Directory Contacts</div>
                 <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Export buyer details, emails, phone numbers, and delivery locations.</div>
@@ -430,7 +362,7 @@ export const AccountSettingsPage: React.FC = () => {
               </button>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
               <div>
                 <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Order Ledger & Sales History</div>
                 <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Export all completed and pending transaction records with line items.</div>
@@ -459,7 +391,7 @@ export const AccountSettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

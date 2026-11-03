@@ -6,7 +6,6 @@ import SkeletonLoader from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const PriceLists: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'wholesale' | 'vip' | 'retail'>('all');
   const [priceLists, setPriceLists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -79,11 +78,7 @@ export const PriceLists: FC = () => {
       pl.name.toLowerCase().includes(search.toLowerCase()) ||
       (pl.description && pl.description.toLowerCase().includes(search.toLowerCase()));
 
-    if (!matchesSearch) return false;
-    if (activeTab === 'wholesale') return pl.tier_type === 'WHOLESALE';
-    if (activeTab === 'vip') return pl.tier_type === 'VIP';
-    if (activeTab === 'retail') return pl.tier_type === 'RETAIL';
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -144,36 +139,9 @@ export const PriceLists: FC = () => {
         </div>
       </div>
 
-      {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[
-            { id: 'all', label: 'All Price Lists' },
-            { id: 'wholesale', label: 'Wholesale B2B' },
-            { id: 'vip', label: 'VIP Customer Rates' },
-            { id: 'retail', label: 'Custom Retail' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
-                color: activeTab === tab.id ? '#ffffff' : '#64748b',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: 'relative', width: '280px' }}>
+      {/* Search Bar Row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ position: 'relative', width: '320px' }}>
           <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
           <input
             type="text"

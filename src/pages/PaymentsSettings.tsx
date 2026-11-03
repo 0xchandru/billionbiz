@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 
 export const PaymentsSettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'gateways' | 'taxes' | 'payouts'>('gateways');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   // Gateway Toggles
@@ -39,7 +38,7 @@ export const PaymentsSettingsPage: React.FC = () => {
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1100px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       {/* Breadcrumb & Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748b', marginBottom: '6px' }}>
             <span>Settings</span>
@@ -88,203 +87,138 @@ export const PaymentsSettingsPage: React.FC = () => {
           alignItems: 'center',
           gap: '8px',
           border: '1px solid #bbf7d0',
-          marginBottom: '20px'
+          marginBottom: '24px'
         }}>
           <CheckCircle2 size={18} />
           <span>Payment and tax settings saved successfully!</span>
         </div>
       )}
 
-      {/* Local Page Sub-tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '6px',
-        borderBottom: '1px solid #e2e8f0',
-        marginBottom: '24px'
-      }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('gateways')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'gateways' ? 700 : 500,
-            color: activeTab === 'gateways' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'gateways' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <CreditCard size={15} />
-          <span>Payment Gateways</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('taxes')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'taxes' ? 700 : 500,
-            color: activeTab === 'taxes' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'taxes' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Percent size={15} />
-          <span>Taxes & GSTIN</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('payouts')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            fontSize: '13.5px',
-            fontWeight: activeTab === 'payouts' ? 700 : 500,
-            color: activeTab === 'payouts' ? '#083e47' : '#64748b',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'payouts' ? '2.5px solid #083e47' : '2.5px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          <Landmark size={15} />
-          <span>Settlement & Payouts</span>
-        </button>
-      </div>
-
-      {/* TAB 1: GATEWAYS */}
-      {activeTab === 'gateways' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <div>
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Section 1: Accepted Payment Gateways */}
+        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CreditCard size={18} />
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
                   Accepted Online Payment Tenders
                 </h3>
-                <p style={{ margin: 0, color: '#64748b', fontSize: '13.5px' }}>
-                  Primary currency: <strong>INR (₹)</strong>. Customers can checkout via UPI, Cards, Netbanking, or Cash.
-                </p>
               </div>
-
-              <a
-                href="/extensions"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  borderRadius: '8px',
-                  backgroundColor: '#083e47',
-                  color: '#ffffff',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  textDecoration: 'none'
-                }}
-              >
-                <CreditCard size={14} />
-                <span>Configure Keys in Extensions</span>
-              </a>
+              <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13.5px' }}>
+                Primary currency: <strong>INR (₹)</strong>. Customers can checkout via UPI, Cards, Netbanking, or Cash.
+              </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <CreditCard size={20} color="#2563eb" />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Razorpay Payment Gateway</div>
-                    <div style={{ fontSize: '12.5px', color: '#64748b' }}>Supports Credit/Debit Cards, Google Pay, PhonePe, Paytm, Netbanking.</div>
-                  </div>
-                </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={razorpayEnabled}
-                    onChange={(e) => setRazorpayEnabled(e.target.checked)}
-                    style={{ width: '18px', height: '18px' }}
-                  />
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: razorpayEnabled ? '#15803d' : '#64748b' }}>
-                    {razorpayEnabled ? 'Active' : 'Disabled'}
-                  </span>
-                </label>
-              </div>
+            <a
+              href="/extensions"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                backgroundColor: '#083e47',
+                color: '#ffffff',
+                fontSize: '13px',
+                fontWeight: '600',
+                textDecoration: 'none'
+              }}
+            >
+              <CreditCard size={14} />
+              <span>Configure Keys in Extensions</span>
+            </a>
+          </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <QrCode size={20} color="#15803d" />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>UPI Dynamic QR Code (POS & Storefront)</div>
-                    <div style={{ fontSize: '12.5px', color: '#64748b' }}>Show on-screen QR for instantaneous payment confirmation without cards.</div>
-                  </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CreditCard size={20} color="#2563eb" />
                 </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={upiEnabled}
-                    onChange={(e) => setUpiEnabled(e.target.checked)}
-                    style={{ width: '18px', height: '18px' }}
-                  />
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: upiEnabled ? '#15803d' : '#64748b' }}>
-                    {upiEnabled ? 'Active' : 'Disabled'}
-                  </span>
-                </label>
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Razorpay Payment Gateway</div>
+                  <div style={{ fontSize: '12.5px', color: '#64748b' }}>Supports Credit/Debit Cards, Google Pay, PhonePe, Paytm, Netbanking.</div>
+                </div>
               </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={razorpayEnabled}
+                  onChange={(e) => setRazorpayEnabled(e.target.checked)}
+                  style={{ width: '18px', height: '18px' }}
+                />
+                <span style={{ fontSize: '13px', fontWeight: '600', color: razorpayEnabled ? '#15803d' : '#64748b' }}>
+                  {razorpayEnabled ? 'Active' : 'Disabled'}
+                </span>
+              </label>
+            </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#fefce8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Landmark size={20} color="#ca8a04" />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Cash on Delivery (COD)</div>
-                    <div style={{ fontSize: '12.5px', color: '#64748b' }}>Collect payment in cash upon courier parcel delivery.</div>
-                  </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <QrCode size={20} color="#15803d" />
                 </div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={codEnabled}
-                    onChange={(e) => setCodEnabled(e.target.checked)}
-                    style={{ width: '18px', height: '18px' }}
-                  />
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: codEnabled ? '#15803d' : '#64748b' }}>
-                    {codEnabled ? 'Active' : 'Disabled'}
-                  </span>
-                </label>
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>UPI Dynamic QR Code (POS & Storefront)</div>
+                  <div style={{ fontSize: '12.5px', color: '#64748b' }}>Show on-screen QR for instantaneous payment confirmation without cards.</div>
+                </div>
               </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={upiEnabled}
+                  onChange={(e) => setUpiEnabled(e.target.checked)}
+                  style={{ width: '18px', height: '18px' }}
+                />
+                <span style={{ fontSize: '13px', fontWeight: '600', color: upiEnabled ? '#15803d' : '#64748b' }}>
+                  {upiEnabled ? 'Active' : 'Disabled'}
+                </span>
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#fefce8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Landmark size={20} color="#ca8a04" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '14.5px', color: '#0f172a' }}>Cash on Delivery (COD)</div>
+                  <div style={{ fontSize: '12.5px', color: '#64748b' }}>Collect payment in cash upon courier parcel delivery.</div>
+                </div>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={codEnabled}
+                  onChange={(e) => setCodEnabled(e.target.checked)}
+                  style={{ width: '18px', height: '18px' }}
+                />
+                <span style={{ fontSize: '13px', fontWeight: '600', color: codEnabled ? '#15803d' : '#64748b' }}>
+                  {codEnabled ? 'Active' : 'Disabled'}
+                </span>
+              </label>
             </div>
           </div>
         </div>
-      )}
 
-      {/* TAB 2: TAXES & GSTIN */}
-      {activeTab === 'taxes' && (
+        {/* Section 2: Taxes & GSTIN */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-            Goods and Services Tax (GST) & Invoicing
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Percent size={18} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+              Goods and Services Tax (GST) & Invoicing
+            </h3>
+          </div>
           <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
             Configure your registered GSTIN and tax slabs for compliant tax invoices.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                 Merchant GSTIN Registration Number
@@ -332,19 +266,22 @@ export const PaymentsSettingsPage: React.FC = () => {
             </div>
           </label>
         </div>
-      )}
 
-      {/* TAB 3: PAYOUTS */}
-      {activeTab === 'payouts' && (
+        {/* Section 3: Bank Payouts */}
         <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
-            Merchant Settlement Bank Account
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Landmark size={18} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>
+              Merchant Settlement Bank Account
+            </h3>
+          </div>
           <p style={{ color: '#64748b', fontSize: '13.5px', marginBottom: '20px' }}>
             Funds from storefront sales and appointment deposits are settled directly into this account.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
                 Bank Name
@@ -409,7 +346,31 @@ export const PaymentsSettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+
+        {/* Bottom Save Bar */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '8px' }}>
+          <button
+            onClick={handleSave}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: '#083e47',
+              color: '#ffffff',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}
+          >
+            <Save size={16} />
+            <span>Save Payment Settings</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

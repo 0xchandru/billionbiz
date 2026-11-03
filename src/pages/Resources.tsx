@@ -9,7 +9,6 @@ import {
 import EmptyState from '../components/common/EmptyState';
 
 export const ResourcesPage: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'rooms' | 'equipment'>('all');
   const [resources, setResources] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -52,10 +51,7 @@ export const ResourcesPage: FC = () => {
 
   const filteredResources = resources.filter((r) => {
     const matchesSearch = r.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-    if (activeTab === 'rooms') return r.type === 'SPACE';
-    if (activeTab === 'equipment') return r.type === 'ASSET';
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -64,7 +60,7 @@ export const ResourcesPage: FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Box size={26} color="#0d9488" />
+            <Box size={26} color="#083e47" />
             Equipment & Room Resources
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
@@ -78,7 +74,7 @@ export const ResourcesPage: FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#0d9488',
+            backgroundColor: '#083e47',
             color: '#ffffff',
             border: 'none',
             borderRadius: '8px',
@@ -86,60 +82,11 @@ export const ResourcesPage: FC = () => {
             fontSize: '14px',
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(13, 148, 136, 0.25)'
+            boxShadow: '0 1px 3px rgba(8, 62, 71, 0.25)'
           }}
         >
           <Plus size={16} />
           Add Resource
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
-        <button
-          onClick={() => setActiveTab('all')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'all' ? 600 : 500,
-            color: activeTab === 'all' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'all' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          All Resources ({resources.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('rooms')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'rooms' ? 600 : 500,
-            color: activeTab === 'rooms' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'rooms' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Treatment Rooms & Suites
-        </button>
-        <button
-          onClick={() => setActiveTab('equipment')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'equipment' ? 600 : 500,
-            color: activeTab === 'equipment' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'equipment' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Machinery & Assets
         </button>
       </div>
 

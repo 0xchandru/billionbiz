@@ -6,7 +6,6 @@ import SkeletonLoader from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const CustomerTickets: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'open' | 'in_progress' | 'resolved' | 'closed'>('all');
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -82,12 +81,7 @@ export const CustomerTickets: FC = () => {
       t.subject.toLowerCase().includes(search.toLowerCase()) ||
       (t.customer_email && t.customer_email.toLowerCase().includes(search.toLowerCase()));
 
-    if (!matchesSearch) return false;
-    if (activeTab === 'open') return t.status === 'OPEN';
-    if (activeTab === 'in_progress') return t.status === 'IN_PROGRESS';
-    if (activeTab === 'resolved') return t.status === 'RESOLVED';
-    if (activeTab === 'closed') return t.status === 'CLOSED';
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -154,37 +148,9 @@ export const CustomerTickets: FC = () => {
         </div>
       </div>
 
-      {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[
-            { id: 'all', label: 'All Tickets' },
-            { id: 'open', label: 'Open' },
-            { id: 'in_progress', label: 'In Progress' },
-            { id: 'resolved', label: 'Resolved' },
-            { id: 'closed', label: 'Closed' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
-                color: activeTab === tab.id ? '#ffffff' : '#64748b',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: 'relative', width: '280px' }}>
+      {/* Search Bar Row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ position: 'relative', width: '320px' }}>
           <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
           <input
             type="text"

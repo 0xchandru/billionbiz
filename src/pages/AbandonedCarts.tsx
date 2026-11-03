@@ -11,7 +11,6 @@ import { TableSkeleton } from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const AbandonedCartsPage: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'recovered' | 'high_value'>('all');
   const [carts, setCarts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,10 +46,7 @@ export const AbandonedCartsPage: FC = () => {
     const matchesSearch =
       c.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.customer_phone?.includes(searchQuery);
-    if (!matchesSearch) return false;
-    if (activeTab === 'recovered') return c.status === 'RECOVERED';
-    if (activeTab === 'high_value') return (c.total_minor || 0) >= 500000;
-    return true;
+    return matchesSearch;
   });
 
   const totalValue = carts.reduce((acc, c) => acc + (c.total_minor || 0), 0) / 100;
@@ -61,7 +57,7 @@ export const AbandonedCartsPage: FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <ShoppingBag size={26} color="#0d9488" />
+            <ShoppingBag size={26} color="#083e47" />
             Abandoned Checkouts & Carts
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
@@ -77,8 +73,8 @@ export const AbandonedCartsPage: FC = () => {
           <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '6px' }}>{carts.length}</div>
         </div>
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px' }}>
-          <div style={{ fontSize: '12px', color: '#0d9488', fontWeight: 600, textTransform: 'uppercase' }}>Potential Value</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#0d9488', marginTop: '6px' }}>
+          <div style={{ fontSize: '12px', color: '#083e47', fontWeight: 600, textTransform: 'uppercase' }}>Potential Value</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#083e47', marginTop: '6px' }}>
             ₹{totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
         </div>
@@ -89,55 +85,6 @@ export const AbandonedCartsPage: FC = () => {
             Email Reminders Active
           </div>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
-        <button
-          onClick={() => setActiveTab('all')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'all' ? 600 : 500,
-            color: activeTab === 'all' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'all' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          All Abandoned ({carts.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('high_value')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'high_value' ? 600 : 500,
-            color: activeTab === 'high_value' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'high_value' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          High Value (&gt; ₹5,000)
-        </button>
-        <button
-          onClick={() => setActiveTab('recovered')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'recovered' ? 600 : 500,
-            color: activeTab === 'recovered' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'recovered' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Recovered
-        </button>
       </div>
 
       {/* Toolbar */}

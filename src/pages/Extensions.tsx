@@ -322,11 +322,20 @@ export const ExtensionsPage: React.FC<ExtensionsPageProps> = ({ defaultTab = 'al
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
+            <span>Plugins</span>
+            <span>/</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>
+              {activeTab === 'marketplace' ? 'App Store' : 'Installed Plugins'}
+            </span>
+          </div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
-            Extensions & Integrations
+            {activeTab === 'marketplace' ? 'Plugin Marketplace & App Store' : 'Installed Plugins & Extensions'}
           </h1>
           <p style={{ color: '#64748b', marginTop: '4px', fontSize: '14px' }}>
-            Install and manage third-party payment gateways, automated logistics, and business connectors.
+            {activeTab === 'marketplace'
+              ? 'Discover, install, and connect third-party business extensions, payment gateways, and shipping partners.'
+              : 'Manage your active third-party connections, payment gateway credentials, and logistics bridges.'}
           </p>
         </div>
 
@@ -350,45 +359,6 @@ export const ExtensionsPage: React.FC<ExtensionsPageProps> = ({ defaultTab = 'al
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           <span>Refresh</span>
         </button>
-      </div>
-
-      {/* Modern Tabs Bar */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '8px',
-          borderBottom: '1px solid #e2e8f0',
-          paddingBottom: '2px'
-        }}
-      >
-        {[
-          { id: 'all', label: 'All Plugins' },
-          { id: 'installed', label: 'Installed Plugins' },
-          { id: 'marketplace', label: 'Marketplace' }
-        ].map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 16px',
-                border: 'none',
-                background: 'transparent',
-                borderBottom: isActive ? '2px solid #0d9488' : '2px solid transparent',
-                color: isActive ? '#0d9488' : '#64748b',
-                fontWeight: isActive ? 600 : 500,
-                fontSize: '14px',
-                cursor: 'pointer'
-              }}
-            >
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
       </div>
 
       {/* Alert Banner */}

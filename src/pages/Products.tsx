@@ -4,10 +4,7 @@ import {
   Search, 
   RefreshCw, 
   X, 
-  Box, 
-  FolderTree, 
-  Layers, 
-  Tag 
+  Box
 } from 'lucide-react';
 import { api } from '../api/services';
 import { TableSkeleton } from '../components/common/SkeletonLoader';
@@ -17,21 +14,8 @@ const formatCurrency = (minor: number) => {
   return '₹' + (minor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-interface ProductsPageProps {
-  defaultTab?: 'all' | 'categories' | 'inventory' | 'pricelists';
-}
-
-export const ProductsPage: React.FC<ProductsPageProps> = ({ defaultTab = 'all' }) => {
-  const [activeTab, setActiveTab] = useState<'all' | 'categories' | 'inventory' | 'pricelists'>(defaultTab);
-
-  useEffect(() => {
-    if (defaultTab) {
-      setActiveTab(defaultTab);
-    }
-  }, [defaultTab]);
-
+export const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -50,12 +34,8 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ defaultTab = 'all' }
   const loadData = async () => {
     try {
       setLoading(true);
-      const [prodRes, catRes] = await Promise.all([
-        api.getProducts({ search: search || undefined }),
-        api.getCategories().catch(() => ({ categories: [] }))
-      ]);
+      const prodRes = await api.getProducts({ search: search || undefined });
       setProducts(prodRes.products || []);
-      setCategories(catRes.categories || []);
     } catch (err) {
       console.error('Failed to load products', err);
     } finally {
@@ -124,11 +104,16 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ defaultTab = 'all' }
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
+            <span>Catalogue</span>
+            <span>/</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Products</span>
+          </div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-            Product Catalogue & Inventory
+            Product Catalogue
           </h1>
           <p style={{ color: '#64748b', marginTop: '4px', fontSize: '14px' }}>
-            Manage sellable SKUs, categories, multi-location stock levels, and price lists.
+            Manage sellable SKUs, multi-variant options, and storefront pricing.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -174,257 +159,123 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ defaultTab = 'all' }
         </div>
       </div>
 
-      {/* Modern Tabs Bar */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '8px',
-          borderBottom: '1px solid #e2e8f0',
-          marginBottom: '24px',
-          overflowX: 'auto',
-          paddingBottom: '2px'
-        }}
-      >
-        {[
-          { id: 'all', label: 'All Products', icon: Box },
-          { id: 'categories', label: 'Categories', icon: FolderTree },
-          { id: 'inventory', label: 'Stock & Inventory', icon: Layers },
-          { id: 'pricelists', label: 'Price Lists', icon: Tag }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 16px',
-                border: 'none',
-                background: 'transparent',
-                borderBottom: isActive ? '2px solid #0d9488' : '2px solid transparent',
-                color: isActive ? '#0d9488' : '#64748b',
-                fontWeight: isActive ? 600 : 500,
-                fontSize: '14px',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <Icon size={16} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Search Bar */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ position: 'relative', flex: 1, maxWidth: '480px' }}>
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
+          <input
+            type="text"
+            placeholder="Search products by title, SKU, or category..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 12px 10px 38px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              backgroundColor: '#ffffff'
+            }}
+          />
+        </div>
       </div>
 
-      {/* TAB 1: ALL PRODUCTS */}
-      {activeTab === 'all' && (
-        <div>
-          {/* Search Bar */}
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-            <div style={{ position: 'relative', flex: 1, maxWidth: '480px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
-              <input
-                type="text"
-                placeholder="Search products by title, SKU, or category..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px 10px 38px',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  fontSize: '14px',
-                  backgroundColor: '#ffffff'
-                }}
-              />
-            </div>
+      <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        {loading ? (
+          <div style={{ padding: '24px' }}>
+            <TableSkeleton rows={5} columns={6} />
           </div>
-
-          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-            {loading ? (
-              <div style={{ padding: '24px' }}>
-                <TableSkeleton rows={5} columns={6} />
-              </div>
-            ) : products.length === 0 ? (
-              <EmptyState
-                icon={Box}
-                title="No products in catalog"
-                description={search ? 'No products match your search criteria.' : 'Create sellable inventory items, set prices, and configure options.'}
-                actionLabel="Add Product"
-                onAction={() => setIsCreateOpen(true)}
-              />
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    <th style={{ padding: '14px 18px' }}>Product</th>
-                    <th style={{ padding: '14px 18px' }}>Category</th>
-                    <th style={{ padding: '14px 18px' }}>Status</th>
-                    <th style={{ padding: '14px 18px' }}>Variants</th>
-                    <th style={{ padding: '14px 18px' }}>Price</th>
-                    <th style={{ padding: '14px 18px' }}>Stock Available</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((p) => {
-                    const primaryVariant = p.variants?.[0] || {};
-                    const totalStock = (p.variants || []).reduce((acc: number, v: any) => acc + (v.stock_available || 0), 0);
-                    return (
-                      <tr
-                        key={p.id}
-                        style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                      >
-                        <td style={{ padding: '14px 18px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{
-                              width: '40px',
-                              height: '40px',
-                              borderRadius: '8px',
-                              background: '#f0fdfa',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#0d9488'
-                            }}>
-                              <Box size={20} />
-                            </div>
-                            <div>
-                              <div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div>
-                              <div style={{ fontSize: '12px', color: '#94a3b8' }}>SKU: {primaryVariant.sku || 'N/A'}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td style={{ padding: '14px 18px', color: '#475569' }}>
-                          {p.category_name || 'General Catalog'}
-                        </td>
-                        <td style={{ padding: '14px 18px' }}>
-                          <span style={{
-                            padding: '4px 10px',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            background: p.status === 'ACTIVE' ? '#dcfce7' : '#f1f5f9',
-                            color: p.status === 'ACTIVE' ? '#15803d' : '#475569'
-                          }}>
-                            {p.status}
-                          </span>
-                        </td>
-                        <td style={{ padding: '14px 18px', color: '#64748b' }}>
-                          {p.variants?.length || 1} variant(s)
-                        </td>
-                        <td style={{ padding: '14px 18px', fontWeight: 700, color: '#0f172a' }}>
-                          {formatCurrency(primaryVariant.price_minor || 0)}
-                        </td>
-                        <td style={{ padding: '14px 18px' }}>
-                          <span style={{
-                            padding: '4px 10px',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            background: totalStock > 5 ? '#dcfce7' : totalStock > 0 ? '#fef3c7' : '#fee2e2',
-                            color: totalStock > 5 ? '#15803d' : totalStock > 0 ? '#b45309' : '#b91c1c'
-                          }}>
-                            {totalStock} in stock
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 2: CATEGORIES */}
-      {activeTab === 'categories' && (
-        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 16px 0' }}>Catalog Categories</h2>
-          {categories.length === 0 ? (
-            <div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
-              <FolderTree size={36} color="#cbd5e1" style={{ margin: '0 auto 12px' }} />
-              <p style={{ margin: 0, fontWeight: 600 }}>No custom categories configured yet</p>
-              <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#94a3b8' }}>Products belong to General Catalog by default.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
-              {categories.map((c) => (
-                <div key={c.id} style={{ padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                  <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.name}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Slug: {c.slug}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 3: STOCK & INVENTORY ADJUSTMENTS */}
-      {activeTab === 'inventory' && (
-        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 16px 0' }}>
-            Location Inventory Levels & Reconciliation
-          </h2>
+        ) : products.length === 0 ? (
+          <EmptyState
+            icon={Box}
+            title="No products in catalog"
+            description={search ? 'No products match your search criteria.' : 'Create sellable inventory items, set prices, and configure options.'}
+            actionLabel="Add Product"
+            onAction={() => setIsCreateOpen(true)}
+          />
+        ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontSize: '12px', textTransform: 'uppercase' }}>
-                <th style={{ padding: '12px 16px' }}>SKU Code</th>
-                <th style={{ padding: '12px 16px' }}>Product</th>
-                <th style={{ padding: '12px 16px' }}>Current Stock</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Adjustment</th>
+              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <th style={{ padding: '14px 18px' }}>Product</th>
+                <th style={{ padding: '14px 18px' }}>Category</th>
+                <th style={{ padding: '14px 18px' }}>Status</th>
+                <th style={{ padding: '14px 18px' }}>Variants</th>
+                <th style={{ padding: '14px 18px' }}>Price</th>
+                <th style={{ padding: '14px 18px' }}>Stock Available</th>
               </tr>
             </thead>
             <tbody>
-              {products.flatMap(p => (p.variants || []).map((v: any) => (
-                <tr key={v.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#0d9488' }}>{v.sku}</td>
-                  <td style={{ padding: '12px 16px', color: '#1e293b' }}>{p.name}</td>
-                  <td style={{ padding: '12px 16px', fontWeight: 600 }}>{v.stock_available || 0} units</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                    <button
-                      onClick={() => {
-                        setSelectedVariant(v);
-                        setIsAdjustOpen(true);
-                      }}
-                      style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
-                    >
-                      Reconcile Stock
-                    </button>
-                  </td>
-                </tr>
-              )))}
+              {products.map((p) => {
+                const primaryVariant = p.variants?.[0] || {};
+                const totalStock = (p.variants || []).reduce((acc: number, v: any) => acc + (v.stock_available || 0), 0);
+                return (
+                  <tr
+                    key={p.id}
+                    style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <td style={{ padding: '14px 18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '8px',
+                          background: '#f0fdfa',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#0d9488'
+                        }}>
+                          <Box size={20} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#0f172a' }}>{p.name}</div>
+                          <div style={{ fontSize: '12px', color: '#94a3b8' }}>SKU: {primaryVariant.sku || 'N/A'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '14px 18px', color: '#475569' }}>
+                      {p.category_name || 'General Catalog'}
+                    </td>
+                    <td style={{ padding: '14px 18px' }}>
+                      <span style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        background: p.status === 'ACTIVE' ? '#dcfce7' : '#f1f5f9',
+                        color: p.status === 'ACTIVE' ? '#15803d' : '#475569'
+                      }}>
+                        {p.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 18px', color: '#64748b' }}>
+                      {p.variants?.length || 1} variant(s)
+                    </td>
+                    <td style={{ padding: '14px 18px', fontWeight: 700, color: '#0f172a' }}>
+                      {formatCurrency(primaryVariant.price_minor || 0)}
+                    </td>
+                    <td style={{ padding: '14px 18px' }}>
+                      <span style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        background: totalStock > 5 ? '#dcfce7' : totalStock > 0 ? '#fef3c7' : '#fee2e2',
+                        color: totalStock > 5 ? '#15803d' : totalStock > 0 ? '#b45309' : '#b91c1c'
+                      }}>
+                        {totalStock} in stock
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* TAB 4: PRICE LISTS */}
-      {activeTab === 'pricelists' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-          {[
-            { name: 'Standard Retail (MSRP)', code: 'RETAIL', discount: '0% adjustment', desc: 'Default price applied across all storefront orders.' },
-            { name: 'Wholesale B2B Tier', code: 'WHOLESALE', discount: '25% discount off MSRP', desc: 'Applied to business accounts ordering minimum 20 units.' },
-            { name: 'VIP Loyalty Members', code: 'VIP_MEMBERS', discount: '10% discount off MSRP', desc: 'Automatic perk for recurring membership holders.' }
-          ].map((pl) => (
-            <div key={pl.code} style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>{pl.name}</h3>
-                <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: '#f0fdfa', color: '#0d9488' }}>
-                  {pl.code}
-                </span>
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0d9488', marginBottom: '8px' }}>{pl.discount}</div>
-              <p style={{ margin: 0, fontSize: '13px', color: '#64748b', lineHeight: 1.5 }}>{pl.desc}</p>
-            </div>
-          ))}
-        </div>
-      )}
+        )}
+      </div>
 
       {/* CREATE PRODUCT MODAL */}
       {isCreateOpen && (

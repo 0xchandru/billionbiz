@@ -6,7 +6,6 @@ import SkeletonLoader from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const Responsibilities: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'appointments' | 'cashier' | 'fulfillment' | 'management'>('all');
   const [responsibilities, setResponsibilities] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,12 +50,7 @@ export const Responsibilities: FC = () => {
       r.description.toLowerCase().includes(search.toLowerCase()) ||
       r.id.toLowerCase().includes(search.toLowerCase());
 
-    if (!matchesSearch) return false;
-    if (activeTab === 'appointments') return r.id === 'APPOINTMENT_STAFF';
-    if (activeTab === 'cashier') return r.id === 'CASHIER';
-    if (activeTab === 'fulfillment') return r.id === 'FULFILLMENT_STAFF';
-    if (activeTab === 'management') return r.id === 'MANAGER' || r.id === 'ADMIN_STAFF';
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -102,37 +96,9 @@ export const Responsibilities: FC = () => {
         </div>
       </div>
 
-      {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[
-            { id: 'all', label: 'All Operational Profiles' },
-            { id: 'appointments', label: 'Appointment Specialists' },
-            { id: 'cashier', label: 'Counter Cashiers' },
-            { id: 'fulfillment', label: 'Fulfillment Operators' },
-            { id: 'management', label: 'Store Management' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
-                color: activeTab === tab.id ? '#ffffff' : '#64748b',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: 'relative', width: '280px' }}>
+      {/* Search Bar Row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ position: 'relative', width: '320px' }}>
           <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
           <input
             type="text"

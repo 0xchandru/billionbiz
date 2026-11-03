@@ -6,7 +6,6 @@ import SkeletonLoader from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const POSShifts: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'discrepancy'>('all');
   const [shifts, setShifts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -41,11 +40,7 @@ export const POSShifts: FC = () => {
       (s.counter_code && s.counter_code.toLowerCase().includes(search.toLowerCase())) ||
       (s.opened_by_name && s.opened_by_name.toLowerCase().includes(search.toLowerCase()));
 
-    if (!matchesSearch) return false;
-    if (activeTab === 'open') return s.status === 'OPEN';
-    if (activeTab === 'closed') return s.status === 'CLOSED';
-    if (activeTab === 'discrepancy') return s.variance_minor && parseInt(s.variance_minor, 10) !== 0;
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -91,36 +86,9 @@ export const POSShifts: FC = () => {
         </div>
       </div>
 
-      {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[
-            { id: 'all', label: 'All Shift Sessions' },
-            { id: 'open', label: 'Active Open' },
-            { id: 'closed', label: 'Closed Z-Reports' },
-            { id: 'discrepancy', label: 'Discrepancy Audit' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                backgroundColor: activeTab === tab.id ? '#083e47' : 'transparent',
-                color: activeTab === tab.id ? '#ffffff' : '#64748b',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: 'relative', width: '280px' }}>
+      {/* Search Bar Row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ position: 'relative', width: '320px' }}>
           <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
           <input
             type="text"
@@ -160,79 +128,76 @@ export const POSShifts: FC = () => {
         />
       ) : (
         <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>REGISTER</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>STATUS</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>OPENING FLOAT</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>EXPECTED CASH</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>CLOSING COUNT</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>VARIANCE</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>CASHIER</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>OPENED AT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredShifts.map((s) => {
-                const variance = s.variance_minor ? parseInt(s.variance_minor, 10) : 0;
-                return (
-                  <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{s.counter_name || 'Counter'}</div>
-                      <div style={{ fontSize: '12px', color: '#083e47', fontFamily: 'monospace' }}>{s.counter_code}</div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>REGISTER / CODE</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>CASHIER</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>STATUS</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>OPENING FLOAT</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>CLOSING CASH</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>VARIANCE</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>OPENED AT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredShifts.map((shift) => (
+                  <tr key={shift.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '12px 16px' }}>
+                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{shift.counter_name || 'Main Counter'}</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>{shift.counter_code || shift.id}</div>
                     </td>
-                    <td style={{ padding: '16px 20px' }}>
+                    <td style={{ padding: '12px 16px', color: '#334155' }}>
+                      {shift.opened_by_name || 'Staff Cashier'}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
                       <span
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '6px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: s.status === 'OPEN' ? '#0284c7' : '#16a34a'
+                          gap: '4px',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          backgroundColor: shift.status === 'OPEN' ? '#e0f2fe' : '#dcfce7',
+                          color: shift.status === 'OPEN' ? '#0369a1' : '#15803d',
+                          border: `1px solid ${shift.status === 'OPEN' ? '#bae6fd' : '#bbf7d0'}`
                         }}
                       >
-                        {s.status === 'OPEN' ? <Clock size={13} /> : <CheckCircle size={13} />}
-                        {s.status}
+                        {shift.status === 'OPEN' ? <Clock size={12} /> : <CheckCircle size={12} />}
+                        {shift.status}
                       </span>
                     </td>
-                    <td style={{ padding: '16px 20px', color: '#334155' }}>
-                      {formatCurrency(s.opening_float_minor)}
+                    <td style={{ padding: '12px 16px', color: '#0f172a', fontWeight: 600 }}>
+                      {formatCurrency(shift.opening_float_minor)}
                     </td>
-                    <td style={{ padding: '16px 20px', color: '#334155' }}>
-                      {s.expected_cash_minor !== null ? formatCurrency(s.expected_cash_minor) : '—'}
+                    <td style={{ padding: '12px 16px', color: '#0f172a', fontWeight: 600 }}>
+                      {shift.status === 'CLOSED' ? formatCurrency(shift.closing_cash_minor) : '—'}
                     </td>
-                    <td style={{ padding: '16px 20px', color: '#0f172a', fontWeight: 600 }}>
-                      {s.closing_cash_minor !== null ? formatCurrency(s.closing_cash_minor) : 'Active'}
-                    </td>
-                    <td style={{ padding: '16px 20px' }}>
-                      {s.status === 'CLOSED' ? (
-                        variance === 0 ? (
-                          <span style={{ color: '#16a34a', fontWeight: 600 }}>₹0.00 (Balanced)</span>
-                        ) : variance > 0 ? (
-                          <span style={{ color: '#0284c7', fontWeight: 600 }}>+{formatCurrency(variance)} (Overage)</span>
+                    <td style={{ padding: '12px 16px' }}>
+                      {shift.variance_minor ? (
+                        parseInt(shift.variance_minor, 10) === 0 ? (
+                          <span style={{ color: '#16a34a', fontWeight: 600 }}>Exact Match</span>
                         ) : (
-                          <span style={{ color: '#dc2626', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            <AlertTriangle size={13} />
-                            {formatCurrency(variance)} (Shortage)
+                          <span style={{ color: '#dc2626', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <AlertTriangle size={12} />
+                            {formatCurrency(shift.variance_minor)}
                           </span>
                         )
                       ) : (
-                        <span style={{ color: '#64748b' }}>—</span>
+                        <span style={{ color: '#94a3b8' }}>—</span>
                       )}
                     </td>
-                    <td style={{ padding: '16px 20px', color: '#334155' }}>
-                      {s.opened_by_name || 'Cashier'}
-                    </td>
-                    <td style={{ padding: '16px 20px', color: '#64748b', fontSize: '12px' }}>
-                      {new Date(s.opened_at).toLocaleString()}
+                    <td style={{ padding: '12px 16px', color: '#64748b' }}>
+                      {new Date(shift.opened_at).toLocaleString()}
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

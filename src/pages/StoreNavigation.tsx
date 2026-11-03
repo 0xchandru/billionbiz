@@ -3,10 +3,8 @@ import type { FC } from 'react';
 import { Compass, Plus, Search, Trash2, ExternalLink, Link as LinkIcon, Check } from 'lucide-react';
 import { api } from '../api/services';
 import SkeletonLoader from '../components/common/SkeletonLoader';
-import EmptyState from '../components/common/EmptyState';
 
 export const StoreNavigation: FC = () => {
-  const [activeTab, setActiveTab] = useState<'HEADER' | 'FOOTER' | 'DRAWER'>('HEADER');
   const [navigation, setNavigation] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -89,19 +87,147 @@ export const StoreNavigation: FC = () => {
     }
   };
 
-  const filteredLinks = navigation.filter((item) => {
-    const itemMenuType = item.menu_type || 'HEADER';
-    if (itemMenuType !== activeTab) return false;
+  const renderMenuSection = (type: 'HEADER' | 'FOOTER' | 'DRAWER', title: string, subtitle: string) => {
+    const items = navigation.filter(
+      (item) =>
+        (item.menu_type || 'HEADER') === type &&
+        (!search ||
+          item.label.toLowerCase().includes(search.toLowerCase()) ||
+          item.path.toLowerCase().includes(search.toLowerCase()))
+    );
 
-    if (search) {
-      const matches =
-        item.label.toLowerCase().includes(search.toLowerCase()) ||
-        item.path.toLowerCase().includes(search.toLowerCase());
-      if (!matches) return false;
-    }
+    return (
+      <div
+        key={type}
+        style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          marginBottom: '24px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+        }}
+      >
+        <div
+          style={{
+            padding: '18px 24px',
+            borderBottom: '1px solid #e2e8f0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: '#fafbfc'
+          }}
+        >
+          <div>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#0f172a' }}>{title}</h2>
+            <p style={{ margin: '3px 0 0', fontSize: '13px', color: '#64748b' }}>{subtitle}</p>
+          </div>
+          <button
+            onClick={() => {
+              setMenuType(type);
+              setIsModalOpen(true);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#083e47',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '7px 14px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            <Plus size={14} />
+            <span>Add Link</span>
+          </button>
+        </div>
 
-    return true;
-  });
+        {items.length === 0 ? (
+          <div style={{ padding: '32px 24px', textAlign: 'center', color: '#64748b' }}>
+            <Compass size={28} style={{ color: '#cbd5e1', margin: '0 auto 8px' }} />
+            <div style={{ fontSize: '13px', fontWeight: 600 }}>No links in {title}</div>
+            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+              Click "Add Link" to add a navigation link here.
+            </div>
+          </div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
+                <th style={{ padding: '12px 20px', fontWeight: 600 }}>MENU TITLE</th>
+                <th style={{ padding: '12px 20px', fontWeight: 600 }}>DESTINATION PATH / URL</th>
+                <th style={{ padding: '12px 20px', fontWeight: 600 }}>TARGET</th>
+                <th style={{ padding: '12px 20px', fontWeight: 600 }}>VISIBILITY</th>
+                <th style={{ padding: '12px 20px', fontWeight: 600, textAlign: 'right' }}>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '14px 20px' }}>
+                    <div style={{ fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <LinkIcon size={14} style={{ color: '#083e47' }} />
+                      {item.label}
+                    </div>
+                  </td>
+                  <td style={{ padding: '14px 20px', fontFamily: 'monospace', color: '#334155' }}>
+                    {item.path}
+                  </td>
+                  <td style={{ padding: '14px 20px' }}>
+                    <span style={{ fontSize: '12px', color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {item.target === '_blank' ? <ExternalLink size={12} /> : null}
+                      {item.target === '_blank' ? 'New Tab' : 'Same Tab'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '14px 20px' }}>
+                    <button
+                      onClick={() => handleToggleActive(item.id)}
+                      style={{
+                        backgroundColor: item.is_active ? '#dcfce7' : '#f1f5f9',
+                        color: item.is_active ? '#16a34a' : '#64748b',
+                        border: `1px solid ${item.is_active ? '#bbf7d0' : '#e2e8f0'}`,
+                        borderRadius: '12px',
+                        padding: '3px 10px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      {item.is_active && <Check size={11} />}
+                      {item.is_active ? 'Visible' : 'Hidden'}
+                    </button>
+                  </td>
+                  <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                    <button
+                      onClick={() => handleDeleteLink(item.id)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#64748b',
+                        cursor: 'pointer',
+                        padding: '6px',
+                        borderRadius: '4px'
+                      }}
+                      title="Delete Link"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
@@ -121,7 +247,7 @@ export const StoreNavigation: FC = () => {
 
         <button
           onClick={() => {
-            setMenuType(activeTab);
+            setMenuType('HEADER');
             setIsModalOpen(true);
           }}
           style={{
@@ -166,39 +292,13 @@ export const StoreNavigation: FC = () => {
         </div>
       </div>
 
-      {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[
-            { id: 'HEADER', label: 'Main Header Menu' },
-            { id: 'FOOTER', label: 'Footer Links' },
-            { id: 'DRAWER', label: 'Mobile Drawer Menu' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
-                color: activeTab === tab.id ? '#ffffff' : '#64748b',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: 'relative', width: '280px' }}>
+      {/* Search Bar */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ position: 'relative', width: '320px' }}>
           <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
           <input
             type="text"
-            placeholder="Search links..."
+            placeholder="Search all navigation links..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
@@ -215,101 +315,19 @@ export const StoreNavigation: FC = () => {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content Sections */}
       {loading ? (
         <SkeletonLoader count={4} height={65} />
       ) : error ? (
         <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '16px', color: '#b91c1c' }}>
           {error}
         </div>
-      ) : filteredLinks.length === 0 ? (
-        <EmptyState
-          icon={Compass}
-          title="No Menu Items Found"
-          description={
-            search
-              ? 'No links match your filter query.'
-              : `You have not configured any menu items for the ${activeTab.toLowerCase()} menu.`
-          }
-          actionLabel="Add First Menu Link"
-          onAction={() => {
-            setMenuType(activeTab);
-            setIsModalOpen(true);
-          }}
-        />
       ) : (
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>MENU TITLE</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>DESTINATION PATH / URL</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>TARGET</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>VISIBILITY</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600, textAlign: 'right' }}>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredLinks.map((item) => (
-                <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '16px 20px' }}>
-                    <div style={{ fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <LinkIcon size={14} style={{ color: '#083e47' }} />
-                      {item.label}
-                    </div>
-                  </td>
-                  <td style={{ padding: '16px 20px', fontFamily: 'monospace', color: '#334155' }}>
-                    {item.path}
-                  </td>
-                  <td style={{ padding: '16px 20px' }}>
-                    <span style={{ fontSize: '12px', color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      {item.target === '_blank' ? <ExternalLink size={12} /> : null}
-                      {item.target === '_blank' ? 'New Tab' : 'Same Tab'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '16px 20px' }}>
-                    <button
-                      onClick={() => handleToggleActive(item.id)}
-                      style={{
-                        backgroundColor: item.is_active ? '#dcfce7' : '#f1f5f9',
-                        color: item.is_active ? '#16a34a' : '#64748b',
-                        border: `1px solid ${item.is_active ? '#bbf7d0' : '#e2e8f0'}`,
-                        borderRadius: '12px',
-                        padding: '3px 10px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                    >
-                      {item.is_active && <Check size={11} />}
-                      {item.is_active ? 'Visible' : 'Hidden'}
-                    </button>
-                  </td>
-                  <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                    <button
-                      onClick={() => handleDeleteLink(item.id)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#64748b',
-                        cursor: 'pointer',
-                        padding: '6px',
-                        borderRadius: '4px',
-                        transition: 'color 0.15s'
-                      }}
-                      title="Delete Link"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {renderMenuSection('HEADER', 'Main Header Menu', 'Top-level header navigation links visible across all storefront pages.')}
+          {renderMenuSection('FOOTER', 'Footer Links', 'Directory links shown in the storefront footer columns.')}
+          {renderMenuSection('DRAWER', 'Mobile Drawer Menu', 'Slide-out drawer navigation links displayed on smartphones and tablets.')}
+        </>
       )}
 
       {/* Add Menu Link Modal */}

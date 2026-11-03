@@ -6,7 +6,6 @@ import SkeletonLoader from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const RolesPermissions: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'system' | 'custom' | 'matrix'>('all');
   const [roles, setRoles] = useState<any[]>([]);
   const [permissions, setPermissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,10 +79,7 @@ export const RolesPermissions: FC = () => {
       r.code.toLowerCase().includes(search.toLowerCase()) ||
       (r.description && r.description.toLowerCase().includes(search.toLowerCase()));
 
-    if (!matchesSearch) return false;
-    if (activeTab === 'system') return r.is_system;
-    if (activeTab === 'custom') return !r.is_system;
-    return true;
+    return matchesSearch;
   });
 
   // Group permissions by domain for matrix & modal
@@ -150,56 +146,27 @@ export const RolesPermissions: FC = () => {
         </div>
       </div>
 
-      {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[
-            { id: 'all', label: 'All Roles' },
-            { id: 'system', label: 'System Roles' },
-            { id: 'custom', label: 'Custom Roles' },
-            { id: 'matrix', label: 'Permissions Matrix' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
-                color: activeTab === tab.id ? '#ffffff' : '#64748b',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+      {/* Search Bar Row */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ position: 'relative', width: '320px' }}>
+          <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+          <input
+            type="text"
+            placeholder="Search roles or codes..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: '100%',
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '8px 12px 8px 36px',
+              color: '#0f172a',
+              fontSize: '13px',
+              outline: 'none'
+            }}
+          />
         </div>
-
-        {activeTab !== 'matrix' && (
-          <div style={{ position: 'relative', width: '280px' }}>
-            <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-            <input
-              type="text"
-              placeholder="Search roles or codes..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width: '100%',
-                backgroundColor: '#ffffff',
-                border: '1px solid #cbd5e1',
-                borderRadius: '8px',
-                padding: '8px 12px 8px 36px',
-                color: '#0f172a',
-                fontSize: '13px',
-                outline: 'none'
-              }}
-            />
-          </div>
-        )}
       </div>
 
       {/* Content */}
@@ -209,110 +176,121 @@ export const RolesPermissions: FC = () => {
         <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '16px', color: '#b91c1c' }}>
           {error}
         </div>
-      ) : activeTab === 'matrix' ? (
-        /* Permissions Matrix View */
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
-                <th style={{ padding: '14px 20px', fontWeight: 600, minWidth: '240px' }}>PERMISSION CODE / DOMAIN</th>
-                {roles.map((r) => (
-                  <th key={r.id} style={{ padding: '14px 16px', fontWeight: 600, textAlign: 'center', minWidth: '120px' }}>
-                    {r.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {permissions.map((p) => (
-                <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '12px 20px' }}>
-                    <div style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'monospace' }}>{p.code}</div>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>{p.description}</div>
-                  </td>
-                  {roles.map((r) => {
-                    const hasPerm = r.permissions && r.permissions.includes(p.code);
-                    return (
-                      <td key={r.id} style={{ padding: '12px 16px', textAlign: 'center' }}>
-                        {hasPerm ? (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#f0fdfa', color: '#083e47' }}>
-                            <Check size={14} />
-                          </span>
-                        ) : (
-                          <span style={{ color: '#cbd5e1' }}>—</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : filteredRoles.length === 0 ? (
-        <EmptyState
-          icon={Shield}
-          title="No Roles Found"
-          description={
-            search
-              ? 'No roles match your search term.'
-              : 'No roles match the selected filter.'
-          }
-          actionLabel="Create Custom Role"
-          onAction={() => setIsModalOpen(true)}
-        />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '16px' }}>
-          {filteredRoles.map((role) => (
-            <div
-              key={role.id}
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>{role.name}</h3>
-                  <span
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          {/* Section 1: Configured Roles */}
+          <div>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '14px' }}>
+              Configured Access Roles
+            </h2>
+            {filteredRoles.length === 0 ? (
+              <EmptyState
+                icon={Shield}
+                title="No Roles Found"
+                description={search ? 'No roles match your search term.' : 'No roles configured.'}
+                actionLabel="Create Custom Role"
+                onAction={() => setIsModalOpen(true)}
+              />
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '16px' }}>
+                {filteredRoles.map((role) => (
+                  <div
+                    key={role.id}
                     style={{
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      backgroundColor: role.is_system ? '#f0fdfa' : '#f5f3ff',
-                      color: role.is_system ? '#083e47' : '#7c3aed',
-                      border: `1px solid ${role.is_system ? '#ccfbf1' : '#ede9fe'}`
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      padding: '20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
                     }}
                   >
-                    {role.is_system ? 'SYSTEM' : 'CUSTOM'}
-                  </span>
-                </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>{role.name}</h3>
+                        <span
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            backgroundColor: role.is_system ? '#f0fdfa' : '#f5f3ff',
+                            color: role.is_system ? '#083e47' : '#7c3aed',
+                            border: `1px solid ${role.is_system ? '#ccfbf1' : '#ede9fe'}`
+                          }}
+                        >
+                          {role.is_system ? 'SYSTEM' : 'CUSTOM'}
+                        </span>
+                      </div>
 
-                <div style={{ fontSize: '12px', color: '#64748b', fontFamily: 'monospace', marginBottom: '10px' }}>
-                  CODE: {role.code}
-                </div>
+                      <div style={{ fontSize: '12px', color: '#64748b', fontFamily: 'monospace', marginBottom: '10px' }}>
+                        CODE: {role.code}
+                      </div>
 
-                <p style={{ margin: '0 0 16px', color: '#64748b', fontSize: '13px', lineHeight: 1.5 }}>
-                  {role.description || 'No description provided.'}
-                </p>
+                      <p style={{ margin: '0 0 16px', color: '#64748b', fontSize: '13px', lineHeight: 1.5 }}>
+                        {role.description || 'No description provided.'}
+                      </p>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Key size={13} style={{ color: '#083e47' }} />
+                        {role.permissions ? role.permissions.length : 0} Permissions Assigned
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 600 }}>Active in Store</span>
+                    </div>
+                  </div>
+                ))}
               </div>
+            )}
+          </div>
 
-              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Key size={13} style={{ color: '#083e47' }} />
-                  {role.permissions ? role.permissions.length : 0} Permissions Assigned
-                </span>
-                <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 600 }}>Active in Store</span>
-              </div>
+          {/* Section 2: Permissions Matrix View */}
+          <div>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '14px' }}>
+              Granular Role Capabilities Matrix
+            </h2>
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
+                    <th style={{ padding: '14px 20px', fontWeight: 600, minWidth: '240px' }}>PERMISSION CODE / DOMAIN</th>
+                    {roles.map((r) => (
+                      <th key={r.id} style={{ padding: '14px 16px', fontWeight: 600, textAlign: 'center', minWidth: '120px' }}>
+                        {r.name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {permissions.map((p) => (
+                    <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '12px 20px' }}>
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'monospace' }}>{p.code}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>{p.description}</div>
+                      </td>
+                      {roles.map((r) => {
+                        const hasPerm = r.permissions && r.permissions.includes(p.code);
+                        return (
+                          <td key={r.id} style={{ padding: '12px 16px', textAlign: 'center' }}>
+                            {hasPerm ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#f0fdfa', color: '#083e47' }}>
+                                <Check size={14} />
+                              </span>
+                            ) : (
+                              <span style={{ color: '#cbd5e1' }}>—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          </div>
         </div>
       )}
 

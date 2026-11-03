@@ -12,7 +12,6 @@ import { TableSkeleton } from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const OfferingsPage: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'fixed' | 'hourly' | 'custom'>('all');
   const [offerings, setOfferings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,12 +85,7 @@ export const OfferingsPage: FC = () => {
     const matchesSearch =
       off.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       off.category?.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (activeTab === 'fixed') return off.pricing_type === 'FIXED' || !off.pricing_type;
-    if (activeTab === 'hourly') return off.pricing_type === 'HOURLY';
-    if (activeTab === 'custom') return off.pricing_type === 'CUSTOM';
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -99,6 +93,11 @@ export const OfferingsPage: FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
+            <span>Appointments</span>
+            <span>/</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Services & Offerings</span>
+          </div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Sparkles size={26} color="#0d9488" />
             Services & Appointment Offerings
@@ -127,70 +126,6 @@ export const OfferingsPage: FC = () => {
         >
           <Plus size={16} />
           Add Service
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
-        <button
-          onClick={() => setActiveTab('all')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'all' ? 600 : 500,
-            color: activeTab === 'all' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'all' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          All Offerings ({offerings.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('fixed')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'fixed' ? 600 : 500,
-            color: activeTab === 'fixed' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'fixed' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Fixed Price
-        </button>
-        <button
-          onClick={() => setActiveTab('hourly')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'hourly' ? 600 : 500,
-            color: activeTab === 'hourly' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'hourly' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Hourly Rate
-        </button>
-        <button
-          onClick={() => setActiveTab('custom')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'custom' ? 600 : 500,
-            color: activeTab === 'custom' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'custom' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Custom Packages
         </button>
       </div>
 

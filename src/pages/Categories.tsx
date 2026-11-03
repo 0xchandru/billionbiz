@@ -11,7 +11,6 @@ import { TableSkeleton } from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
 
 export const CategoriesPage: FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'active'>('all');
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,9 +81,7 @@ export const CategoriesPage: FC = () => {
     const matchesSearch =
       c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.slug?.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-    if (activeTab === 'active') return c.is_active;
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -93,7 +90,7 @@ export const CategoriesPage: FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FolderTree size={26} color="#0d9488" />
+            <FolderTree size={26} color="#083e47" />
             Product Categories & Taxonomy
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
@@ -107,7 +104,7 @@ export const CategoriesPage: FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#0d9488',
+            backgroundColor: '#083e47',
             color: '#ffffff',
             border: 'none',
             borderRadius: '8px',
@@ -115,45 +112,11 @@ export const CategoriesPage: FC = () => {
             fontSize: '14px',
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(13, 148, 136, 0.25)'
+            boxShadow: '0 1px 3px rgba(8, 62, 71, 0.25)'
           }}
         >
           <Plus size={16} />
           Add Category
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
-        <button
-          onClick={() => setActiveTab('all')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'all' ? 600 : 500,
-            color: activeTab === 'all' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'all' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          All Categories ({categories.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('active')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'active' ? 600 : 500,
-            color: activeTab === 'active' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'active' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
-        >
-          Active Storefront Collections
         </button>
       </div>
 
