@@ -37,6 +37,7 @@ export interface AuthState {
     capabilityMode?: string;
     password?: string;
     fullName?: string;
+    plan?: string;
   }) => Promise<{ success: boolean; destination?: string; error?: string }>;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
@@ -79,6 +80,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('billionbiz_token', token);
       localStorage.setItem('billionbiz_org_id', orgId);
       localStorage.setItem('billionbiz_store_id', storeId);
+      localStorage.setItem('billionbiz_store_slug', storeSlug);
 
       set({
         token,
@@ -124,6 +126,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('billionbiz_token', token);
       localStorage.setItem('billionbiz_org_id', orgId);
       localStorage.setItem('billionbiz_store_id', storeId);
+      localStorage.setItem('billionbiz_store_slug', storeSlug);
 
       set({
         token,
@@ -165,6 +168,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('billionbiz_token', token);
       localStorage.setItem('billionbiz_org_id', orgId);
       localStorage.setItem('billionbiz_store_id', storeId);
+      localStorage.setItem('billionbiz_store_slug', storeSlug);
 
       set({
         token,
@@ -204,6 +208,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('billionbiz_token', token);
       localStorage.setItem('billionbiz_org_id', orgId);
       localStorage.setItem('billionbiz_store_id', storeId);
+      localStorage.setItem('billionbiz_store_slug', storeSlug);
 
       set({
         token,
@@ -243,6 +248,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('billionbiz_token', token);
       localStorage.setItem('billionbiz_org_id', orgId);
       localStorage.setItem('billionbiz_store_id', storeId);
+      localStorage.setItem('billionbiz_store_slug', storeSlug);
 
       set({
         token,

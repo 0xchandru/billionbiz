@@ -23,6 +23,7 @@ import { HealthScorePopovers } from './topbar/HealthScorePopovers';
 import { PageSelectorDropdown } from './topbar/PageSelectorDropdown';
 import { MoreOptionsMenu } from './topbar/MoreOptionsMenu';
 import { useEditorContextStore } from '../../store/editorContextStore';
+import { useAuthStore } from '../../store/authStore';
 import { AuditButton } from './topbar/AuditButton';
 import { VersionCompareModal } from './engine/VersionCompareModal';
 import styles from './topbar/topbar.module.css';
@@ -57,6 +58,7 @@ export const EditorTopBar: React.FC = () => {
     publishPage,
   } = useSiteStore();
   const { canUndo, canRedo } = useThemeHistoryStore();
+  const { storeSlug } = useAuthStore();
 
   // Dialog & Drawer States
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -353,8 +355,23 @@ export const EditorTopBar: React.FC = () => {
 
   const handlePreview = () => {
     const previewPath = activePage?.path || '/';
-    window.open(previewPath, '_blank');
-    showToast('Opening storefront preview in new tab...');
+    const slug = storeSlug || localStorage.getItem('billionbiz_store_slug') || 'my-store';
+
+    // In local dev or ngrok tunnel: navigate to /store/:slug
+    // On production domain: navigate to https://<slug>.stores.chandraprakash.codes
+    const isLocal = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.includes('ngrok')
+    );
+
+    const pathSuffix = previewPath === '/' ? '' : previewPath;
+    const previewUrl = isLocal
+      ? `/store/${slug}${pathSuffix}`
+      : `https://${slug}.stores.chandraprakash.codes${pathSuffix}`;
+
+    window.open(previewUrl, '_blank');
+    showToast(`Opening storefront preview (${slug})...`);
   };
 
   const handleStatusBadgeClick = () => {

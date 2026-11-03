@@ -6,22 +6,31 @@
  */
 
 export function getApiBaseUrl(): string {
+  let url = '';
+
   // 1. Merchant or developer manual override stored in localStorage
   if (typeof window !== 'undefined') {
     const override = localStorage.getItem('billionbiz_api_override');
     if (override && override.trim().length > 0) {
-      return override.trim().replace(/\/+$/, '');
+      url = override.trim();
     }
   }
 
   // 2. Vite environment variable
-  const envUrl = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
-  if (envUrl.length > 0) {
-    return envUrl.replace(/\/+$/, '');
+  if (!url) {
+    url = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
   }
 
   // 3. Sensible development fallback
-  return 'http://localhost:8080/api/v1';
+  if (!url) {
+    url = 'http://localhost:8080/api/v1';
+  }
+
+  url = url.replace(/\/+$/, '');
+  if (!url.endsWith('/api/v1')) {
+    url = `${url}/api/v1`;
+  }
+  return url;
 }
 
 export function setApiBaseUrl(url: string): void {

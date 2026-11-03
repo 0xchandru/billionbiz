@@ -137,6 +137,14 @@ export const api = {
       body: JSON.stringify(data)
     }),
 
+  checkDomain: (slug: string) =>
+    apiClient<{
+      available: boolean;
+      slug: string;
+      fullDomain: string;
+      message: string;
+    }>(`/auth/check-domain?slug=${encodeURIComponent(slug)}`),
+
   registerStreamlined: (data: {
     identifier: string;
     storeName: string;
@@ -144,6 +152,7 @@ export const api = {
     capabilityMode?: string;
     password?: string;
     fullName?: string;
+    plan?: string;
   }) =>
     apiClient<AuthResponse>('/auth/register-streamlined', {
       method: 'POST',
