@@ -60,17 +60,17 @@ export const Responsibilities: FC = () => {
   });
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#f8fafc' }}>
+    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
             <span>Team</span>
             <span>/</span>
-            <span style={{ color: '#38bdf8' }}>Responsibilities</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Responsibilities</span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#f8fafc' }}>Operational Responsibilities</h1>
-          <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '14px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Operational Responsibilities</h1>
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
             Multi-responsibility mapping across your workforce. Staff members can hold both Cashier and Appointment specialist responsibilities simultaneously.
           </p>
         </div>
@@ -78,19 +78,19 @@ export const Responsibilities: FC = () => {
 
       {/* Metrics Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Profiles Defined</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#f8fafc', marginTop: '6px' }}>{responsibilities.length}</div>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Profiles Defined</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '6px' }}>{responsibilities.length}</div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Active Personnel</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#38bdf8', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Active Personnel</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#083e47', marginTop: '6px' }}>
             {teamMembers.filter(m => m.is_active).length}
           </div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Multi-Functional Staff</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#4ade80', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Multi-Functional Staff</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#16a34a', marginTop: '6px' }}>
             {teamMembers.filter(m => {
               let resps = m.responsibilities;
               if (typeof resps === 'string') {
@@ -103,7 +103,7 @@ export const Responsibilities: FC = () => {
       </div>
 
       {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[
             { id: 'all', label: 'All Operational Profiles' },
@@ -116,8 +116,8 @@ export const Responsibilities: FC = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               style={{
-                backgroundColor: activeTab === tab.id ? '#334155' : 'transparent',
-                color: activeTab === tab.id ? '#38bdf8' : '#94a3b8',
+                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
+                color: activeTab === tab.id ? '#ffffff' : '#64748b',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '8px 16px',
@@ -141,11 +141,11 @@ export const Responsibilities: FC = () => {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: '100%',
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
               borderRadius: '8px',
               padding: '8px 12px 8px 36px',
-              color: '#f8fafc',
+              color: '#0f172a',
               fontSize: '13px',
               outline: 'none'
             }}
@@ -157,7 +157,7 @@ export const Responsibilities: FC = () => {
       {loading ? (
         <SkeletonLoader count={4} height={90} />
       ) : error ? (
-        <div style={{ backgroundColor: '#ef444415', border: '1px solid #ef444450', borderRadius: '8px', padding: '16px', color: '#f87171' }}>
+        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '16px', color: '#b91c1c' }}>
           {error}
         </div>
       ) : filteredResponsibilities.length === 0 ? (
@@ -174,13 +174,14 @@ export const Responsibilities: FC = () => {
               <div
                 key={resp.id}
                 style={{
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #334155',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e2e8f0',
                   borderRadius: '12px',
                   padding: '24px',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between'
+                  justifyContent: 'space-between',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
                 }}
               >
                 <div>
@@ -191,8 +192,8 @@ export const Responsibilities: FC = () => {
                           width: '36px',
                           height: '36px',
                           borderRadius: '8px',
-                          backgroundColor: '#0284c720',
-                          color: '#38bdf8',
+                          backgroundColor: '#f0fdfa',
+                          color: '#083e47',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center'
@@ -201,7 +202,7 @@ export const Responsibilities: FC = () => {
                         <UserCheck size={18} />
                       </div>
                       <div>
-                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#f8fafc' }}>{resp.name}</h3>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>{resp.name}</h3>
                         <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>{resp.id}</span>
                       </div>
                     </div>
@@ -212,23 +213,23 @@ export const Responsibilities: FC = () => {
                         borderRadius: '12px',
                         fontSize: '11px',
                         fontWeight: 700,
-                        backgroundColor: assigned.length > 0 ? '#4ade8015' : '#64748b20',
-                        color: assigned.length > 0 ? '#4ade80' : '#94a3b8',
-                        border: `1px solid ${assigned.length > 0 ? '#4ade8030' : '#64748b30'}`
+                        backgroundColor: assigned.length > 0 ? '#dcfce7' : '#f1f5f9',
+                        color: assigned.length > 0 ? '#16a34a' : '#64748b',
+                        border: `1px solid ${assigned.length > 0 ? '#bbf7d0' : '#e2e8f0'}`
                       }}
                     >
                       {assigned.length} ASSIGNED
                     </span>
                   </div>
 
-                  <p style={{ margin: '12px 0 16px', color: '#94a3b8', fontSize: '13px', lineHeight: 1.5 }}>
+                  <p style={{ margin: '12px 0 16px', color: '#64748b', fontSize: '13px', lineHeight: 1.5 }}>
                     {resp.description}
                   </p>
                 </div>
 
-                <div style={{ borderTop: '1px solid #33415550', paddingTop: '16px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Users size={14} style={{ color: '#38bdf8' }} />
+                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Users size={14} style={{ color: '#083e47' }} />
                     Active Qualified Personnel ({assigned.length})
                   </div>
 
@@ -245,15 +246,15 @@ export const Responsibilities: FC = () => {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '6px',
-                            backgroundColor: '#0f172a',
-                            border: '1px solid #334155',
+                            backgroundColor: '#f8fafc',
+                            border: '1px solid #e2e8f0',
                             borderRadius: '6px',
                             padding: '4px 10px',
                             fontSize: '12px',
-                            color: '#e2e8f0'
+                            color: '#0f172a'
                           }}
                         >
-                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#4ade80' }} />
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
                           {staff.display_name}
                         </span>
                       ))}

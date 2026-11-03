@@ -95,17 +95,17 @@ export const RolesPermissions: FC = () => {
   }, {});
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#f8fafc' }}>
+    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
             <span>Team</span>
             <span>/</span>
-            <span style={{ color: '#38bdf8' }}>Roles & Permissions</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Roles & Permissions</span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#f8fafc' }}>Access Roles & Permissions Matrix</h1>
-          <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '14px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Access Roles & Permissions Matrix</h1>
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
             Define role boundaries, manage granular capabilities, and enforce enterprise multi-tenant access controls.
           </p>
         </div>
@@ -116,7 +116,7 @@ export const RolesPermissions: FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#0284c7',
+            backgroundColor: '#083e47',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
@@ -134,24 +134,24 @@ export const RolesPermissions: FC = () => {
 
       {/* Metrics Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Configured Roles</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#f8fafc', marginTop: '6px' }}>{roles.length}</div>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Configured Roles</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '6px' }}>{roles.length}</div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Built-In System Roles</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#38bdf8', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Built-In System Roles</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#083e47', marginTop: '6px' }}>
             {roles.filter(r => r.is_system).length}
           </div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Security Permissions</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#4ade80', marginTop: '6px' }}>{permissions.length}</div>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Security Permissions</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#16a34a', marginTop: '6px' }}>{permissions.length}</div>
         </div>
       </div>
 
       {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[
             { id: 'all', label: 'All Roles' },
@@ -163,8 +163,8 @@ export const RolesPermissions: FC = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               style={{
-                backgroundColor: activeTab === tab.id ? '#334155' : 'transparent',
-                color: activeTab === tab.id ? '#38bdf8' : '#94a3b8',
+                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
+                color: activeTab === tab.id ? '#ffffff' : '#64748b',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '8px 16px',
@@ -189,11 +189,11 @@ export const RolesPermissions: FC = () => {
               onChange={(e) => setSearch(e.target.value)}
               style={{
                 width: '100%',
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
+                backgroundColor: '#ffffff',
+                border: '1px solid #cbd5e1',
                 borderRadius: '8px',
                 padding: '8px 12px 8px 36px',
-                color: '#f8fafc',
+                color: '#0f172a',
                 fontSize: '13px',
                 outline: 'none'
               }}
@@ -206,15 +206,15 @@ export const RolesPermissions: FC = () => {
       {loading ? (
         <SkeletonLoader count={4} height={80} />
       ) : error ? (
-        <div style={{ backgroundColor: '#ef444415', border: '1px solid #ef444450', borderRadius: '8px', padding: '16px', color: '#f87171' }}>
+        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '16px', color: '#b91c1c' }}>
           {error}
         </div>
       ) : activeTab === 'matrix' ? (
         /* Permissions Matrix View */
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', overflow: 'auto' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #334155', color: '#94a3b8', backgroundColor: '#0f172a' }}>
+              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
                 <th style={{ padding: '14px 20px', fontWeight: 600, minWidth: '240px' }}>PERMISSION CODE / DOMAIN</th>
                 {roles.map((r) => (
                   <th key={r.id} style={{ padding: '14px 16px', fontWeight: 600, textAlign: 'center', minWidth: '120px' }}>
@@ -225,21 +225,21 @@ export const RolesPermissions: FC = () => {
             </thead>
             <tbody>
               {permissions.map((p) => (
-                <tr key={p.id} style={{ borderBottom: '1px solid #33415550' }}>
+                <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={{ padding: '12px 20px' }}>
-                    <div style={{ fontWeight: 600, color: '#f8fafc', fontFamily: 'monospace' }}>{p.code}</div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{p.description}</div>
+                    <div style={{ fontWeight: 600, color: '#0f172a', fontFamily: 'monospace' }}>{p.code}</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>{p.description}</div>
                   </td>
                   {roles.map((r) => {
                     const hasPerm = r.permissions && r.permissions.includes(p.code);
                     return (
                       <td key={r.id} style={{ padding: '12px 16px', textAlign: 'center' }}>
                         {hasPerm ? (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#0284c725', color: '#38bdf8' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#f0fdfa', color: '#083e47' }}>
                             <Check size={14} />
                           </span>
                         ) : (
-                          <span style={{ color: '#475569' }}>—</span>
+                          <span style={{ color: '#cbd5e1' }}>—</span>
                         )}
                       </td>
                     );
@@ -267,27 +267,28 @@ export const RolesPermissions: FC = () => {
             <div
               key={role.id}
               style={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
                 borderRadius: '12px',
                 padding: '20px',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
               }}
             >
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#f8fafc' }}>{role.name}</h3>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>{role.name}</h3>
                   <span
                     style={{
                       padding: '2px 8px',
                       borderRadius: '10px',
                       fontSize: '11px',
                       fontWeight: 700,
-                      backgroundColor: role.is_system ? '#38bdf815' : '#a855f715',
-                      color: role.is_system ? '#38bdf8' : '#c084fc',
-                      border: `1px solid ${role.is_system ? '#38bdf830' : '#a855f730'}`
+                      backgroundColor: role.is_system ? '#f0fdfa' : '#f5f3ff',
+                      color: role.is_system ? '#083e47' : '#7c3aed',
+                      border: `1px solid ${role.is_system ? '#ccfbf1' : '#ede9fe'}`
                     }}
                   >
                     {role.is_system ? 'SYSTEM' : 'CUSTOM'}
@@ -298,17 +299,17 @@ export const RolesPermissions: FC = () => {
                   CODE: {role.code}
                 </div>
 
-                <p style={{ margin: '0 0 16px', color: '#94a3b8', fontSize: '13px', lineHeight: 1.5 }}>
+                <p style={{ margin: '0 0 16px', color: '#64748b', fontSize: '13px', lineHeight: 1.5 }}>
                   {role.description || 'No description provided.'}
                 </p>
               </div>
 
-              <div style={{ borderTop: '1px solid #33415550', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Key size={13} style={{ color: '#38bdf8' }} />
+              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Key size={13} style={{ color: '#083e47' }} />
                   {role.permissions ? role.permissions.length : 0} Permissions Assigned
                 </span>
-                <span style={{ fontSize: '11px', color: '#4ade80' }}>Active in Store</span>
+                <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 600 }}>Active in Store</span>
               </div>
             </div>
           ))}
@@ -321,7 +322,8 @@ export const RolesPermissions: FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -332,26 +334,26 @@ export const RolesPermissions: FC = () => {
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: '16px',
               padding: '28px',
               width: '100%',
               maxWidth: '680px',
               maxHeight: '90vh',
               overflowY: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
             }}
           >
-            <h2 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>Create Custom Role</h2>
-            <p style={{ margin: '0 0 20px', color: '#94a3b8', fontSize: '13px' }}>
+            <h2 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Create Custom Role</h2>
+            <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: '13px' }}>
               Select specific security permission scopes to craft an operational role for your staff.
             </p>
 
             <form onSubmit={handleCreateRole}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Role Name *
                   </label>
                   <input
@@ -362,11 +364,11 @@ export const RolesPermissions: FC = () => {
                     onChange={(e) => setRoleName(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -374,7 +376,7 @@ export const RolesPermissions: FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Role Code (Uppercase Identifier)
                   </label>
                   <input
@@ -384,11 +386,11 @@ export const RolesPermissions: FC = () => {
                     onChange={(e) => setRoleCode(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -397,7 +399,7 @@ export const RolesPermissions: FC = () => {
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                   Description
                 </label>
                 <input
@@ -407,11 +409,11 @@ export const RolesPermissions: FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#f8fafc',
+                    color: '#0f172a',
                     fontSize: '13px',
                     outline: 'none'
                   }}
@@ -420,13 +422,13 @@ export const RolesPermissions: FC = () => {
 
               {/* Permission Checkboxes by Domain */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '8px' }}>
                   Assign Permissions ({selectedPermissions.length} selected)
                 </label>
-                <div style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #334155', borderRadius: '8px', padding: '12px', backgroundColor: '#0f172a' }}>
+                <div style={{ maxHeight: '240px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', backgroundColor: '#f8fafc' }}>
                   {Object.entries(permissionsByDomain).map(([domain, perms]: [string, any]) => (
                     <div key={domain} style={{ marginBottom: '14px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#083e47', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
                         {domain}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '8px' }}>
@@ -440,12 +442,12 @@ export const RolesPermissions: FC = () => {
                                 alignItems: 'flex-start',
                                 gap: '8px',
                                 fontSize: '12px',
-                                color: isSelected ? '#f8fafc' : '#94a3b8',
+                                color: isSelected ? '#0f172a' : '#64748b',
                                 cursor: 'pointer',
                                 padding: '6px 8px',
                                 borderRadius: '6px',
-                                backgroundColor: isSelected ? '#1e293b' : 'transparent',
-                                border: isSelected ? '1px solid #38bdf840' : '1px solid transparent'
+                                backgroundColor: isSelected ? '#f0fdfa' : 'transparent',
+                                border: isSelected ? '1px solid #99f6e4' : '1px solid transparent'
                               }}
                             >
                               <input
@@ -473,8 +475,8 @@ export const RolesPermissions: FC = () => {
                   onClick={() => setIsModalOpen(false)}
                   style={{
                     backgroundColor: 'transparent',
-                    border: '1px solid #334155',
-                    color: '#94a3b8',
+                    border: '1px solid #cbd5e1',
+                    color: '#64748b',
                     borderRadius: '8px',
                     padding: '10px 18px',
                     fontSize: '13px',
@@ -488,7 +490,7 @@ export const RolesPermissions: FC = () => {
                   type="submit"
                   disabled={submitting}
                   style={{
-                    backgroundColor: '#0284c7',
+                    backgroundColor: '#083e47',
                     border: 'none',
                     color: '#fff',
                     borderRadius: '8px',

@@ -87,17 +87,17 @@ export const PriceLists: FC = () => {
   });
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#f8fafc' }}>
+    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
             <span>Catalogue</span>
             <span>/</span>
-            <span style={{ color: '#38bdf8' }}>Price Lists</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Price Lists</span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#f8fafc' }}>Price Lists & Wholesale Tiers</h1>
-          <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '14px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Price Lists & Wholesale Tiers</h1>
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
             Manage custom wholesale rates, B2B volume pricing tiers, and VIP discounts across your catalog.
           </p>
         </div>
@@ -108,7 +108,7 @@ export const PriceLists: FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#0284c7',
+            backgroundColor: '#083e47',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
@@ -126,26 +126,26 @@ export const PriceLists: FC = () => {
 
       {/* Metrics Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Total Price Lists</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#f8fafc', marginTop: '6px' }}>{priceLists.length}</div>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Price Lists</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '6px' }}>{priceLists.length}</div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Wholesale Tiers</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#38bdf8', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Wholesale Tiers</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#083e47', marginTop: '6px' }}>
             {priceLists.filter(p => p.tier_type === 'WHOLESALE').length}
           </div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>VIP Discount Lists</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#a855f7', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>VIP Discount Lists</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#7c3aed', marginTop: '6px' }}>
             {priceLists.filter(p => p.tier_type === 'VIP').length}
           </div>
         </div>
       </div>
 
       {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[
             { id: 'all', label: 'All Price Lists' },
@@ -157,8 +157,8 @@ export const PriceLists: FC = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               style={{
-                backgroundColor: activeTab === tab.id ? '#334155' : 'transparent',
-                color: activeTab === tab.id ? '#38bdf8' : '#94a3b8',
+                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
+                color: activeTab === tab.id ? '#ffffff' : '#64748b',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '8px 16px',
@@ -182,11 +182,11 @@ export const PriceLists: FC = () => {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: '100%',
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
               borderRadius: '8px',
               padding: '8px 12px 8px 36px',
-              color: '#f8fafc',
+              color: '#0f172a',
               fontSize: '13px',
               outline: 'none'
             }}
@@ -198,7 +198,7 @@ export const PriceLists: FC = () => {
       {loading ? (
         <SkeletonLoader count={4} height={70} />
       ) : error ? (
-        <div style={{ backgroundColor: '#ef444415', border: '1px solid #ef444450', borderRadius: '8px', padding: '16px', color: '#f87171' }}>
+        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '16px', color: '#b91c1c' }}>
           {error}
         </div>
       ) : filteredLists.length === 0 ? (
@@ -214,10 +214,10 @@ export const PriceLists: FC = () => {
           onAction={() => setIsModalOpen(true)}
         />
       ) : (
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #334155', color: '#94a3b8' }}>
+              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>PRICE LIST NAME</th>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>TIER TYPE</th>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>DISCOUNT %</th>
@@ -228,10 +228,10 @@ export const PriceLists: FC = () => {
             </thead>
             <tbody>
               {filteredLists.map((pl) => (
-                <tr key={pl.id} style={{ borderBottom: '1px solid #33415550', transition: 'background-color 0.15s ease' }}>
+                <tr key={pl.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.15s ease' }}>
                   <td style={{ padding: '16px 20px' }}>
-                    <div style={{ fontWeight: 600, color: '#f8fafc' }}>{pl.name}</div>
-                    {pl.description && <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>{pl.description}</div>}
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{pl.name}</div>
+                    {pl.description && <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>{pl.description}</div>}
                   </td>
                   <td style={{ padding: '16px 20px' }}>
                     <span
@@ -241,21 +241,21 @@ export const PriceLists: FC = () => {
                         borderRadius: '12px',
                         fontSize: '11px',
                         fontWeight: 700,
-                        backgroundColor: pl.tier_type === 'WHOLESALE' ? '#0284c720' : '#a855f720',
-                        color: pl.tier_type === 'WHOLESALE' ? '#38bdf8' : '#c084fc',
-                        border: `1px solid ${pl.tier_type === 'WHOLESALE' ? '#0284c740' : '#a855f740'}`
+                        backgroundColor: pl.tier_type === 'WHOLESALE' ? '#f0fdfa' : '#f5f3ff',
+                        color: pl.tier_type === 'WHOLESALE' ? '#083e47' : '#7c3aed',
+                        border: `1px solid ${pl.tier_type === 'WHOLESALE' ? '#ccfbf1' : '#ede9fe'}`
                       }}
                     >
                       {pl.tier_type}
                     </span>
                   </td>
-                  <td style={{ padding: '16px 20px', color: '#4ade80', fontWeight: 600 }}>
+                  <td style={{ padding: '16px 20px', color: '#16a34a', fontWeight: 600 }}>
                     {parseFloat(pl.discount_pct) > 0 ? `${pl.discount_pct}% OFF` : 'Standard Base'}
                   </td>
-                  <td style={{ padding: '16px 20px', color: '#cbd5e1' }}>{pl.currency}</td>
+                  <td style={{ padding: '16px 20px', color: '#334155' }}>{pl.currency}</td>
                   <td style={{ padding: '16px 20px' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#4ade80', fontSize: '12px' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#4ade80' }} />
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontSize: '12px' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
                       Active
                     </span>
                   </td>
@@ -265,7 +265,7 @@ export const PriceLists: FC = () => {
                       style={{
                         background: 'transparent',
                         border: 'none',
-                        color: '#94a3b8',
+                        color: '#64748b',
                         cursor: 'pointer',
                         padding: '6px',
                         borderRadius: '4px',
@@ -289,7 +289,8 @@ export const PriceLists: FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -298,23 +299,23 @@ export const PriceLists: FC = () => {
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: '16px',
               padding: '28px',
               width: '100%',
               maxWidth: '520px',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
             }}
           >
-            <h2 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>Create Price List</h2>
-            <p style={{ margin: '0 0 20px', color: '#94a3b8', fontSize: '13px' }}>
+            <h2 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Create Price List</h2>
+            <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: '13px' }}>
               Define pricing tiers for specific merchant channels or customer segments.
             </p>
 
             <form onSubmit={handleCreatePriceList}>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                   Price List Name *
                 </label>
                 <input
@@ -325,11 +326,11 @@ export const PriceLists: FC = () => {
                   onChange={(e) => setName(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#f8fafc',
+                    color: '#0f172a',
                     fontSize: '13px',
                     outline: 'none'
                   }}
@@ -338,7 +339,7 @@ export const PriceLists: FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Tier Type
                   </label>
                   <select
@@ -346,11 +347,11 @@ export const PriceLists: FC = () => {
                     onChange={(e) => setTierType(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -363,7 +364,7 @@ export const PriceLists: FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Discount Percentage (%)
                   </label>
                   <input
@@ -375,11 +376,11 @@ export const PriceLists: FC = () => {
                     onChange={(e) => setDiscountPct(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -388,7 +389,7 @@ export const PriceLists: FC = () => {
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                   Description / Channel Terms
                 </label>
                 <textarea
@@ -398,11 +399,11 @@ export const PriceLists: FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#f8fafc',
+                    color: '#0f172a',
                     fontSize: '13px',
                     outline: 'none',
                     resize: 'none'
@@ -416,8 +417,8 @@ export const PriceLists: FC = () => {
                   onClick={() => setIsModalOpen(false)}
                   style={{
                     backgroundColor: 'transparent',
-                    border: '1px solid #334155',
-                    color: '#94a3b8',
+                    border: '1px solid #cbd5e1',
+                    color: '#64748b',
                     borderRadius: '8px',
                     padding: '10px 18px',
                     fontSize: '13px',
@@ -431,7 +432,7 @@ export const PriceLists: FC = () => {
                   type="submit"
                   disabled={submitting}
                   style={{
-                    backgroundColor: '#0284c7',
+                    backgroundColor: '#083e47',
                     border: 'none',
                     color: '#fff',
                     borderRadius: '8px',

@@ -91,17 +91,17 @@ export const CustomerTickets: FC = () => {
   });
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#f8fafc' }}>
+    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
             <span>People & CRM</span>
             <span>/</span>
-            <span style={{ color: '#38bdf8' }}>Support Tickets</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Support Tickets</span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#f8fafc' }}>Customer Inquiries & Support Tickets</h1>
-          <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '14px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Customer Inquiries & Support Tickets</h1>
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
             Omnichannel ticket queue directly tied to customer accounts, orders, and appointment bookings.
           </p>
         </div>
@@ -112,7 +112,7 @@ export const CustomerTickets: FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#0284c7',
+            backgroundColor: '#083e47',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
@@ -130,32 +130,32 @@ export const CustomerTickets: FC = () => {
 
       {/* Metrics Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Total Tickets</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#f8fafc', marginTop: '6px' }}>{tickets.length}</div>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Tickets</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '6px' }}>{tickets.length}</div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Open Inquiries</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#f59e0b', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Open Inquiries</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#d97706', marginTop: '6px' }}>
             {tickets.filter(t => t.status === 'OPEN').length}
           </div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>In Progress</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#38bdf8', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>In Progress</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#083e47', marginTop: '6px' }}>
             {tickets.filter(t => t.status === 'IN_PROGRESS').length}
           </div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Resolved & Closed</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#4ade80', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Resolved & Closed</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#16a34a', marginTop: '6px' }}>
             {tickets.filter(t => t.status === 'RESOLVED' || t.status === 'CLOSED').length}
           </div>
         </div>
       </div>
 
       {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[
             { id: 'all', label: 'All Tickets' },
@@ -168,8 +168,8 @@ export const CustomerTickets: FC = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               style={{
-                backgroundColor: activeTab === tab.id ? '#334155' : 'transparent',
-                color: activeTab === tab.id ? '#38bdf8' : '#94a3b8',
+                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
+                color: activeTab === tab.id ? '#ffffff' : '#64748b',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '8px 16px',
@@ -193,11 +193,11 @@ export const CustomerTickets: FC = () => {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: '100%',
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
               borderRadius: '8px',
               padding: '8px 12px 8px 36px',
-              color: '#f8fafc',
+              color: '#0f172a',
               fontSize: '13px',
               outline: 'none'
             }}
@@ -209,7 +209,7 @@ export const CustomerTickets: FC = () => {
       {loading ? (
         <SkeletonLoader count={4} height={70} />
       ) : error ? (
-        <div style={{ backgroundColor: '#ef444415', border: '1px solid #ef444450', borderRadius: '8px', padding: '16px', color: '#f87171' }}>
+        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '16px', color: '#b91c1c' }}>
           {error}
         </div>
       ) : filteredTickets.length === 0 ? (
@@ -225,10 +225,10 @@ export const CustomerTickets: FC = () => {
           onAction={() => setIsModalOpen(true)}
         />
       ) : (
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #334155', color: '#94a3b8' }}>
+              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>TICKET ID</th>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>CUSTOMER</th>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>SUBJECT & DETAILS</th>
@@ -240,18 +240,18 @@ export const CustomerTickets: FC = () => {
             </thead>
             <tbody>
               {filteredTickets.map((t) => (
-                <tr key={t.id} style={{ borderBottom: '1px solid #33415550' }}>
-                  <td style={{ padding: '16px 20px', fontFamily: 'monospace', color: '#38bdf8', fontWeight: 600 }}>
+                <tr key={t.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '16px 20px', fontFamily: 'monospace', color: '#083e47', fontWeight: 600 }}>
                     {t.ticket_number}
                   </td>
                   <td style={{ padding: '16px 20px' }}>
-                    <div style={{ fontWeight: 600, color: '#f8fafc' }}>{t.customer_name}</div>
-                    {t.customer_email && <div style={{ fontSize: '12px', color: '#94a3b8' }}>{t.customer_email}</div>}
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{t.customer_name}</div>
+                    {t.customer_email && <div style={{ fontSize: '12px', color: '#64748b' }}>{t.customer_email}</div>}
                   </td>
                   <td style={{ padding: '16px 20px' }}>
-                    <div style={{ fontWeight: 600, color: '#f8fafc' }}>{t.subject}</div>
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{t.subject}</div>
                     {t.description && (
-                      <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px', maxWidth: '320px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px', maxWidth: '320px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {t.description}
                       </div>
                     )}
@@ -265,22 +265,22 @@ export const CustomerTickets: FC = () => {
                         fontWeight: 700,
                         backgroundColor:
                           t.priority === 'URGENT'
-                            ? '#ef444420'
+                            ? '#fef2f2'
                             : t.priority === 'HIGH'
-                            ? '#f9731620'
-                            : '#0284c720',
+                            ? '#fff7ed'
+                            : '#f0fdfa',
                         color:
                           t.priority === 'URGENT'
-                            ? '#f87171'
+                            ? '#b91c1c'
                             : t.priority === 'HIGH'
-                            ? '#fb923c'
-                            : '#38bdf8',
+                            ? '#c2410c'
+                            : '#083e47',
                         border: `1px solid ${
                           t.priority === 'URGENT'
-                            ? '#ef444440'
+                            ? '#fecaca'
                             : t.priority === 'HIGH'
-                            ? '#f9731640'
-                            : '#0284c740'
+                            ? '#fed7aa'
+                            : '#ccfbf1'
                         }`
                       }}
                     >
@@ -297,10 +297,10 @@ export const CustomerTickets: FC = () => {
                         fontWeight: 600,
                         color:
                           t.status === 'RESOLVED' || t.status === 'CLOSED'
-                            ? '#4ade80'
+                            ? '#16a34a'
                             : t.status === 'IN_PROGRESS'
-                            ? '#38bdf8'
-                            : '#f59e0b'
+                            ? '#083e47'
+                            : '#d97706'
                       }}
                     >
                       <span
@@ -310,16 +310,16 @@ export const CustomerTickets: FC = () => {
                           borderRadius: '50%',
                           backgroundColor:
                             t.status === 'RESOLVED' || t.status === 'CLOSED'
-                              ? '#4ade80'
+                              ? '#16a34a'
                               : t.status === 'IN_PROGRESS'
-                              ? '#38bdf8'
-                              : '#f59e0b'
+                              ? '#083e47'
+                              : '#d97706'
                         }}
                       />
                       {t.status}
                     </span>
                   </td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8', fontSize: '12px' }}>
+                  <td style={{ padding: '16px 20px', color: '#64748b', fontSize: '12px' }}>
                     {new Date(t.created_at).toLocaleDateString()}
                   </td>
                   <td style={{ padding: '16px 20px', textAlign: 'right' }}>
@@ -327,9 +327,9 @@ export const CustomerTickets: FC = () => {
                       <button
                         onClick={() => handleUpdateStatus(t.id, 'IN_PROGRESS')}
                         style={{
-                          backgroundColor: '#334155',
-                          border: 'none',
-                          color: '#38bdf8',
+                          backgroundColor: '#f1f5f9',
+                          border: '1px solid #e2e8f0',
+                          color: '#083e47',
                           padding: '6px 12px',
                           borderRadius: '6px',
                           fontSize: '12px',
@@ -348,9 +348,9 @@ export const CustomerTickets: FC = () => {
                       <button
                         onClick={() => handleUpdateStatus(t.id, 'RESOLVED')}
                         style={{
-                          backgroundColor: '#0284c725',
-                          border: '1px solid #0284c750',
-                          color: '#38bdf8',
+                          backgroundColor: '#f0fdf4',
+                          border: '1px solid #bbf7d0',
+                          color: '#16a34a',
                           padding: '6px 12px',
                           borderRadius: '6px',
                           fontSize: '12px',
@@ -382,7 +382,8 @@ export const CustomerTickets: FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -392,24 +393,24 @@ export const CustomerTickets: FC = () => {
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: '16px',
               padding: '28px',
               width: '100%',
               maxWidth: '540px',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
             }}
           >
-            <h2 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>Create Support Ticket</h2>
-            <p style={{ margin: '0 0 20px', color: '#94a3b8', fontSize: '13px' }}>
+            <h2 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Create Support Ticket</h2>
+            <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: '13px' }}>
               Log an incoming customer support inquiry or service escalation.
             </p>
 
             <form onSubmit={handleCreateTicket}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Customer Name *
                   </label>
                   <input
@@ -420,11 +421,11 @@ export const CustomerTickets: FC = () => {
                     onChange={(e) => setCustomerName(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -432,7 +433,7 @@ export const CustomerTickets: FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Customer Email
                   </label>
                   <input
@@ -442,11 +443,11 @@ export const CustomerTickets: FC = () => {
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -456,7 +457,7 @@ export const CustomerTickets: FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Subject *
                   </label>
                   <input
@@ -467,11 +468,11 @@ export const CustomerTickets: FC = () => {
                     onChange={(e) => setSubject(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -479,7 +480,7 @@ export const CustomerTickets: FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Priority
                   </label>
                   <select
@@ -487,11 +488,11 @@ export const CustomerTickets: FC = () => {
                     onChange={(e) => setPriority(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -505,7 +506,7 @@ export const CustomerTickets: FC = () => {
               </div>
 
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                   Issue Description & Notes
                 </label>
                 <textarea
@@ -515,11 +516,11 @@ export const CustomerTickets: FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#f8fafc',
+                    color: '#0f172a',
                     fontSize: '13px',
                     outline: 'none',
                     resize: 'none'
@@ -533,8 +534,8 @@ export const CustomerTickets: FC = () => {
                   onClick={() => setIsModalOpen(false)}
                   style={{
                     backgroundColor: 'transparent',
-                    border: '1px solid #334155',
-                    color: '#94a3b8',
+                    border: '1px solid #cbd5e1',
+                    color: '#64748b',
                     borderRadius: '8px',
                     padding: '10px 18px',
                     fontSize: '13px',
@@ -548,7 +549,7 @@ export const CustomerTickets: FC = () => {
                   type="submit"
                   disabled={submitting}
                   style={{
-                    backgroundColor: '#0284c7',
+                    backgroundColor: '#083e47',
                     border: 'none',
                     color: '#fff',
                     borderRadius: '8px',

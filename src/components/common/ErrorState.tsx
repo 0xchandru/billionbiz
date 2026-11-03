@@ -63,7 +63,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
             borderRadius: '8px',
             backgroundColor: '#ffffff',
             border: '1px solid #cbd5e1',
-            color: '#1e293b',
+            color: '#0f172a',
             fontSize: '13px',
             fontWeight: 600,
             cursor: 'pointer'

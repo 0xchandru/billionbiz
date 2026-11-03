@@ -122,17 +122,17 @@ export const PeoplePage: FC = () => {
   });
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#f8fafc' }}>
+    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '13px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
             <span>People & CRM</span>
             <span>/</span>
-            <span style={{ color: '#38bdf8' }}>Customers</span>
+            <span style={{ color: '#083e47', fontWeight: 600 }}>Customers</span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#f8fafc' }}>Customer Directory & Profiles</h1>
-          <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '14px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Customer Directory & Profiles</h1>
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
             Authoritative directory of registered customer accounts, order history, and service clients.
           </p>
         </div>
@@ -143,7 +143,7 @@ export const PeoplePage: FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#0284c7',
+            backgroundColor: '#083e47',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
@@ -161,26 +161,26 @@ export const PeoplePage: FC = () => {
 
       {/* Metrics Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Total Customers</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#f8fafc', marginTop: '6px' }}>{customers.length}</div>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Customers</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginTop: '6px' }}>{customers.length}</div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Repeat Buyers</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#38bdf8', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Repeat Buyers</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#083e47', marginTop: '6px' }}>
             {customers.filter(c => parseInt(c.total_orders || '0', 10) > 1).length}
           </div>
         </div>
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Total Client Value</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#4ade80', marginTop: '6px' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Client Value</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#16a34a', marginTop: '6px' }}>
             {formatCurrency(customers.reduce((sum, c) => sum + (c.total_spent_minor || 0), 0))}
           </div>
         </div>
       </div>
 
       {/* Tabs & Search Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[
             { id: 'all', label: 'All Customers' },
@@ -191,8 +191,8 @@ export const PeoplePage: FC = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               style={{
-                backgroundColor: activeTab === tab.id ? '#334155' : 'transparent',
-                color: activeTab === tab.id ? '#38bdf8' : '#94a3b8',
+                backgroundColor: activeTab === tab.id ? '#083e47' : '#f1f5f9',
+                color: activeTab === tab.id ? '#ffffff' : '#64748b',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '8px 16px',
@@ -216,11 +216,11 @@ export const PeoplePage: FC = () => {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: '100%',
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              border: '1px solid #cbd5e1',
               borderRadius: '8px',
               padding: '8px 12px 8px 36px',
-              color: '#f8fafc',
+              color: '#0f172a',
               fontSize: '13px',
               outline: 'none'
             }}
@@ -244,10 +244,10 @@ export const PeoplePage: FC = () => {
           onAction={() => setIsAddModalOpen(true)}
         />
       ) : (
-        <div style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #334155', color: '#94a3b8' }}>
+              <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>CUSTOMER NAME</th>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>CONTACT DETAILS</th>
                 <th style={{ padding: '14px 20px', fontWeight: 600 }}>TOTAL ORDERS</th>
@@ -260,38 +260,38 @@ export const PeoplePage: FC = () => {
               {filteredCustomers.map((c) => (
                 <tr 
                   key={c.id} 
-                  style={{ borderBottom: '1px solid #33415550', cursor: 'pointer', transition: 'background-color 0.15s ease' }}
+                  style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer', transition: 'background-color 0.15s ease' }}
                   onClick={() => handleOpenCustomer(c)}
                 >
                   <td style={{ padding: '16px 20px' }}>
-                    <div style={{ fontWeight: 600, color: '#f8fafc' }}>
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>
                       {c.first_name} {c.last_name || ''}
                     </div>
                     {c.default_address?.city && (
-                      <div style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                         <MapPin size={11} /> {c.default_address.city}, {c.default_address.state || c.default_address.country}
                       </div>
                     )}
                   </td>
                   <td style={{ padding: '16px 20px' }}>
                     {c.email && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#cbd5e1', fontSize: '12px' }}>
-                        <Mail size={12} style={{ color: '#38bdf8' }} /> {c.email}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155', fontSize: '12px' }}>
+                        <Mail size={12} style={{ color: '#083e47' }} /> {c.email}
                       </div>
                     )}
                     {c.phone && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '12px', marginTop: '2px' }}>
                         <Phone size={12} /> {c.phone}
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: '16px 20px', color: '#f8fafc', fontWeight: 600 }}>
+                  <td style={{ padding: '16px 20px', color: '#0f172a', fontWeight: 600 }}>
                     {c.total_orders || 0}
                   </td>
-                  <td style={{ padding: '16px 20px', color: '#4ade80', fontWeight: 600 }}>
+                  <td style={{ padding: '16px 20px', color: '#16a34a', fontWeight: 600 }}>
                     {formatCurrency(c.total_spent_minor || 0)}
                   </td>
-                  <td style={{ padding: '16px 20px', color: '#94a3b8', fontSize: '12px' }}>
+                  <td style={{ padding: '16px 20px', color: '#64748b', fontSize: '12px' }}>
                     {new Date(c.created_at).toLocaleDateString()}
                   </td>
                   <td style={{ padding: '16px 20px', textAlign: 'right' }}>
@@ -301,9 +301,9 @@ export const PeoplePage: FC = () => {
                         handleOpenCustomer(c);
                       }}
                       style={{
-                        backgroundColor: '#334155',
-                        border: 'none',
-                        color: '#38bdf8',
+                        backgroundColor: '#f1f5f9',
+                        border: '1px solid #e2e8f0',
+                        color: '#083e47',
                         padding: '6px 12px',
                         borderRadius: '6px',
                         fontSize: '12px',
@@ -327,7 +327,8 @@ export const PeoplePage: FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             justifyContent: 'flex-end',
             zIndex: 1000
@@ -336,23 +337,23 @@ export const PeoplePage: FC = () => {
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              borderLeft: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              borderLeft: '1px solid #e2e8f0',
               width: '100%',
               maxWidth: '520px',
               height: '100%',
               overflowY: 'auto',
               padding: '32px',
-              boxShadow: '-10px 0 25px rgba(0, 0, 0, 0.5)'
+              boxShadow: '-10px 0 25px rgba(0, 0, 0, 0.08)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#f8fafc' }}>
+                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>
                   {selectedCustomer.first_name} {selectedCustomer.last_name || ''}
                 </h2>
-                <span style={{ fontSize: '12px', color: '#38bdf8', fontFamily: 'monospace' }}>
+                <span style={{ fontSize: '12px', color: '#083e47', fontFamily: 'monospace' }}>
                   {selectedCustomer.id}
                 </span>
               </div>
@@ -361,7 +362,7 @@ export const PeoplePage: FC = () => {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#94a3b8',
+                  color: '#64748b',
                   cursor: 'pointer',
                   padding: '6px'
                 }}
@@ -375,51 +376,51 @@ export const PeoplePage: FC = () => {
             ) : (
               <div>
                 {/* Contact & Metrics */}
-                <div style={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+                <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>Orders Count</div>
-                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#f8fafc', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Orders Count</div>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
                         {selectedCustomer.total_orders || 0}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>Total Spent</div>
-                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#4ade80', marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Total Spent</div>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#16a34a', marginTop: '2px' }}>
                         {formatCurrency(selectedCustomer.total_spent_minor || 0)}
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ borderTop: '1px solid #334155', marginTop: '16px', paddingTop: '16px' }}>
+                  <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '16px', paddingTop: '16px' }}>
                     {selectedCustomer.email && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#cbd5e1', fontSize: '13px', marginBottom: '8px' }}>
-                        <Mail size={14} style={{ color: '#38bdf8' }} /> {selectedCustomer.email}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontSize: '13px', marginBottom: '8px' }}>
+                        <Mail size={14} style={{ color: '#083e47' }} /> {selectedCustomer.email}
                       </div>
                     )}
                     {selectedCustomer.phone && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#cbd5e1', fontSize: '13px' }}>
-                        <Phone size={14} style={{ color: '#4ade80' }} /> {selectedCustomer.phone}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontSize: '13px' }}>
+                        <Phone size={14} style={{ color: '#16a34a' }} /> {selectedCustomer.phone}
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Recent Orders */}
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#f8fafc', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ShoppingBag size={15} style={{ color: '#38bdf8' }} /> Recent Store Orders
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShoppingBag size={15} style={{ color: '#083e47' }} /> Recent Store Orders
                 </h3>
                 {customerDetails?.orders && customerDetails.orders.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
                     {customerDetails.orders.map((ord: any) => (
-                      <div key={ord.id} style={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div key={ord.id} style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '13px' }}>{ord.order_number}</div>
-                          <div style={{ fontSize: '11px', color: '#94a3b8' }}>{new Date(ord.created_at).toLocaleDateString()}</div>
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '13px' }}>{ord.order_number}</div>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>{new Date(ord.created_at).toLocaleDateString()}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontWeight: 600, color: '#4ade80', fontSize: '13px' }}>{formatCurrency(ord.total_minor)}</div>
-                          <div style={{ fontSize: '11px', color: '#38bdf8' }}>{ord.status}</div>
+                          <div style={{ fontWeight: 600, color: '#16a34a', fontSize: '13px' }}>{formatCurrency(ord.total_minor)}</div>
+                          <div style={{ fontSize: '11px', color: '#083e47', fontWeight: 600 }}>{ord.status}</div>
                         </div>
                       </div>
                     ))}
@@ -431,22 +432,22 @@ export const PeoplePage: FC = () => {
                 )}
 
                 {/* Service Appointments */}
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#f8fafc', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Calendar size={15} style={{ color: '#a855f7' }} /> Booking History
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Calendar size={15} style={{ color: '#083e47' }} /> Booking History
                 </h3>
                 {customerDetails?.bookings && customerDetails.bookings.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {customerDetails.bookings.map((bkg: any) => (
-                      <div key={bkg.id} style={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div key={bkg.id} style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '13px' }}>{bkg.service_name}</div>
-                          <div style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '13px' }}>{bkg.service_name}</div>
+                          <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <Clock size={11} /> {new Date(bkg.start_time).toLocaleString()}
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '13px' }}>{formatCurrency(bkg.total_minor)}</div>
-                          <div style={{ fontSize: '11px', color: '#a855f7' }}>{bkg.status}</div>
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '13px' }}>{formatCurrency(bkg.total_minor)}</div>
+                          <div style={{ fontSize: '11px', color: '#083e47', fontWeight: 600 }}>{bkg.status}</div>
                         </div>
                       </div>
                     ))}
@@ -468,7 +469,8 @@ export const PeoplePage: FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.4)',
+            backdropFilter: 'blur(2px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -478,24 +480,24 @@ export const PeoplePage: FC = () => {
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: '16px',
               padding: '28px',
               width: '100%',
               maxWidth: '520px',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
             }}
           >
-            <h2 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>Add New Customer</h2>
-            <p style={{ margin: '0 0 20px', color: '#94a3b8', fontSize: '13px' }}>
+            <h2 style={{ margin: '0 0 6px', fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Add New Customer</h2>
+            <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: '13px' }}>
               Create a customer profile to track purchases, addresses, and bookings.
             </p>
 
             <form onSubmit={handleCreateCustomer}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     First Name *
                   </label>
                   <input
@@ -506,11 +508,11 @@ export const PeoplePage: FC = () => {
                     onChange={(e) => setFirstName(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -518,7 +520,7 @@ export const PeoplePage: FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Last Name
                   </label>
                   <input
@@ -528,11 +530,11 @@ export const PeoplePage: FC = () => {
                     onChange={(e) => setLastName(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -542,7 +544,7 @@ export const PeoplePage: FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Email Address
                   </label>
                   <input
@@ -552,11 +554,11 @@ export const PeoplePage: FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -564,7 +566,7 @@ export const PeoplePage: FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     Phone Number
                   </label>
                   <input
@@ -574,11 +576,11 @@ export const PeoplePage: FC = () => {
                     onChange={(e) => setPhone(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -587,7 +589,7 @@ export const PeoplePage: FC = () => {
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                   Street Address
                 </label>
                 <input
@@ -597,11 +599,11 @@ export const PeoplePage: FC = () => {
                   onChange={(e) => setAddressLine1(e.target.value)}
                   style={{
                     width: '100%',
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '8px',
                     padding: '10px 12px',
-                    color: '#f8fafc',
+                    color: '#0f172a',
                     fontSize: '13px',
                     outline: 'none'
                   }}
@@ -610,7 +612,7 @@ export const PeoplePage: FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     City
                   </label>
                   <input
@@ -620,11 +622,11 @@ export const PeoplePage: FC = () => {
                     onChange={(e) => setCity(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -632,7 +634,7 @@ export const PeoplePage: FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     State
                   </label>
                   <input
@@ -642,11 +644,11 @@ export const PeoplePage: FC = () => {
                     onChange={(e) => setState(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -654,7 +656,7 @@ export const PeoplePage: FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
                     PIN Code
                   </label>
                   <input
@@ -664,11 +666,11 @@ export const PeoplePage: FC = () => {
                     onChange={(e) => setPostalCode(e.target.value)}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 12px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       outline: 'none'
                     }}
@@ -682,8 +684,8 @@ export const PeoplePage: FC = () => {
                   onClick={() => setIsAddModalOpen(false)}
                   style={{
                     backgroundColor: 'transparent',
-                    border: '1px solid #334155',
-                    color: '#94a3b8',
+                    border: '1px solid #cbd5e1',
+                    color: '#64748b',
                     borderRadius: '8px',
                     padding: '10px 18px',
                     fontSize: '13px',
@@ -697,7 +699,7 @@ export const PeoplePage: FC = () => {
                   type="submit"
                   disabled={submitting}
                   style={{
-                    backgroundColor: '#0284c7',
+                    backgroundColor: '#083e47',
                     border: 'none',
                     color: '#fff',
                     borderRadius: '8px',

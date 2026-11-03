@@ -97,7 +97,7 @@ export const NotFoundPage: React.FC<{ message?: string }> = ({ message }) => {
             style={{
               flex: 1,
               padding: '0.75rem 1rem',
-              backgroundColor: '#0f172a',
+              backgroundColor: '#083e47',
               color: '#ffffff',
               borderRadius: '12px',
               fontSize: '0.85rem',
