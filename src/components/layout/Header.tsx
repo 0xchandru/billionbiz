@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { 
-  Search, Globe, HelpCircle, Bell, ChevronDown, 
+  Search, Bell, ChevronDown, 
   LogOut, Store, Shield, User
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
@@ -15,7 +15,6 @@ const Header: FC = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [activeVersion, setActiveVersion] = useState<'v1' | 'v2'>('v2');
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -104,47 +103,8 @@ const Header: FC = () => {
         </div>
       </div>
 
-      {/* RIGHT: Topbar Controls matching attached design */}
+      {/* RIGHT: Topbar Controls */}
       <div className={styles.right}>
-        {/* Divider */}
-        <div className={styles.divider} />
-
-        {/* Version Switcher Pill (v1 / v2) */}
-        <div className={styles.versionPill} role="group" aria-label="Version switcher">
-          <button
-            type="button"
-            className={`${styles.vBtn} ${activeVersion === 'v1' ? styles.vActive : ''}`}
-            onClick={() => setActiveVersion('v1')}
-          >
-            v1
-          </button>
-          <button
-            type="button"
-            className={`${styles.vBtn} ${activeVersion === 'v2' ? styles.vActive : ''}`}
-            onClick={() => setActiveVersion('v2')}
-          >
-            v2
-          </button>
-        </div>
-
-        {/* Language Selector */}
-        <button type="button" className={styles.langBtn} title="Language selector">
-          <Globe size={16} className={styles.iconWhite} />
-          <span className={styles.langText}>EN</span>
-          <ChevronDown size={13} className={styles.iconMuted} />
-        </button>
-
-        {/* Help Button */}
-        <button
-          type="button"
-          className={styles.iconBtn}
-          title="Help & Documentation"
-          onClick={() => window.open('https://billionbiz.codes', '_blank')}
-          aria-label="Help"
-        >
-          <HelpCircle size={18} className={styles.iconWhite} />
-        </button>
-
         {/* Notifications Popover Button */}
         <div ref={notifRef} style={{ position: 'relative' }}>
           <button 

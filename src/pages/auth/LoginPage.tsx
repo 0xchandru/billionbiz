@@ -7,6 +7,7 @@ import { CountryPhoneInput, COUNTRIES } from '../../components/auth/CountryPhone
 import type { Country } from '../../components/auth/CountryPhoneInput';
 import { validateContactInput, validateOtpCode } from '../../utils/validators';
 import { initiateGoogleSignIn } from '../../utils/googleAuth';
+import { getPortalUrl } from '../../utils/subdomain';
 import logoLightBg from '../../assets/logo-light-bg.png';
 import {
   Lock,
@@ -492,10 +493,10 @@ export default function LoginPage() {
         )}
       </div>
 
-      {/* Footer: Register Link */}
+      {/* Footer: Register Link (Directs strictly to root domain registration) */}
       <p className="auth-footer-link">
         Don't have a store yet?{' '}
-        <Link to="/register">Create Store</Link>
+        <a href={getPortalUrl('root', '/register')}>Create Store</a>
       </p>
     </div>
   );

@@ -28,7 +28,8 @@ export interface NavSection {
   id: string;
   label: string;
   icon: any;
-  items: SubItem[];
+  path?: string;
+  items?: SubItem[];
 }
 
 export const navSections: NavSection[] = [
@@ -117,11 +118,7 @@ export const navSections: NavSection[] = [
     id: 'plugins',
     label: 'Plugins',
     icon: Zap,
-    items: [
-      { id: 'all-plugins', label: 'All Plugins', path: '/plugins' },
-      { id: 'installed-plugins', label: 'Installed Plugins', path: '/plugins/installed' },
-      { id: 'marketplace', label: 'Marketplace', path: '/plugins/marketplace' },
-    ]
+    path: '/plugins'
   },
   {
     id: 'settings',
@@ -152,6 +149,7 @@ export const Sidebar: FC = () => {
     const path = location.pathname;
 
     for (const section of navSections) {
+      if (!section.items || section.items.length === 0) continue;
       const match = section.items.some(
         (item) => path === item.path || (item.path !== '/' && path.startsWith(item.path))
       );
@@ -161,8 +159,8 @@ export const Sidebar: FC = () => {
       }
     }
 
-    // Default to close if on dashboard or unknown
-    if (path === '/dashboard' || path === '/') {
+    // Default to close if on dashboard or direct links
+    if (path === '/dashboard' || path === '/' || path.startsWith('/plugins')) {
       setActiveDropdown(null);
     }
   }, [location.pathname]);
@@ -171,6 +169,11 @@ export const Sidebar: FC = () => {
   // 1. Opening one closes all others.
   // 2. Automatically selects its first submenu item & navigates to it.
   const handleDropdownClick = (section: NavSection) => {
+    if (!section.items || section.items.length === 0) {
+      if (section.path) navigate(section.path);
+      return;
+    }
+
     if (activeDropdown === section.id) {
       // Allow collapsing
       setActiveDropdown(null);
@@ -220,10 +223,29 @@ export const Sidebar: FC = () => {
             </Link>
           </div>
 
-          {/* 2. Expandable Accordion Dropdowns */}
+          {/* 2. Expandable Accordion Dropdowns & Direct Nav Links */}
           {navSections.map((section) => {
-            const isOpen = activeDropdown === section.id;
             const Icon = section.icon;
+
+            // Direct link for sections without subitems (e.g. Plugins)
+            if (!section.items || section.items.length === 0) {
+              const active = location.pathname === (section.path || '') || location.pathname.startsWith(`${section.path}/`);
+              return (
+                <div key={section.id} className={styles.sectionHeaderWrap}>
+                  <Link 
+                    to={section.path || '/plugins'} 
+                    className={`${styles.itemBtn} ${active ? styles.itemActiveDirect : ''}`}
+                  >
+                    <div className={styles.itemLeft}>
+                      <Icon size={18} className={styles.itemIcon} />
+                      <span className={styles.itemLabel}>{section.label}</span>
+                    </div>
+                  </Link>
+                </div>
+              );
+            }
+
+            const isOpen = activeDropdown === section.id;
 
             return (
               <div key={section.id} className={styles.sectionGroup}>
