@@ -17,7 +17,8 @@ import {
   ArrowRight,
   ArrowLeft,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -31,22 +32,20 @@ export default function RegisterPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Phase: 1 = Store Name (Minimal), 2 = Contact & OTP, 3 = Account & Password
+  // Phase: 1 = Contact (Email / Mobile), 2 = Verification (OTP), 3 = Store Details & Password
   const [phase, setPhase] = useState<1 | 2 | 3>(1);
 
-  // Phase 1 State (Store / Brand Name)
-  const [storeName, setStoreName] = useState('');
-  const customSlug = '';
-
-  // Phase 2 State (Contact & OTP)
+  // Phase 1 State (Contact)
   const [rawIdentifier, setRawIdentifier] = useState('');
   const [formattedIdentifier, setFormattedIdentifier] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
-  const [isOtpSent, setIsOtpSent] = useState(false);
+
+  // Phase 2 State (OTP Code)
   const [otpCode, setOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Phase 3 State (Account & Password)
+  // Phase 3 State (Store Details & Account)
+  const [storeName, setStoreName] = useState('');
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -59,7 +58,7 @@ export default function RegisterPage() {
   const targetIdentifier = (formattedIdentifier || rawIdentifier).trim();
 
   // Auto-generate slug from storeName
-  const derivedSlug = (customSlug || storeName)
+  const derivedSlug = storeName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '') || 'your-store';
@@ -73,22 +72,7 @@ export default function RegisterPage() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  // Phase 1 Submit -> Proceed to Contact
-  const handleStoreNameSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    setUiError(null);
-    clearError();
-
-    const cleanName = storeName.trim();
-    if (!cleanName || cleanName.length < 2) {
-      setUiError('Please enter a shop or brand name (at least 2 characters).');
-      return;
-    }
-
-    setPhase(2);
-  };
-
-  // Phase 2 Step A -> Send OTP
+  // Phase 1 Submit -> Send OTP and proceed to Phase 2
   const handleSendOtp = async (e?: FormEvent) => {
     if (e) e.preventDefault();
     setUiError(null);
@@ -111,7 +95,7 @@ export default function RegisterPage() {
       });
 
       setResendCooldown(45);
-      setIsOtpSent(true);
+      setPhase(2);
     } catch (err: any) {
       setUiError(err.message || 'Failed to send verification code. Please check your details.');
     } finally {
@@ -119,7 +103,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Phase 2 Step B -> Verify OTP & Proceed to Phase 3
+  // Phase 2 Submit -> Verify OTP & Proceed to Phase 3 (Store Details)
   const handleVerifyOtp = async (e: FormEvent) => {
     e.preventDefault();
     setUiError(null);
@@ -149,11 +133,17 @@ export default function RegisterPage() {
     }
   };
 
-  // Phase 3 Submit -> Complete registration & launch
+  // Phase 3 Submit -> Complete registration & launch store
   const handleFinalSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setUiError(null);
     clearError();
+
+    const cleanStoreName = storeName.trim();
+    if (!cleanStoreName || cleanStoreName.length < 2) {
+      setUiError('Please enter a shop or brand name (at least 2 characters).');
+      return;
+    }
 
     if (!password || password.length < 6) {
       setUiError('Password must be at least 6 characters.');
@@ -171,11 +161,11 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       const res = await registerStreamlined({
-        storeName: storeName.trim(),
+        storeName: cleanStoreName,
         slug: derivedSlug,
         identifier: finalIdentifier,
         capabilityMode: 'COMMERCE',
-        fullName: fullName.trim() || storeName.trim(),
+        fullName: fullName.trim() || cleanStoreName,
         password: password.trim()
       });
 
@@ -234,6 +224,30 @@ export default function RegisterPage() {
 
       {/* Main Register Card */}
       <div className="auth-card" style={{ maxWidth: '440px' }}>
+        {/* Step Wizard */}
+        <div className="auth-steps">
+          <div className="auth-step-item">
+            <div className={`auth-step-badge ${phase === 1 ? 'active' : 'completed'}`}>
+              {phase > 1 ? <CheckCircle2 size={14} /> : '1'}
+            </div>
+            <span className="auth-step-label">Contact</span>
+          </div>
+          <div className="auth-step-line" />
+          <div className="auth-step-item">
+            <div className={`auth-step-badge ${phase === 2 ? 'active' : phase > 2 ? 'completed' : ''}`}>
+              {phase > 2 ? <CheckCircle2 size={14} /> : '2'}
+            </div>
+            <span className="auth-step-label">OTP</span>
+          </div>
+          <div className="auth-step-line" />
+          <div className="auth-step-item">
+            <div className={`auth-step-badge ${phase === 3 ? 'active' : ''}`}>
+              3
+            </div>
+            <span className="auth-step-label">Store Setup</span>
+          </div>
+        </div>
+
         {/* Error Alert */}
         {(uiError || storeError) && (
           <div className="auth-alert-error">
@@ -243,48 +257,50 @@ export default function RegisterPage() {
         )}
 
         {/* ======================================================== */}
-        {/* PHASE 1: MINIMAL SHOP NAME & BRAND                       */}
+        {/* PHASE 1: CONTACT (EMAIL OR MOBILE NUMBER FIRST)          */}
         {/* ======================================================== */}
         {phase === 1 && (
           <div>
             <div className="auth-card-header">
               <h1 className="auth-card-title">Create Your Store</h1>
               <p className="auth-card-desc">
-                Enter your brand or shop name to get started.
+                Enter your email address or mobile number to get started.
               </p>
             </div>
 
-            <form onSubmit={handleStoreNameSubmit}>
+            <form onSubmit={handleSendOtp}>
               <div className="auth-form-group">
-                <label className="auth-label">Shop Name</label>
-                <div className="auth-input-wrapper">
-                  <div className="auth-input-icon">
-                    <Store style={{ width: 18, height: 18 }} />
-                  </div>
-                  <input
-                    type="text"
-                    value={storeName}
-                    onChange={(e) => setStoreName(e.target.value)}
-                    placeholder="e.g. Aura Studio, Zenith Apparel"
-                    className="auth-input"
-                    autoFocus
-                    required
-                  />
-                </div>
-                {storeName.trim() && (
-                  <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#64748b' }}>
-                    Store link: <span style={{ color: '#083e47', fontWeight: 600 }}>{derivedSlug}.stores.chandraprakash.codes</span>
-                  </div>
-                )}
+                <label className="auth-label">Email or Mobile Number</label>
+                <CountryPhoneInput
+                  value={rawIdentifier}
+                  onChange={(raw, _isMail, formatted, country) => {
+                    setRawIdentifier(raw);
+                    setFormattedIdentifier(formatted);
+                    if (country) setSelectedCountry(country);
+                  }}
+                  onCountryChange={setSelectedCountry}
+                  placeholder="Enter your email or phone number"
+                  autoFocus
+                  required
+                />
               </div>
 
               <button
                 type="submit"
-                disabled={!storeName.trim() || storeName.trim().length < 2}
+                disabled={isSubmitting || !rawIdentifier.trim()}
                 className="auth-btn-primary"
               >
-                <span>Continue</span>
-                <ArrowRight style={{ width: 16, height: 16 }} />
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
+                    Sending Code...
+                  </>
+                ) : (
+                  <>
+                    <span>Continue</span>
+                    <ArrowRight style={{ width: 16, height: 16 }} />
+                  </>
+                )}
               </button>
             </form>
 
@@ -325,7 +341,7 @@ export default function RegisterPage() {
         )}
 
         {/* ======================================================== */}
-        {/* PHASE 2: CONTACT & VERIFICATION                          */}
+        {/* PHASE 2: OTP VERIFICATION                                */}
         {/* ======================================================== */}
         {phase === 2 && (
           <div>
@@ -333,124 +349,85 @@ export default function RegisterPage() {
               type="button"
               onClick={() => {
                 setPhase(1);
-                setIsOtpSent(false);
                 setOtpCode('');
                 setUiError(null);
               }}
               className="auth-back-btn"
             >
               <ArrowLeft style={{ width: 14, height: 14 }} />
-              <span>Back to shop name</span>
+              <span>Back to contact</span>
             </button>
 
             <div className="auth-card-header" style={{ marginTop: '0.5rem' }}>
-              <h1 className="auth-card-title">
-                {isOtpSent ? 'Enter Verification Code' : 'Contact Information'}
-              </h1>
+              <h1 className="auth-card-title">Enter Verification Code</h1>
               <p className="auth-card-desc">
-                {isOtpSent
-                  ? `Enter the 6-digit code sent to ${targetIdentifier}`
-                  : 'Enter your mobile number or email to secure your account.'}
+                Enter the 6-digit code sent to <strong style={{ color: '#083e47' }}>{targetIdentifier}</strong>
               </p>
             </div>
 
-            {!isOtpSent ? (
-              <form onSubmit={handleSendOtp}>
-                <div className="auth-form-group">
-                  <label className="auth-label">Mobile Number or Email</label>
-                  <CountryPhoneInput
-                    value={rawIdentifier}
-                    onChange={(raw, _isMail, formatted, country) => {
-                      setRawIdentifier(raw);
-                      setFormattedIdentifier(formatted);
-                      if (country) setSelectedCountry(country);
+            <form onSubmit={handleVerifyOtp}>
+              <div className="auth-form-group">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="123456"
+                  className="auth-otp-input"
+                  autoFocus
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', marginTop: '0.5rem', color: '#64748b' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhase(1);
+                      setOtpCode('');
+                      setUiError(null);
                     }}
-                    onCountryChange={setSelectedCountry}
-                    placeholder="Enter your mobile number or email"
-                    autoFocus
-                    required
-                  />
+                    style={{ color: '#2563eb', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 500 }}
+                  >
+                    Change contact
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resendCooldown > 0 || isSubmitting}
+                    onClick={() => handleSendOtp()}
+                    style={{
+                      color: resendCooldown > 0 ? '#94a3b8' : '#2563eb',
+                      fontWeight: 600,
+                      border: 'none',
+                      background: 'none',
+                      cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                  </button>
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !rawIdentifier.trim()}
-                  className="auth-btn-primary"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
-                      Sending Code...
-                    </>
-                  ) : (
-                    <>
-                      <span>Send Verification Code</span>
-                      <ArrowRight style={{ width: 16, height: 16 }} />
-                    </>
-                  )}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyOtp}>
-                <div className="auth-form-group">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="123456"
-                    className="auth-otp-input"
-                    autoFocus
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', marginTop: '0.5rem', color: '#64748b' }}>
-                    <button
-                      type="button"
-                      onClick={() => setIsOtpSent(false)}
-                      style={{ color: '#2563eb', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 500 }}
-                    >
-                      Change contact
-                    </button>
-                    <button
-                      type="button"
-                      disabled={resendCooldown > 0 || isSubmitting}
-                      onClick={() => handleSendOtp()}
-                      style={{
-                        color: resendCooldown > 0 ? '#94a3b8' : '#2563eb',
-                        fontWeight: 600,
-                        border: 'none',
-                        background: 'none',
-                        cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer'
-                      }}
-                    >
-                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting || otpCode.length !== 6}
-                  className="auth-btn-primary"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    <>
-                      <span>Verify & Continue</span>
-                      <ArrowRight style={{ width: 16, height: 16 }} />
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
+              <button
+                type="submit"
+                disabled={isSubmitting || otpCode.length !== 6}
+                className="auth-btn-primary"
+              >
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <span>Verify Code</span>
+                    <ArrowRight style={{ width: 16, height: 16 }} />
+                  </>
+                )}
+              </button>
+            </form>
           </div>
         )}
 
         {/* ======================================================== */}
-        {/* PHASE 3: SET PASSWORD & LAUNCH                           */}
+        {/* PHASE 3: STORE DETAILS & ACCOUNT CREDENTIALS             */}
         {/* ======================================================== */}
         {phase === 3 && (
           <div>
@@ -463,17 +440,42 @@ export default function RegisterPage() {
               className="auth-back-btn"
             >
               <ArrowLeft style={{ width: 14, height: 14 }} />
-              <span>Back to contact</span>
+              <span>Back to verification</span>
             </button>
 
             <div className="auth-card-header" style={{ marginTop: '0.5rem' }}>
-              <h1 className="auth-card-title">Set Your Password</h1>
+              <h1 className="auth-card-title">Set Up Your Store</h1>
               <p className="auth-card-desc">
-                Create a secure password for <strong style={{ color: '#083e47' }}>{storeName}</strong>.
+                Name your brand and create your login credentials.
               </p>
             </div>
 
             <form onSubmit={handleFinalSubmit}>
+              {/* Store Name */}
+              <div className="auth-form-group">
+                <label className="auth-label">Shop / Brand Name</label>
+                <div className="auth-input-wrapper">
+                  <div className="auth-input-icon">
+                    <Store style={{ width: 18, height: 18 }} />
+                  </div>
+                  <input
+                    type="text"
+                    value={storeName}
+                    onChange={(e) => setStoreName(e.target.value)}
+                    placeholder="e.g. Aura Studio, Zenith Apparel"
+                    className="auth-input"
+                    autoFocus
+                    required
+                  />
+                </div>
+                {storeName.trim() && (
+                  <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#64748b' }}>
+                    Store link: <span style={{ color: '#083e47', fontWeight: 600 }}>{derivedSlug}.stores.chandraprakash.codes</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Owner Name */}
               <div className="auth-form-group">
                 <label className="auth-label">Your Full Name (Optional)</label>
                 <div className="auth-input-wrapper">
@@ -490,6 +492,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* Password */}
               <div className="auth-form-group">
                 <label className="auth-label">Password</label>
                 <div className="auth-input-wrapper">
@@ -515,6 +518,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* Confirm Password */}
               <div className="auth-form-group">
                 <label className="auth-label">Confirm Password</label>
                 <div className="auth-input-wrapper">
@@ -535,13 +539,13 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting || isStoreLoading || !password || password.length < 6}
+                disabled={isSubmitting || isStoreLoading || !storeName.trim() || storeName.trim().length < 2 || !password || password.length < 6}
                 className="auth-btn-primary"
               >
                 {isSubmitting || isStoreLoading ? (
                   <>
                     <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
-                    Launching Store...
+                    Creating Store...
                   </>
                 ) : (
                   <>
