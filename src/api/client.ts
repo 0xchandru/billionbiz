@@ -88,6 +88,15 @@ export async function apiClient<T = any>(endpoint: string, options: RequestOptio
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('billionbiz_token');
+        const path = window.location.pathname;
+        if (!path.startsWith('/login') && !path.startsWith('/register')) {
+          window.location.replace('/login');
+        }
+      }
+    }
     throw new Error(data.message || data.error || `Request failed with status ${response.status}`);
   }
 

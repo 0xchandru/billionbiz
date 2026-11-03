@@ -13,18 +13,20 @@ export default function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
 
   useEffect(() => {
     // Only check auth from server if user details are not yet hydrated
-    if (!user && localStorage.getItem('billionbiz_token')) {
+    const storedToken = localStorage.getItem('billionbiz_token');
+    if (!user && storedToken && !isCheckingAuth) {
       checkAuth();
     }
-  }, [user]);
+  }, [user, isCheckingAuth, checkAuth]);
 
-  // Only show loader if we have a token but haven't determined auth state yet
-  if (isCheckingAuth && !isAuthenticated) {
+  // If a token exists in storage but user profile is still hydrating, wait for checkAuth
+  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('billionbiz_token');
+  if (hasToken && !user) {
     return <AnimatedLoader message="Securing session..." />;
   }
 
   // If definitely not authenticated and no token in storage
-  if (!isAuthenticated && !localStorage.getItem('billionbiz_token')) {
+  if (!isAuthenticated || !hasToken) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

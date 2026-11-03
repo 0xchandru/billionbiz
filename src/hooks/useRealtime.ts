@@ -26,9 +26,22 @@ export function useRealtime(onEvent?: (event: RealtimeMessage) => void) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
   const cursorRef = useRef<string | null>(null);
+  const retryCountRef = useRef(0);
+  const onEventRef = useRef(onEvent);
+
+  // Keep event handler reference fresh without triggering reconnects
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   const connect = useCallback(() => {
     if (!isAuthenticated || !token) return;
+
+    // Clear existing timer
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
 
     try {
       const wsUrl = new URL(getRealtimeWsUrl());
@@ -42,6 +55,7 @@ export function useRealtime(onEvent?: (event: RealtimeMessage) => void) {
 
       ws.onopen = () => {
         setIsConnected(true);
+        retryCountRef.current = 0;
       };
 
       ws.onmessage = (messageEvent) => {
@@ -53,36 +67,47 @@ export function useRealtime(onEvent?: (event: RealtimeMessage) => void) {
           }
 
           setLastEvent(data);
-          if (onEvent) {
-            onEvent(data);
+          if (onEventRef.current) {
+            onEventRef.current(data);
           }
 
           // Dispatch window event for cross-component subscription
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('billionbiz_realtime', { detail: data }));
           }
-        } catch (e) {
-          console.warn('[Realtime] Failed to parse message', e);
+        } catch {
+          // Ignore non-json or heartbeat frames
         }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event: CloseEvent) => {
         setIsConnected(false);
         wsRef.current = null;
-        // Auto-reconnect after 3 seconds
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
-        }, 3000);
+
+        // Do NOT reconnect if auth failed (4001 Unauthorized, 4003 Forbidden)
+        if (event.code === 4001 || event.code === 4003) {
+          return;
+        }
+
+        // Limit retries with exponential backoff (max 5 retries: 2s, 4s, 8s, 16s, 20s)
+        if (retryCountRef.current < 5) {
+          retryCountRef.current += 1;
+          const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 20000);
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connect();
+          }, delay);
+        }
       };
 
-      ws.onerror = (err) => {
-        console.warn('[Realtime] WebSocket error:', err);
-        ws.close();
+      ws.onerror = () => {
+        try {
+          ws.close();
+        } catch {}
       };
-    } catch (err) {
-      console.warn('[Realtime] Failed to initialize WebSocket', err);
+    } catch {
+      // WebSocket initialization failure
     }
-  }, [isAuthenticated, token, onEvent]);
+  }, [isAuthenticated, token]);
 
   useEffect(() => {
     connect();
@@ -90,9 +115,11 @@ export function useRealtime(onEvent?: (event: RealtimeMessage) => void) {
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
       if (wsRef.current) {
         wsRef.current.close();
+        wsRef.current = null;
       }
     };
   }, [connect]);
@@ -109,4 +136,3 @@ export function useRealtime(onEvent?: (event: RealtimeMessage) => void) {
     sendPing
   };
 }
-
