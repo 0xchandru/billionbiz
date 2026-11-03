@@ -55,7 +55,14 @@ import POSShiftsPage from '../../pages/POSShifts';
 
 import StoreNavigationPage from '../../pages/StoreNavigation';
 import ExtensionsPage from '../../pages/Extensions';
-import SettingsPage from '../../pages/Settings';
+import GeneralSettingsPage from '../../pages/GeneralSettings';
+import AccountSettingsPage from '../../pages/AccountSettings';
+import SecuritySettingsPage from '../../pages/SecuritySettings';
+import PreferencesSettingsPage from '../../pages/PreferencesSettings';
+import PaymentsSettingsPage from '../../pages/PaymentsSettings';
+import FulfillmentSettingsPage from '../../pages/FulfillmentSettings';
+import NotificationsSettingsPage from '../../pages/NotificationsSettings';
+import IntegrationsSettingsPage from '../../pages/IntegrationsSettings';
 import ThemeStyles from '../../pages/ThemeStyles';
 import EditorLayout from '../../pages/editor/EditorLayout';
 
@@ -139,9 +146,20 @@ const renderAdminRoutes = (): React.ReactElement => (
       <Route path="/plugins/marketplace" element={<ExtensionsPage defaultTab="marketplace" />} />
       <Route path="/extensions" element={<ExtensionsPage defaultTab="installed" />} />
 
-      {/* Settings */}
-      <Route path="/settings" element={<SettingsPage />} />
-      <Route path="/settings/:tab" element={<SettingsPage />} />
+      {/* Settings Section - Dedicated Individual Pages */}
+      <Route path="/settings" element={<Navigate to="/settings/general" replace />} />
+      <Route path="/settings/general" element={<GeneralSettingsPage />} />
+      <Route path="/settings/account" element={<AccountSettingsPage />} />
+      <Route path="/settings/security" element={<SecuritySettingsPage />} />
+      <Route path="/settings/preferences" element={<PreferencesSettingsPage />} />
+      <Route path="/settings/payments" element={<PaymentsSettingsPage />} />
+      <Route path="/settings/fulfillment" element={<FulfillmentSettingsPage />} />
+      <Route path="/settings/notifications" element={<NotificationsSettingsPage />} />
+      <Route path="/settings/integrations" element={<IntegrationsSettingsPage />} />
+      <Route path="/settings/locations" element={<FulfillmentSettingsPage />} />
+      <Route path="/settings/taxes" element={<PaymentsSettingsPage />} />
+      <Route path="/settings/domains" element={<IntegrationsSettingsPage />} />
+      <Route path="/settings/:tab" element={<Navigate to="/settings/general" replace />} />
     </Route>
 
     {/* Native Online Store Editor */}
