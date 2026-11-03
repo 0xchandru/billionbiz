@@ -226,10 +226,14 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      await api.sendOtp({
+      const res = await api.sendOtp({
         identifier: validatedIdentifier,
         type: 'REGISTER'
       });
+
+      if ((res as any)?.previewCode) {
+        setOtpCode(String((res as any).previewCode));
+      }
 
       setResendCooldown(45);
       setPhase('otp');
