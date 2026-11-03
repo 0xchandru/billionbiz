@@ -2,51 +2,53 @@ import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
-  Home, 
+  LayoutDashboard, 
   ShoppingCart, 
   Calendar, 
   Package, 
   Users, 
-  Wallet, 
+  ShieldCheck,
   Store,
   Palette,
   Zap,
   Settings as SettingsIcon,
   ChevronDown,
   ChevronUp,
-  LogOut
+  LogOut,
+  Sparkles,
+  ChevronRight
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import ProfileModal from './ProfileModal';
 import styles from './Sidebar.module.css';
 
-interface SubItem {
+export interface SubItem {
   id: string;
   label: string;
   path: string;
-  searchParam?: string;
-  isExternal?: boolean;
 }
 
-interface NavSection {
+export interface NavSection {
   id: string;
   label: string;
   icon: any;
   items: SubItem[];
 }
 
-const navSections: NavSection[] = [
+export const navSections: NavSection[] = [
   {
     id: 'orders',
     label: 'Orders',
     icon: ShoppingCart,
     items: [
-      { id: 'all-orders', label: 'All orders', path: '/orders' },
-      { id: 'new-invoice', label: 'New Invoice', path: '/orders?tab=invoices&action=new', searchParam: 'action=new' },
-      { id: 'abandoned-carts', label: 'Abandoned carts', path: '/orders?tab=abandoned', searchParam: 'tab=abandoned' },
-      { id: 'refunds', label: 'Refunds', path: '/orders?tab=refunds', searchParam: 'tab=refunds' },
-      { id: 'shipments', label: 'Shipments', path: '/orders?tab=shipments', searchParam: 'tab=shipments' },
-      { id: 'quotes', label: 'Quotes', path: '/orders?tab=quotes', searchParam: 'tab=quotes' },
-      { id: 'returns', label: 'Returns', path: '/orders?tab=returns', searchParam: 'tab=returns' },
+      { id: 'all-orders', label: 'All Orders', path: '/orders' },
+      { id: 'new-invoice', label: 'New Invoice', path: '/orders/invoices/new' },
+      { id: 'abandoned-carts', label: 'Abandoned Carts', path: '/orders/abandoned-carts' },
+      { id: 'returns-refunds', label: 'Returns & Refunds', path: '/orders/returns-refunds' },
+      { id: 'shipments', label: 'Shipments', path: '/orders/shipments' },
+      { id: 'warehouses', label: 'Warehouses', path: '/orders/warehouses' },
+      { id: 'quotes', label: 'Quotes', path: '/orders/quotes' },
+      { id: 'returns', label: 'Returns', path: '/orders/returns' },
     ]
   },
   {
@@ -54,10 +56,14 @@ const navSections: NavSection[] = [
     label: 'Appointments',
     icon: Calendar,
     items: [
-      { id: 'all-appointments', label: 'All appointments', path: '/appointments' },
-      { id: 'calendar', label: 'Calendar', path: '/appointments?tab=calendar', searchParam: 'tab=calendar' },
-      { id: 'services', label: 'Services', path: '/appointments?tab=services', searchParam: 'tab=services' },
-      { id: 'staff-schedules', label: 'Staff schedules', path: '/appointments?tab=schedules', searchParam: 'tab=schedules' },
+      { id: 'all-bookings', label: 'All Bookings', path: '/appointments' },
+      { id: 'new-booking', label: 'New Booking', path: '/appointments/new' },
+      { id: 'offerings', label: 'Offerings', path: '/appointments/offerings' },
+      { id: 'staff', label: 'Staff', path: '/appointments/staff' },
+      { id: 'working-hours', label: 'Working Hours', path: '/appointments/working-hours' },
+      { id: 'booking-settings', label: 'Booking Settings', path: '/appointments/settings' },
+      { id: 'availability', label: 'Availability', path: '/appointments/availability' },
+      { id: 'resources', label: 'Resources', path: '/appointments/resources' },
     ]
   },
   {
@@ -66,9 +72,19 @@ const navSections: NavSection[] = [
     icon: Package,
     items: [
       { id: 'products', label: 'Products', path: '/products' },
-      { id: 'categories', label: 'Categories', path: '/products?tab=categories', searchParam: 'tab=categories' },
-      { id: 'inventory', label: 'Inventory', path: '/products?tab=inventory', searchParam: 'tab=inventory' },
-      { id: 'price-lists', label: 'Price lists', path: '/products?tab=pricelists', searchParam: 'tab=pricelists' },
+      { id: 'categories', label: 'Categories', path: '/products/categories' },
+      { id: 'inventory', label: 'Inventory', path: '/products/inventory' },
+      { id: 'price-lists', label: 'Price Lists', path: '/products/pricelists' },
+    ]
+  },
+  {
+    id: 'team',
+    label: 'Team',
+    icon: ShieldCheck,
+    items: [
+      { id: 'team-members', label: 'Team Members', path: '/team' },
+      { id: 'roles-permissions', label: 'Roles & Permissions', path: '/team/roles' },
+      { id: 'responsibilities', label: 'Responsibilities', path: '/team/responsibilities' },
     ]
   },
   {
@@ -77,19 +93,7 @@ const navSections: NavSection[] = [
     icon: Users,
     items: [
       { id: 'customers', label: 'Customers', path: '/people' },
-      { id: 'staff-team', label: 'Staff & Team', path: '/team' },
-      { id: 'roles-permissions', label: 'Roles & Permissions', path: '/team?tab=roles', searchParam: 'tab=roles' },
-    ]
-  },
-  {
-    id: 'finance',
-    label: 'Finance',
-    icon: Wallet,
-    items: [
-      { id: 'transactions', label: 'Transactions', path: '/finance' },
-      { id: 'payouts', label: 'Payouts', path: '/finance?tab=payouts', searchParam: 'tab=payouts' },
-      { id: 'invoices', label: 'Invoices', path: '/orders?tab=invoices', searchParam: 'tab=invoices' },
-      { id: 'finance-taxes', label: 'Taxes', path: '/settings?tab=taxes', searchParam: 'tab=taxes' },
+      { id: 'customer-tickets', label: 'Customer Tickets', path: '/people/tickets' },
     ]
   },
   {
@@ -99,30 +103,28 @@ const navSections: NavSection[] = [
     items: [
       { id: 'pos-counters', label: 'POS Registers', path: '/pos-counters' },
       { id: 'open-pos', label: 'Open Cashier Terminal', path: '/pos' },
-      { id: 'pos-shifts', label: 'Cash Shifts & Floats', path: '/pos-counters?tab=shifts', searchParam: 'tab=shifts' },
+      { id: 'pos-shifts', label: 'Shifts & Floats', path: '/pos-counters/shifts' },
     ]
   },
   {
     id: 'online-store',
-    label: 'Online store',
+    label: 'Online Store',
     icon: Palette,
     items: [
+      { id: 'pages', label: 'Pages', path: '/online-store/pages' },
       { id: 'store-editor', label: 'Store Editor', path: '/editor' },
-      { id: 'pages', label: 'Pages', path: '/pages' },
-      { id: 'themes', label: 'Themes', path: '/editor?tab=theme', searchParam: 'tab=theme' },
-      { id: 'navigation', label: 'Navigation', path: '/editor?tab=navigation', searchParam: 'tab=navigation' },
-      { id: 'store-domains', label: 'Domains', path: '/settings?tab=domains', searchParam: 'tab=domains' },
-      { id: 'store-preferences', label: 'Preferences', path: '/settings' },
+      { id: 'themes', label: 'Themes', path: '/online-store/themes' },
+      { id: 'navigation', label: 'Navigation', path: '/online-store/navigation' },
     ]
   },
   {
-    id: 'extensions',
-    label: 'Extensions',
+    id: 'plugins',
+    label: 'Plugins',
     icon: Zap,
     items: [
-      { id: 'all-extensions', label: 'All Extensions', path: '/extensions' },
-      { id: 'payment-gateways', label: 'Payment Gateways', path: '/extensions?category=payments', searchParam: 'category=payments' },
-      { id: 'shipping-couriers', label: 'Shipping Couriers', path: '/extensions?category=shipping', searchParam: 'category=shipping' },
+      { id: 'all-plugins', label: 'All Plugins', path: '/plugins' },
+      { id: 'installed-plugins', label: 'Installed Plugins', path: '/plugins/installed' },
+      { id: 'marketplace', label: 'Marketplace', path: '/plugins/marketplace' },
     ]
   },
   {
@@ -130,174 +132,191 @@ const navSections: NavSection[] = [
     label: 'Settings',
     icon: SettingsIcon,
     items: [
-      { id: 'set-general', label: 'General & Mode', path: '/settings?tab=general', searchParam: 'tab=general' },
-      { id: 'set-locations', label: 'Locations & Warehouses', path: '/settings?tab=locations', searchParam: 'tab=locations' },
-      { id: 'set-payments', label: 'Payments & Razorpay', path: '/settings?tab=payments', searchParam: 'tab=payments' },
-      { id: 'set-shipping', label: 'Shipping & Delivery', path: '/settings?tab=shipping', searchParam: 'tab=shipping' },
-      { id: 'set-taxes', label: 'Taxes & GSTIN', path: '/settings?tab=taxes', searchParam: 'tab=taxes' },
-      { id: 'set-domains', label: 'Custom Domains', path: '/settings?tab=domains', searchParam: 'tab=domains' },
-      { id: 'set-notifications', label: 'Notifications & Emails', path: '/settings?tab=notifications', searchParam: 'tab=notifications' },
-      { id: 'set-security', label: 'Security & Staff Access', path: '/settings?tab=security', searchParam: 'tab=security' },
+      { id: 'set-general', label: 'General', path: '/settings/general' },
+      { id: 'set-account', label: 'Account', path: '/settings/account' },
+      { id: 'set-security', label: 'Security & Login', path: '/settings/security' },
+      { id: 'set-preferences', label: 'Preferences', path: '/settings/preferences' },
+      { id: 'set-payments', label: 'Payments', path: '/settings/payments' },
+      { id: 'set-fulfillment', label: 'Fulfillment', path: '/settings/fulfillment' },
+      { id: 'set-notifications', label: 'Notifications', path: '/settings/notifications' },
+      { id: 'set-integrations', label: 'Integrations', path: '/settings/integrations' },
     ]
   }
 ];
 
-const Sidebar: FC = () => {
+export const Sidebar: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, storeName, logout } = useAuthStore();
+  const { user, storeName, role, logout } = useAuthStore();
 
-  // Accordion state: Orders is expanded by default matching visual sample
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    orders: true,
-    appointments: false,
-    catalogue: false,
-    people: false,
-    finance: false,
-    pos: false,
-    'online-store': false,
-    extensions: false,
-    settings: false,
-  });
+  const [activeDropdown, setActiveDropdown] = useState<string | null>('orders');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  // Automatically expand accordion if the user navigates directly into one of its routes
+  // Sync active accordion dropdown with current URL path on load, refresh, or back/forward
   useEffect(() => {
-    const currentPath = location.pathname;
+    const path = location.pathname;
 
-    if (currentPath.startsWith('/orders')) {
-      setOpenSections(prev => ({ ...prev, orders: true }));
-    } else if (currentPath.startsWith('/appointments')) {
-      setOpenSections(prev => ({ ...prev, appointments: true }));
-    } else if (currentPath.startsWith('/products')) {
-      setOpenSections(prev => ({ ...prev, catalogue: true }));
-    } else if (currentPath.startsWith('/people') || currentPath.startsWith('/team')) {
-      setOpenSections(prev => ({ ...prev, people: true }));
-    } else if (currentPath.startsWith('/finance')) {
-      setOpenSections(prev => ({ ...prev, finance: true }));
-    } else if (currentPath.startsWith('/pos-counters') || currentPath.startsWith('/pos')) {
-      setOpenSections(prev => ({ ...prev, pos: true }));
-    } else if (currentPath.startsWith('/editor') || currentPath.startsWith('/pages')) {
-      setOpenSections(prev => ({ ...prev, 'online-store': true }));
-    } else if (currentPath.startsWith('/extensions')) {
-      setOpenSections(prev => ({ ...prev, extensions: true }));
-    } else if (currentPath.startsWith('/settings')) {
-      setOpenSections(prev => ({ ...prev, settings: true }));
+    for (const section of navSections) {
+      const match = section.items.some(
+        (item) => path === item.path || (item.path !== '/' && path.startsWith(item.path))
+      );
+      if (match) {
+        setActiveDropdown(section.id);
+        return;
+      }
     }
-  }, [location.pathname, location.search]);
 
-  const toggleSection = (id: string) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+    // Default to close if on dashboard or unknown
+    if (path === '/dashboard' || path === '/') {
+      setActiveDropdown(null);
+    }
+  }, [location.pathname]);
+
+  // Exclusive Accordion Toggle:
+  // 1. Opening one closes all others.
+  // 2. Automatically selects its first submenu item & navigates to it.
+  const handleDropdownClick = (section: NavSection) => {
+    if (activeDropdown === section.id) {
+      // Allow collapsing
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(section.id);
+      if (section.items.length > 0) {
+        const firstItem = section.items[0];
+        navigate(firstItem.path);
+      }
+    }
   };
 
-  const isHomeActive = location.pathname === '/dashboard' || location.pathname === '/';
+  const isHomeActive = location.pathname === '/dashboard';
 
   const isSubItemActive = (item: SubItem) => {
     const currentPath = location.pathname;
-    const currentSearch = location.search;
-
-    if (item.searchParam) {
-      return currentPath === item.path.split('?')[0] && currentSearch.includes(item.searchParam);
-    }
-
-    if (item.path.includes('?')) {
-      return false;
-    }
-    return currentPath === item.path && (!currentSearch || currentSearch === '?');
+    if (item.path === '/orders' && currentPath !== '/orders') return false;
+    if (item.path === '/appointments' && currentPath !== '/appointments') return false;
+    if (item.path === '/products' && currentPath !== '/products') return false;
+    if (item.path === '/team' && currentPath !== '/team') return false;
+    if (item.path === '/people' && currentPath !== '/people') return false;
+    if (item.path === '/plugins' && currentPath !== '/plugins') return false;
+    if (item.path === '/settings' && currentPath !== '/settings') return false;
+    if (item.path === '/pos-counters' && currentPath !== '/pos-counters') return false;
+    return currentPath === item.path || currentPath.startsWith(`${item.path}/`);
   };
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
+  const userInitial = (user?.fullName || user?.email || 'M').charAt(0).toUpperCase();
+
   return (
-    <aside className={styles.sidebar}>
-      {/* Scrollable Navigation Items */}
-      <nav className={styles.navContainer}>
-        {/* 1. Home Direct Link */}
-        <div className={styles.sectionHeaderWrap}>
-          <Link 
-            to="/dashboard" 
-            className={`${styles.itemBtn} ${isHomeActive ? styles.itemActiveDirect : ''}`}
-          >
-            <div className={styles.itemLeft}>
-              <Home size={19} className={styles.itemIcon} />
-              <span className={styles.itemLabel}>Home</span>
-            </div>
-          </Link>
-        </div>
-
-        {/* 2. All Dropdown Accordion Sections */}
-        {navSections.map((section) => {
-          const isOpen = Boolean(openSections[section.id]);
-          const Icon = section.icon;
-
-          return (
-            <div key={section.id} className={styles.sectionGroup}>
-              {/* Accordion Header Row */}
-              <button
-                type="button"
-                className={styles.dropdownBtn}
-                onClick={() => toggleSection(section.id)}
-                aria-expanded={isOpen}
-              >
-                <div className={styles.itemLeft}>
-                  <Icon size={19} className={styles.itemIcon} />
-                  <span className={styles.itemLabel}>{section.label}</span>
-                </div>
-                {isOpen ? (
-                  <ChevronUp size={16} className={styles.chevronIcon} />
-                ) : (
-                  <ChevronDown size={16} className={styles.chevronIcon} />
-                )}
-              </button>
-
-              {/* Sub-items List with thin left guide line */}
-              {isOpen && (
-                <div className={styles.subList}>
-                  {section.items.map((sub) => {
-                    const active = isSubItemActive(sub);
-                    return (
-                      <Link
-                        key={sub.id}
-                        to={sub.path}
-                        className={`${styles.subItem} ${active ? styles.subItemActive : ''}`}
-                      >
-                        {sub.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </nav>
-
-      {/* DOCKED BOTTOM FOOTER: Store Info & Direct Logout Feature */}
-      <div className={styles.bottomFooter}>
-        <div className={styles.storePill}>
-          <div className={styles.storePillLeft}>
-            <span className={styles.storeNameText}>{storeName || 'Primary Store'}</span>
-            <span className={styles.merchantEmail}>{user?.email || 'admin@chandraprakash.codes'}</span>
+    <>
+      <aside className={styles.sidebar}>
+        {/* Scrollable Navigation Rail */}
+        <nav className={styles.navContainer}>
+          {/* 1. Dashboard Direct Link */}
+          <div className={styles.sectionHeaderWrap}>
+            <Link 
+              to="/dashboard" 
+              className={`${styles.itemBtn} ${isHomeActive ? styles.itemActiveDirect : ''}`}
+            >
+              <div className={styles.itemLeft}>
+                <LayoutDashboard size={18} className={styles.itemIcon} />
+                <span className={styles.itemLabel}>Dashboard</span>
+              </div>
+            </Link>
           </div>
-        </div>
 
-        {/* Direct Logout Button */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className={styles.logoutBtn}
-          title="Sign out of BillionBiz Merchant Admin"
-        >
-          <LogOut size={16} className={styles.logoutIcon} />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+          {/* 2. Expandable Accordion Dropdowns */}
+          {navSections.map((section) => {
+            const isOpen = activeDropdown === section.id;
+            const Icon = section.icon;
+
+            return (
+              <div key={section.id} className={styles.sectionGroup}>
+                <button
+                  type="button"
+                  className={`${styles.dropdownBtn} ${isOpen ? styles.dropdownBtnOpen : ''}`}
+                  onClick={() => handleDropdownClick(section)}
+                  aria-expanded={isOpen}
+                >
+                  <div className={styles.itemLeft}>
+                    <Icon size={18} className={styles.itemIcon} />
+                    <span className={styles.itemLabel}>{section.label}</span>
+                  </div>
+                  {isOpen ? (
+                    <ChevronUp size={15} className={styles.chevronIcon} />
+                  ) : (
+                    <ChevronDown size={15} className={styles.chevronIcon} />
+                  )}
+                </button>
+
+                {/* Submenu Items List */}
+                {isOpen && (
+                  <div className={styles.subList}>
+                    {section.items.map((sub) => {
+                      const active = isSubItemActive(sub);
+                      return (
+                        <Link
+                          key={sub.id}
+                          to={sub.path}
+                          className={`${styles.subItem} ${active ? styles.subItemActive : ''}`}
+                        >
+                          {sub.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* DOCKED BOTTOM FOOTER: Plan, Profile & Logout */}
+        <div className={styles.bottomFooter}>
+          {/* Subscription Plan */}
+          <div className={styles.planBadge}>
+            <div className={styles.planBadgeLeft}>
+              <Sparkles size={13} style={{ color: '#083e47' }} />
+              <span>Growth Plan</span>
+            </div>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Active</span>
+          </div>
+
+          {/* Profile Card & Account Trigger */}
+          <div
+            className={styles.profileRow}
+            onClick={() => setIsProfileOpen(true)}
+            title="Open Account & Profile Settings"
+          >
+            <div className={styles.profileLeft}>
+              <div className={styles.avatarCircle}>{userInitial}</div>
+              <div className={styles.profileInfo}>
+                <span className={styles.profileName}>{user?.fullName || storeName || 'Merchant'}</span>
+                <span className={styles.profileRole}>{role || 'OWNER'}</span>
+              </div>
+            </div>
+            <ChevronRight size={15} color="#94a3b8" />
+          </div>
+
+          {/* Logout Button */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className={styles.logoutBtn}
+            title="Sign out of BillionBiz Merchant Admin"
+          >
+            <LogOut size={15} className={styles.logoutIcon} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Profile Management Modal */}
+      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+    </>
   );
 };
 

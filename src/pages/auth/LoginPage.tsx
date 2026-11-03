@@ -6,8 +6,8 @@ import { api } from '../../api/services';
 import { CountryPhoneInput, COUNTRIES } from '../../components/auth/CountryPhoneInput';
 import type { Country } from '../../components/auth/CountryPhoneInput';
 import { validateContactInput, validateOtpCode } from '../../utils/validators';
+import { initiateGoogleSignIn } from '../../utils/googleAuth';
 import {
-  Store,
   Lock,
   Eye,
   EyeOff,
@@ -23,7 +23,7 @@ type LoginView = 'PASSWORD' | 'OTP_REQUEST' | 'OTP_VERIFY';
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginUnified, isAuthenticated, isLoading: isAuthLoading, error: authError, clearError } = useAuthStore();
+  const { loginUnified, loginGoogle, isAuthenticated, isLoading: isAuthLoading, error: authError, clearError } = useAuthStore();
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
@@ -144,17 +144,45 @@ export default function LoginPage() {
     }
   };
 
+  // 5. Google Sign-In Handler
+  const handleGoogleAuth = async () => {
+    setUiError(null);
+    clearError();
+    setIsSubmitting(true);
+    try {
+      await initiateGoogleSignIn(
+        async (credential) => {
+          const res = await loginGoogle({ credential });
+          setIsSubmitting(false);
+          if (res.success) {
+            navigate(res.destination || from, { replace: true });
+          } else if (res.error) {
+            setUiError(res.error);
+          }
+        },
+        (err) => {
+          setIsSubmitting(false);
+          setUiError(err);
+        }
+      );
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setUiError(err.message || 'Google sign-in could not be completed.');
+    }
+  };
+
   return (
     <div className="auth-wrapper">
       {/* Brand Header */}
-      <Link to="/" className="auth-brand">
-        <div className="auth-brand-logo">
-          <Store style={{ width: 22, height: 22 }} />
-        </div>
-        <div className="auth-brand-text">
-          <span className="auth-brand-title">BillionBiz</span>
-          <span className="auth-brand-subtitle">Merchant Portal</span>
-        </div>
+      <Link to="/" className="auth-brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+        <img 
+          src="/billionbiz-logo.png" 
+          alt="BillionBiz" 
+          style={{ height: '42px', width: 'auto', objectFit: 'contain' }} 
+        />
+        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          Merchant Portal
+        </span>
       </Link>
 
       {/* Main Login Card */}
@@ -267,9 +295,8 @@ export default function LoginPage() {
             {/* Continue with Google Button */}
             <button
               type="button"
-              onClick={() => {
-                setUiError('Google Sign-In ready. In production, configure Google Client ID.');
-              }}
+              onClick={handleGoogleAuth}
+              disabled={isSubmitting || isAuthLoading}
               className="auth-google-btn"
             >
               <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24">
@@ -362,9 +389,8 @@ export default function LoginPage() {
             {/* Google Sign-in Button */}
             <button
               type="button"
-              onClick={() => {
-                setUiError('Google Sign-In ready. In production, configure Google Client ID.');
-              }}
+              onClick={handleGoogleAuth}
+              disabled={isSubmitting || isAuthLoading}
               className="auth-google-btn"
             >
               <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24">

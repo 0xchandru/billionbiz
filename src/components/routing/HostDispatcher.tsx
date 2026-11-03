@@ -1,37 +1,62 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { parseSubdomain, getPortalUrl } from '../../utils/subdomain';
+import { parseSubdomain, getPortalUrl, isLocalOrPreview } from '../../utils/subdomain';
 import { useAuthStore } from '../../store/authStore';
 
 // Layout & Route Guards
 import AppLayout from '../layout/AppLayout';
 import ProtectedRoute from '../layout/ProtectedRoute';
 import AnimatedLoader from '../common/AnimatedLoader';
-
 // 404 Not Found Page
 import NotFoundPage from '../../pages/NotFoundPage';
 
 // Marketing App (chandraprakash.codes / www)
 import LandingPage from '../../pages/LandingPage';
 
-// Auth Pages (Register on main domain, Login on admin)
+// Auth Pages
 import LoginPage from '../../pages/auth/LoginPage';
 import RegisterPage from '../../pages/auth/RegisterPage';
 import ForgotPasswordPage from '../../pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from '../../pages/auth/ResetPasswordPage';
 import VerifyEmailPage from '../../pages/auth/VerifyEmailPage';
 
-// Merchant Admin App (admin.chandraprakash.codes)
+// Merchant Admin App
 import Dashboard from '../../pages/Dashboard';
 import Pages from '../../pages/Pages';
 import OrdersPage from '../../pages/Orders';
-import ProductsPage from '../../pages/Products';
+import InvoicesPage from '../../pages/Invoices';
+import AbandonedCartsPage from '../../pages/AbandonedCarts';
+import ReturnsRefundsPage from '../../pages/ReturnsRefunds';
+import ShipmentsPage from '../../pages/Shipments';
+import WarehousesPage from '../../pages/Warehouses';
+import QuotesPage from '../../pages/Quotes';
+
 import AppointmentsPage from '../../pages/Appointments';
+import OfferingsPage from '../../pages/Offerings';
+import StaffPage from '../../pages/Staff';
+import WorkingHoursPage from '../../pages/WorkingHours';
+import BookingSettingsPage from '../../pages/BookingSettings';
+import ResourcesPage from '../../pages/Resources';
+
+import ProductsPage from '../../pages/Products';
+import CategoriesPage from '../../pages/Categories';
+import InventoryPage from '../../pages/Inventory';
+import PriceListsPage from '../../pages/PriceLists';
+
 import PeoplePage from '../../pages/People';
-import POSCountersPage from '../../pages/POSCounters';
-import ExtensionsPage from '../../pages/Extensions';
+import CustomerTicketsPage from '../../pages/CustomerTickets';
+
 import TeamPage from '../../pages/Team';
+import RolesPermissionsPage from '../../pages/RolesPermissions';
+import ResponsibilitiesPage from '../../pages/Responsibilities';
+
+import POSCountersPage from '../../pages/POSCounters';
+import POSShiftsPage from '../../pages/POSShifts';
+
+import StoreNavigationPage from '../../pages/StoreNavigation';
+import ExtensionsPage from '../../pages/Extensions';
 import SettingsPage from '../../pages/Settings';
+import ThemeStyles from '../../pages/ThemeStyles';
 import EditorLayout from '../../pages/editor/EditorLayout';
 
 // Dedicated Subdomain Portals
@@ -52,27 +77,143 @@ const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {
 };
 
 /**
+ * Common Merchant Admin Route Tree Component
+ * Reused for both local/preview and production admin subdomain
+ */
+const renderAdminRoutes = (): React.ReactElement => (
+  <Route element={<ProtectedRoute />}>
+    <Route element={<AppLayout />}>
+      <Route path="/dashboard" element={<Dashboard />} />
+
+      {/* Orders Section - Dedicated Individual Pages */}
+      <Route path="/orders" element={<OrdersPage />} />
+      <Route path="/orders/all" element={<OrdersPage />} />
+      <Route path="/orders/invoices" element={<InvoicesPage />} />
+      <Route path="/orders/invoices/new" element={<InvoicesPage />} />
+      <Route path="/orders/abandoned-carts" element={<AbandonedCartsPage />} />
+      <Route path="/orders/returns-refunds" element={<ReturnsRefundsPage />} />
+      <Route path="/orders/shipments" element={<ShipmentsPage />} />
+      <Route path="/orders/warehouses" element={<WarehousesPage />} />
+      <Route path="/orders/quotes" element={<QuotesPage />} />
+      <Route path="/orders/returns" element={<ReturnsRefundsPage />} />
+
+      {/* Appointments Section - Dedicated Individual Pages */}
+      <Route path="/appointments" element={<AppointmentsPage />} />
+      <Route path="/appointments/new" element={<AppointmentsPage />} />
+      <Route path="/appointments/offerings" element={<OfferingsPage />} />
+      <Route path="/appointments/staff" element={<StaffPage />} />
+      <Route path="/appointments/working-hours" element={<WorkingHoursPage />} />
+      <Route path="/appointments/settings" element={<BookingSettingsPage />} />
+      <Route path="/appointments/availability" element={<WorkingHoursPage />} />
+      <Route path="/appointments/resources" element={<ResourcesPage />} />
+
+      {/* Products & Catalogue Section - Dedicated Individual Pages */}
+      <Route path="/products" element={<ProductsPage />} />
+      <Route path="/products/categories" element={<CategoriesPage />} />
+      <Route path="/products/inventory" element={<InventoryPage />} />
+      <Route path="/products/pricelists" element={<PriceListsPage />} />
+
+      {/* People & CRM Section - Dedicated Individual Pages */}
+      <Route path="/people" element={<PeoplePage />} />
+      <Route path="/people/tickets" element={<CustomerTicketsPage />} />
+
+      {/* Team Management - Dedicated Individual Pages */}
+      <Route path="/team" element={<TeamPage />} />
+      <Route path="/team/roles" element={<RolesPermissionsPage />} />
+      <Route path="/team/responsibilities" element={<ResponsibilitiesPage />} />
+
+      {/* POS Counters & Shifts - Dedicated Individual Pages */}
+      <Route path="/pos-counters" element={<POSCountersPage />} />
+      <Route path="/pos-counters/shifts" element={<POSShiftsPage />} />
+
+      {/* Online Store & Themes - Dedicated Individual Pages */}
+      <Route path="/pages" element={<Pages />} />
+      <Route path="/online-store/pages" element={<Pages />} />
+      <Route path="/online-store/themes" element={<ThemeStyles />} />
+      <Route path="/online-store/navigation" element={<StoreNavigationPage />} />
+      <Route path="/theme" element={<Navigate to="/online-store/themes" replace />} />
+
+      {/* Plugins & Marketplace */}
+      <Route path="/plugins" element={<ExtensionsPage defaultTab="installed" />} />
+      <Route path="/plugins/installed" element={<ExtensionsPage defaultTab="installed" />} />
+      <Route path="/plugins/marketplace" element={<ExtensionsPage defaultTab="marketplace" />} />
+      <Route path="/extensions" element={<ExtensionsPage defaultTab="installed" />} />
+
+      {/* Settings */}
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/settings/:tab" element={<SettingsPage />} />
+    </Route>
+
+    {/* Native Online Store Editor */}
+    <Route path="/editor/store-brand" element={<Navigate to="/editor/brand" replace />} />
+    <Route path="/editor/design-experience" element={<Navigate to="/editor/design" replace />} />
+    <Route path="/editor/seo-growth" element={<Navigate to="/editor/brand" replace />} />
+    <Route path="/editor" element={<Navigate to="/editor/pages" replace />} />
+    <Route path="/editor/:tab" element={<EditorLayout />} />
+
+    {/* Embedded POS Preview in Admin */}
+    <Route path="/pos" element={<Navigate to="/pos-counters" replace />} />
+  </Route>
+);
+
+/**
  * Strict Page-Based & Host-Dispatched Routing Architecture
- *
- * Rules:
- * - Create Store / Register is hosted on the MAIN domain (chandraprakash.codes/register).
- * - Admin Login & Admin Dashboard are ONLY accessible on the `admin` subdomain.
- * - On local/preview environments, routing is seamless with zero intermediate flashing screens.
- * - Marketing apex redirects /login to admin.chandraprakash.codes/login, and 404s on admin routes.
- * - Storefronts (*.stores) strictly serve store pages; admin login routes 404 here.
  */
 export const HostDispatcher: React.FC = () => {
   const subInfo = parseSubdomain();
   const { isAuthenticated } = useAuthStore();
+  const isLocal = isLocalOrPreview() || subInfo.type === 'local';
 
-  // 1. PUBLIC MARKETING WEBSITE (chandraprakash.codes / www)
+  // 1. LOCAL / PREVIEW / SINGLE-ORIGIN RUNTIME
+  // Unified route tree so that browser Back/Forward between Homepage, Login, and Register never flashes or blanks!
+  if (isLocal) {
+    return (
+      <Routes>
+        {/* Public Homepage */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Auth Pages */}
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+        />
+        <Route
+          path="/register"
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />}
+        />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+
+        {/* Full Merchant Admin Workspace */}
+        {renderAdminRoutes()}
+
+        {/* Standalone Local Portals */}
+        <Route
+          path="/pos-app"
+          element={isAuthenticated ? <POSPage /> : <Navigate to="/login?returnUrl=/pos-app" replace />}
+        />
+        <Route
+          path="/staff-app"
+          element={isAuthenticated ? <StaffPortalPage /> : <Navigate to="/login?returnUrl=/staff-app" replace />}
+        />
+        <Route path="/ops" element={<OpsPortalPage />} />
+
+        {/* Store preview route */}
+        <Route path="/store/:slug" element={<StorefrontPage />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<NotFoundPage message="The page you requested could not be found." />} />
+      </Routes>
+    );
+  }
+
+  // 2. PUBLIC MARKETING WEBSITE (chandraprakash.codes / www)
   if (subInfo.type === 'root') {
     return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        {/* CREATE STORE IS HOSTED DIRECTLY ON MAIN DOMAIN! */}
         <Route path="/register" element={<RegisterPage />} />
-        {/* Login is on admin subdomain */}
         <Route path="/login" element={<ExternalRedirect to={getPortalUrl('admin', '/login')} />} />
         <Route path="/forgot-password" element={<ExternalRedirect to={getPortalUrl('admin', '/forgot-password')} />} />
 
@@ -82,35 +223,27 @@ export const HostDispatcher: React.FC = () => {
           element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
         />
         <Route
-          path="/orders"
+          path="/orders/*"
           element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
         />
         <Route
-          path="/products"
+          path="/products/*"
           element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
         />
         <Route
-          path="/appointments"
+          path="/appointments/*"
           element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
         />
         <Route
-          path="/people"
+          path="/people/*"
           element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
         />
         <Route
-          path="/pos-counters"
+          path="/team/*"
           element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
         />
         <Route
-          path="/extensions"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
-        />
-        <Route
-          path="/team"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
-        />
-        <Route
-          path="/settings"
+          path="/settings/*"
           element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
         />
         <Route
@@ -118,13 +251,12 @@ export const HostDispatcher: React.FC = () => {
           element={<NotFoundPage message="Store Editor is only available on admin.chandraprakash.codes" />}
         />
 
-        {/* Any unknown route on marketing apex */}
         <Route path="*" element={<NotFoundPage message="The page you are looking for does not exist on this site." />} />
       </Routes>
     );
   }
 
-  // 2. CENTRAL ACCOUNTS / IDENTITY -> Redirects cleanly to official Admin login
+  // 3. CENTRAL ACCOUNTS / IDENTITY -> Redirects cleanly to official Admin login
   if (subInfo.type === 'accounts') {
     return (
       <Routes>
@@ -133,19 +265,10 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 3. DEDICATED CASHIER POS PORTAL (pos.chandraprakash.codes)
+  // 4. DEDICATED CASHIER POS PORTAL (pos.chandraprakash.codes)
   if (subInfo.type === 'pos') {
     return (
       <Routes>
-        {/* Admin routes are NOT accessible on POS counter domain */}
-        <Route
-          path="/dashboard"
-          element={<NotFoundPage message="Admin dashboard is not available on the POS portal. Visit admin.chandraprakash.codes." />}
-        />
-        <Route
-          path="/settings"
-          element={<NotFoundPage message="Admin settings are not available on the POS portal. Visit admin.chandraprakash.codes." />}
-        />
         <Route
           path="*"
           element={
@@ -162,19 +285,10 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 4. DEDICATED STAFF WORK PORTAL (staff.chandraprakash.codes)
+  // 5. DEDICATED STAFF WORK PORTAL (staff.chandraprakash.codes)
   if (subInfo.type === 'staff') {
     return (
       <Routes>
-        {/* Admin routes are NOT accessible on Staff portal */}
-        <Route
-          path="/dashboard"
-          element={<NotFoundPage message="Admin dashboard is not available on the Staff portal. Visit admin.chandraprakash.codes." />}
-        />
-        <Route
-          path="/settings"
-          element={<NotFoundPage message="Admin settings are not available on the Staff portal. Visit admin.chandraprakash.codes." />}
-        />
         <Route
           path="*"
           element={
@@ -191,7 +305,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 5. RESTRICTED INTERNAL PLATFORM OPERATIONS (ops.chandraprakash.codes)
+  // 6. RESTRICTED INTERNAL PLATFORM OPERATIONS (ops.chandraprakash.codes)
   if (subInfo.type === 'ops') {
     return (
       <Routes>
@@ -204,11 +318,10 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 6. NATIVE MERCHANT STOREFRONT RUNTIME (*.stores.chandraprakash.codes)
+  // 7. NATIVE MERCHANT STOREFRONT RUNTIME (*.stores.chandraprakash.codes)
   if (subInfo.type === 'store') {
     return (
       <Routes>
-        {/* Admin login & dashboard are STRICTLY NOT accessible on customer storefronts -> 404 */}
         <Route
           path="/login"
           element={<NotFoundPage message="Admin login is not available on customer storefronts. Please visit admin.chandraprakash.codes." />}
@@ -221,37 +334,21 @@ export const HostDispatcher: React.FC = () => {
           path="/dashboard"
           element={<NotFoundPage message="Merchant dashboard is only available on admin.chandraprakash.codes." />}
         />
-        <Route
-          path="/admin"
-          element={<NotFoundPage message="Merchant administration is only available on admin.chandraprakash.codes." />}
-        />
-        <Route
-          path="/settings"
-          element={<NotFoundPage message="Merchant settings are only available on admin.chandraprakash.codes." />}
-        />
-
-        {/* All valid customer storefront traffic */}
         <Route path="*" element={<StorefrontPage slug={subInfo.storeSlug} />} />
       </Routes>
     );
   }
 
-  // 7. MERCHANT ADMIN WORKSPACE (admin.chandraprakash.codes)
-  // This is the ONLY subdomain where the Admin Login page and Merchant Admin exist!
+  // 8. MERCHANT ADMIN WORKSPACE (admin.chandraprakash.codes)
   return (
     <Routes>
-      {/* Admin Login & Registration Routes (Exclusively on admin subdomain) */}
       <Route
         path="/login"
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
-        }
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
       />
       <Route
         path="/register"
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />
-        }
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />}
       />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -269,32 +366,8 @@ export const HostDispatcher: React.FC = () => {
         }
       />
 
-      {/* Protected Merchant Administration Workspace */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/appointments" element={<AppointmentsPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/people" element={<PeoplePage />} />
-          <Route path="/pages" element={<Pages />} />
-          <Route path="/pos-counters" element={<POSCountersPage />} />
-          <Route path="/extensions" element={<ExtensionsPage />} />
-          <Route path="/team" element={<TeamPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/theme" element={<Navigate to="/editor/design" replace />} />
-        </Route>
-
-        {/* Native Online Store Editor */}
-        <Route path="/editor/store-brand" element={<Navigate to="/editor/brand" replace />} />
-        <Route path="/editor/design-experience" element={<Navigate to="/editor/design" replace />} />
-        <Route path="/editor/seo-growth" element={<Navigate to="/editor/brand" replace />} />
-        <Route path="/editor" element={<Navigate to="/editor/pages" replace />} />
-        <Route path="/editor/:tab" element={<EditorLayout />} />
-
-        {/* Embedded POS Preview in Admin */}
-        <Route path="/pos" element={<Navigate to="/pos-counters" replace />} />
-      </Route>
+      {/* Full Merchant Admin Workspace */}
+      {renderAdminRoutes()}
 
       {/* Store preview route inside admin */}
       <Route path="/store/:slug" element={<StorefrontPage />} />

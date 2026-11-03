@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { 
   Save, 
   Settings as SettingsIcon, 
@@ -35,13 +35,22 @@ const SETTINGS_TABS: TabDefinition[] = [
   { id: 'security', label: 'Security & Staff Access', icon: ShieldCheck, description: 'Two-factor auth (MFA), staff PINs, and cashier controls.' },
 ];
 
+const resolveTab = (raw?: string): TabKey => {
+  if (!raw) return 'general';
+  if (raw === 'fulfillment') return 'shipping';
+  if (raw === 'account') return 'security';
+  if (raw === 'preferences') return 'general';
+  if (SETTINGS_TABS.some(t => t.id === raw)) return raw as TabKey;
+  return 'general';
+};
+
 const SettingsPage: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const currentTabParam = (searchParams.get('tab') || 'general') as TabKey;
-  
-  const [activeTab, setActiveTab] = useState<TabKey>(
-    SETTINGS_TABS.some(t => t.id === currentTabParam) ? currentTabParam : 'general'
-  );
+  const [searchParams] = useSearchParams();
+  const params = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+
+  const currentTab = resolveTab(params.tab || searchParams.get('tab') || undefined);
+  const [activeTab, setActiveTab] = useState<TabKey>(currentTab);
 
   const [store, setStore] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,17 +64,15 @@ const SettingsPage: React.FC = () => {
   const [appointments, setAppointments] = useState(true);
   const [restaurantPos, setRestaurantPos] = useState(true);
 
-  // Sync state with URL parameter
+  // Sync state with URL parameter or route params
   useEffect(() => {
-    const tab = searchParams.get('tab') as TabKey;
-    if (tab && SETTINGS_TABS.some(t => t.id === tab)) {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
+    const tab = resolveTab(params.tab || searchParams.get('tab') || undefined);
+    setActiveTab(tab);
+  }, [params.tab, searchParams]);
 
   const switchTab = (tabId: TabKey) => {
     setActiveTab(tabId);
-    setSearchParams(tabId === 'general' ? {} : { tab: tabId });
+    navigate(`/settings/${tabId}`);
   };
 
   const loadSettings = async () => {

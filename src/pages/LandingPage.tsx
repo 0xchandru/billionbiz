@@ -69,31 +69,11 @@ export default function LandingPage() {
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none' }}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '8px',
-                backgroundColor: '#064652',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                fontWeight: 800,
-                fontSize: '1.2rem',
-                boxShadow: '0 2px 4px rgba(6, 70, 82, 0.2)'
-              }}
-            >
-              B
-            </div>
-            <div>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#064652', letterSpacing: '-0.02em' }}>
-                Billion<span style={{ color: '#447515' }}>Biz</span>
-              </span>
-              <span style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', fontWeight: 600, letterSpacing: '0.05em' }}>
-                V2 UNIFIED PLATFORM
-              </span>
-            </div>
+            <img 
+              src="/billionbiz-logo.png" 
+              alt="BillionBiz" 
+              style={{ height: '38px', width: 'auto', objectFit: 'contain' }} 
+            />
           </Link>
 
           {/* Desktop Nav Links */}
@@ -685,11 +665,12 @@ export default function LandingPage() {
       <footer style={{ backgroundColor: '#032329', color: '#94a3b8', padding: '3.5rem 1.5rem 2rem 1.5rem', borderTop: '1px solid #0f3d45' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2.5rem', marginBottom: '3rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.75rem' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#447515', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem' }}>
-                B
-              </div>
-              BillionBiz V2
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+              <img 
+                src="/billionbiz-logo.png" 
+                alt="BillionBiz" 
+                style={{ height: '32px', width: 'auto', objectFit: 'contain' }} 
+              />
             </div>
             <p style={{ fontSize: '0.85rem', lineHeight: 1.6 }}>
               The unified commerce, appointments, and POS platform for ambitious retail and service brands.

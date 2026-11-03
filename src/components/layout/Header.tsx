@@ -76,22 +76,12 @@ const Header: FC = () => {
     <header className={styles.header}>
       {/* LEFT: BillionBiz Brand Logo */}
       <div className={styles.left}>
-        <a href="/dashboard" className={styles.logoLink}>
-          <div className={styles.logoMark}>
-            {/* Store Awning & 'b' Brand Icon matching attached design */}
-            <svg width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Lower Stem & Outer 'b' Bowl */}
-              <path d="M6 4V24" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
-              {/* Awning Yellow Canopy Arch */}
-              <path d="M6 14C6 10.5 9 8 14 8C19 8 22 10.5 22 14L21 16C21 17 19.5 17.5 18 17C16.5 16.5 15.5 17.5 14 17.5C12.5 17.5 11.5 16.5 10 17C8.5 17.5 7 17 7 16L6 14Z" fill="#eab308" />
-              {/* Bottom Green Curve */}
-              <path d="M6 18C8 21.5 11 23 15 23C19.5 23 22 20.5 22 17.5" stroke="#74c043" strokeWidth="2.8" strokeLinecap="round" />
-            </svg>
-          </div>
-          <span className={styles.logoText}>
-            <span className={styles.logoBillion}>billion</span>
-            <span className={styles.logoBiz}>biz</span>
-          </span>
+        <a href="/dashboard" className={styles.logoLink} title="BillionBiz Dashboard">
+          <img 
+            src="/billionbiz-logo.png" 
+            alt="BillionBiz" 
+            style={{ height: '32px', width: 'auto', objectFit: 'contain', display: 'block' }} 
+          />
         </a>
       </div>
 

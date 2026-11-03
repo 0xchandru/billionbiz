@@ -14,7 +14,7 @@
  * - {slug}.stores.chandraprakash.codes              -> Customer Storefront
  */
 
-export type SubdomainType = 'root' | 'admin' | 'accounts' | 'staff' | 'pos' | 'ops' | 'store';
+export type SubdomainType = 'root' | 'admin' | 'accounts' | 'staff' | 'pos' | 'ops' | 'store' | 'local';
 
 export interface SubdomainInfo {
   type: SubdomainType;
@@ -64,47 +64,13 @@ export function parseSubdomain(): SubdomainInfo {
     }
   }
 
-  // 2. Local / Single-Origin / Preview environment: route seamlessly by path with NO forced reloads!
+  // 2. Local / Single-Origin / Preview environment: route seamlessly in one unified router with ZERO page unmounts!
   if (isLocal) {
-    if (pathname.startsWith('/pos')) {
-      return { type: 'pos', subdomain: 'pos', isSubdomain: false, isLocal: true };
-    }
-    if (pathname.startsWith('/staff')) {
-      return { type: 'staff', subdomain: 'staff', isSubdomain: false, isLocal: true };
-    }
-    if (pathname.startsWith('/ops')) {
-      return { type: 'ops', subdomain: 'ops', isSubdomain: false, isLocal: true };
-    }
     if (pathname.startsWith('/store/')) {
       const slug = pathname.split('/')[2];
       return { type: 'store', subdomain: slug ? `${slug}.stores` : 'store', storeSlug: slug, isSubdomain: false, isLocal: true };
     }
-    // Auth & Merchant Admin paths route directly to admin on localhost/preview
-    const isAdminPath =
-      pathname === '/login' ||
-      pathname === '/register' ||
-      pathname === '/forgot-password' ||
-      pathname === '/reset-password' ||
-      pathname === '/verify-email' ||
-      pathname === '/dashboard' ||
-      pathname.startsWith('/dashboard/') ||
-      pathname.startsWith('/orders') ||
-      pathname.startsWith('/products') ||
-      pathname.startsWith('/appointments') ||
-      pathname.startsWith('/people') ||
-      pathname.startsWith('/pages') ||
-      pathname.startsWith('/pos-counters') ||
-      pathname.startsWith('/extensions') ||
-      pathname.startsWith('/team') ||
-      pathname.startsWith('/settings') ||
-      pathname.startsWith('/editor');
-
-    if (isAdminPath) {
-      return { type: 'admin', subdomain: 'admin', isSubdomain: false, isLocal: true };
-    }
-
-    // Default root path on local is marketing landing
-    return { type: 'root', subdomain: null, isSubdomain: false, isLocal: true };
+    return { type: 'local', subdomain: null, isSubdomain: false, isLocal: true };
   }
 
   // 3. Dynamic merchant storefront: {slug}.stores.chandraprakash.codes

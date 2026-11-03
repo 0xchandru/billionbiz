@@ -6,22 +6,80 @@ export interface DashboardMetricsResponse {
     totalRevenueMinor: number;
     avgOrderValueMinor: number;
     totalCustomers: number;
+    totalProducts: number;
     totalBookings: number;
     totalAppointmentValueMinor: number;
+    pendingOrders?: number;
+    completedOrders?: number;
+    cancelledOrders?: number;
+    revenueGrowth?: number;
   };
-  orderStatusDistribution: { status: string; count: string }[];
+  salesTrends?: {
+    date: string;
+    orders_count: number | string;
+    revenue_minor: number;
+  }[];
+  orderStatusDistribution: { status: string; count: string | number }[];
   recentOrders: {
     id: string;
     order_number: string;
     created_at: string;
     status: string;
+    payment_status?: string;
+    fulfillment_status?: string;
     total_minor: number;
     customer_name: string;
+    customer_email?: string;
+  }[];
+  recentBookings?: {
+    id: string;
+    booking_number: string;
+    start_time: string;
+    end_time: string;
+    status: string;
+    total_minor: number;
+    service_name: string;
+    staff_name: string;
+    customer_name: string;
+  }[];
+  recentCustomers?: {
+    id: string;
+    first_name: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    total_orders?: number;
+    total_spent_minor?: number;
+    created_at: string;
   }[];
   topProducts: {
+    id?: string;
     name: string;
-    orders_count: string;
+    orders_count: string | number;
     revenue_minor: number;
+  }[];
+  bestServices?: {
+    id?: string;
+    name: string;
+    bookings_count: string | number;
+    revenue_minor: number;
+  }[];
+  recentActivities?: {
+    id: string;
+    action: string;
+    target_type: string;
+    target_id: string;
+    changes?: any;
+    created_at: string;
+    actor_id?: string;
+  }[];
+  importantNotifications?: {
+    id: string;
+    title: string;
+    message: string;
+    type: string;
+    is_read: boolean;
+    created_at: string;
   }[];
 }
 
@@ -98,6 +156,20 @@ export const api = {
       body: JSON.stringify(credentials)
     }),
 
+  loginGoogle: (payload: {
+    credential?: string;
+    idToken?: string;
+    code?: string;
+    redirectUri?: string;
+    googleId?: string;
+    email?: string;
+    fullName?: string;
+  }) =>
+    apiClient<AuthResponse>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+
   register: (payload: {
     email: string;
     password: string;
@@ -163,7 +235,8 @@ export const api = {
     }),
 
   // Dashboard
-  getDashboardMetrics: () => apiClient<DashboardMetricsResponse>('/dashboard/metrics'),
+  getDashboardMetrics: (period: string = '30d') =>
+    apiClient<DashboardMetricsResponse>('/dashboard/metrics', { params: { period } }),
 
   // Catalog
   getProducts: (params?: { search?: string; status?: string; categoryId?: string }) =>
@@ -183,6 +256,7 @@ export const api = {
   // Orders & Customers (People)
   getCustomers: (params?: { search?: string }) =>
     apiClient<{ customers: any[]; total: number }>('/orders/customers', { params }),
+  getCustomerById: (id: string) => apiClient<any>(`/orders/customers/${id}`),
   getOrders: (params?: { status?: string; search?: string }) =>
     apiClient<{ orders: any[]; total: number }>('/orders', { params }),
   getOrderById: (id: string) => apiClient<any>(`/orders/${id}`),
@@ -191,14 +265,108 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(order)
     }),
+  updateOrderStatus: (id: string, status: string, notes?: string) =>
+    apiClient<any>(`/orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, notes })
+    }),
   fulfillOrder: (id: string, fulfillment: { carrier?: string; trackingNumber?: string }) =>
     apiClient(`/orders/${id}/fulfill`, {
       method: 'POST',
       body: JSON.stringify(fulfillment)
     }),
 
+  // Invoices
+  getInvoices: () => apiClient<{ invoices: any[] }>('/orders/invoices'),
+  createInvoice: (invoice: any) =>
+    apiClient<{ message: string; invoiceId: string; invoiceNumber: string }>('/orders/invoices', {
+      method: 'POST',
+      body: JSON.stringify(invoice)
+    }),
+
+  // Abandoned Carts
+  getAbandonedCarts: () => apiClient<{ abandonedCarts: any[] }>('/orders/abandoned-carts'),
+
+  // Returns & Refunds
+  getReturns: () => apiClient<{ returns: any[] }>('/orders/returns'),
+  createReturn: (data: any) =>
+    apiClient<{ message: string; returnId: string }>('/orders/returns', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+  approveReturn: (id: string, notes?: string) =>
+    apiClient<any>(`/orders/returns/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ notes })
+    }),
+  rejectReturn: (id: string, reason: string) =>
+    apiClient<any>(`/orders/returns/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason })
+    }),
+  refundReturn: (id: string, payload: any = {}) =>
+    apiClient<any>(`/orders/returns/${id}/process-refund`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+
+  // Shipments & Warehouses
+  getShipments: () => apiClient<{ shipments: any[] }>('/orders/shipments'),
+  getWarehouses: () => apiClient<{ warehouses: any[] }>('/orders/warehouses'),
+  createWarehouse: (warehouse: any) =>
+    apiClient<{ message: string; warehouseId: string }>('/orders/warehouses', {
+      method: 'POST',
+      body: JSON.stringify(warehouse)
+    }),
+  updateWarehouse: (id: string, warehouse: any) =>
+    apiClient<any>(`/orders/warehouses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(warehouse)
+    }),
+  deleteWarehouse: (id: string) =>
+    apiClient<any>(`/orders/warehouses/${id}`, {
+      method: 'DELETE'
+    }),
+
   // Appointments
   getOfferings: () => apiClient<{ offerings: any[] }>('/appointments/offerings'),
+  createOffering: (offering: any) =>
+    apiClient<{ message: string; offeringId: string }>('/appointments/offerings', {
+      method: 'POST',
+      body: JSON.stringify(offering)
+    }),
+  updateOffering: (id: string, offering: any) =>
+    apiClient<any>(`/appointments/offerings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(offering)
+    }),
+  deleteOffering: (id: string) =>
+    apiClient<any>(`/appointments/offerings/${id}`, {
+      method: 'DELETE'
+    }),
+  getStaff: () => apiClient<{ staff: any[] }>('/appointments/staff'),
+  createStaff: (staff: any) =>
+    apiClient<{ message: string; staffId: string }>('/appointments/staff', {
+      method: 'POST',
+      body: JSON.stringify(staff)
+    }),
+  updateStaff: (id: string, staff: any) =>
+    apiClient<any>(`/appointments/staff/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(staff)
+    }),
+  getWorkingHours: () => apiClient<{ workingHours: any[] }>('/appointments/working-hours'),
+  updateWorkingHours: (workingHours: any[]) =>
+    apiClient<any>('/appointments/working-hours', {
+      method: 'PUT',
+      body: JSON.stringify({ workingHours })
+    }),
+  getBookingSettings: () => apiClient<{ settings: any }>('/appointments/settings'),
+  updateBookingSettings: (settings: any) =>
+    apiClient<any>('/appointments/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    }),
   getAvailability: (offeringId: string, date: string) =>
     apiClient<any>('/appointments/availability', { params: { offeringId, date } }),
   holdSlot: (payload: { offeringId: string; resourceId: string; startTime: string; endTime: string }) =>
@@ -213,6 +381,11 @@ export const api = {
     }),
   getBookings: (params?: { from?: string; to?: string; status?: string }) =>
     apiClient<{ bookings: any[] }>('/appointments/bookings', { params }),
+  updateBookingStatus: (id: string, status: string) =>
+    apiClient<any>(`/appointments/bookings/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    }),
 
   // POS
   getCounters: () => apiClient<{ counters: any[] }>('/pos/counters'),
@@ -250,11 +423,22 @@ export const api = {
   // Team
   getTeamMembers: () => apiClient<{ members: any[] }>('/team/members'),
   createTeamMember: (member: any) =>
-    apiClient('/team/members', {
+    apiClient<{ message: string; staffId: string }>('/team/members', {
       method: 'POST',
       body: JSON.stringify(member)
     }),
+  updateTeamMember: (id: string, member: any) =>
+    apiClient<any>(`/team/members/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(member)
+    }),
+  deleteTeamMember: (id: string) =>
+    apiClient<any>(`/team/members/${id}`, {
+      method: 'DELETE'
+    }),
   getRoles: () => apiClient<{ roles: any[] }>('/team/roles'),
+  getResponsibilities: () => apiClient<{ responsibilities: any[] }>('/team/responsibilities'),
+  getPermissions: () => apiClient<{ permissions: any[] }>('/team/permissions'),
 
   // Storefront & Publishing
   getPages: () => apiClient<{ pages: any[] }>('/storefront/pages'),
@@ -314,5 +498,70 @@ export const api = {
     apiClient<any>('/extensions/shiprocket/create-shipment', {
       method: 'POST',
       body: JSON.stringify(payload)
+    }),
+
+  // Price Lists
+  getPriceLists: () => apiClient<{ priceLists: any[] }>('/catalog/pricelists'),
+  createPriceList: (payload: { name: string; description?: string; currency?: string; tierType?: string; discountPct?: number }) =>
+    apiClient<any>('/catalog/pricelists', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  deletePriceList: (id: string) =>
+    apiClient<any>(`/catalog/pricelists/${id}`, {
+      method: 'DELETE'
+    }),
+
+  // Roles & Responsibilities
+  createCustomRole: (payload: { name: string; code?: string; description?: string; permissionCodes?: string[] }) =>
+    apiClient<any>('/team/roles', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  processRefund: (payload: { orderId: string; amountMinor: number; reason?: string }) =>
+    apiClient<any>('/orders/refunds', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+
+  // People & Tickets
+  createCustomer: (payload: { firstName: string; lastName?: string; email?: string; phone?: string; addressLine1?: string; city?: string; state?: string; postalCode?: string; country?: string }) =>
+    apiClient<any>('/orders/customers', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  getCustomerTickets: (params?: { status?: string; priority?: string; search?: string }) => {
+    const q = new URLSearchParams();
+    if (params?.status) q.append('status', params.status);
+    if (params?.priority) q.append('priority', params.priority);
+    if (params?.search) q.append('search', params.search);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return apiClient<{ tickets: any[] }>(`/orders/tickets${qs}`);
+  },
+  createCustomerTicket: (payload: { customerName: string; customerEmail?: string; subject: string; description?: string; priority?: string; customerId?: string }) =>
+    apiClient<any>('/orders/tickets', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  updateCustomerTicket: (id: string, payload: { status?: string; priority?: string; assignedTo?: string }) =>
+    apiClient<any>(`/orders/tickets/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    }),
+
+  // POS Shifts & Counters
+  getPOSShifts: () => apiClient<{ shifts: any[] }>('/pos/shifts'),
+  createPOSCounter: (payload: { name: string; code?: string }) =>
+    apiClient<any>('/pos/counters', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+
+  // Storefront Navigation
+  getStoreNavigation: () => apiClient<{ navigation: any[] }>('/storefront/navigation'),
+  updateStoreNavigation: (navigation: any[]) =>
+    apiClient<any>('/storefront/navigation', {
+      method: 'PATCH',
+      body: JSON.stringify({ navigation })
     })
 };

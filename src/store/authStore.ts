@@ -22,6 +22,7 @@ export interface AuthState {
   // Actions
   login: (email: string, password: string) => Promise<{ success: boolean; destination?: string; error?: string }>;
   loginUnified: (identifier: string, authFactor: { password?: string; otp?: string }) => Promise<{ success: boolean; destination?: string; error?: string }>;
+  loginGoogle: (payload: { credential?: string; idToken?: string; code?: string; redirectUri?: string }) => Promise<{ success: boolean; destination?: string; error?: string }>;
   register: (payload: {
     fullName: string;
     email: string;
@@ -143,6 +144,47 @@ export const useAuthStore = create<AuthState>((set) => ({
       return { success: true, destination: portalDestination?.path || '/dashboard' };
     } catch (err: any) {
       const message = err.message || 'Login failed. Please check your details.';
+      set({ isLoading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
+  loginGoogle: async (payload) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res: AuthResponse = await api.loginGoogle(payload);
+      const { token, user, organizations, portalDestination } = res;
+
+      const primaryOrg = organizations && organizations.length > 0 ? organizations[0] : null;
+      const orgId = primaryOrg?.organization_id || 'org-billionbiz-default';
+      const storeId = primaryOrg?.store_id || 'store-shoum-default';
+      const storeName = primaryOrg?.store_name || 'My Store';
+      const storeSlug = primaryOrg?.store_slug || 'my-store';
+      const role = primaryOrg?.role || 'OWNER';
+
+      localStorage.setItem('billionbiz_token', token);
+      localStorage.setItem('billionbiz_org_id', orgId);
+      localStorage.setItem('billionbiz_store_id', storeId);
+
+      set({
+        token,
+        user,
+        role,
+        organizationId: orgId,
+        organizationName: primaryOrg?.organization_name || 'Default Organization',
+        storeId,
+        storeName,
+        storeSlug,
+        organizations: organizations || [],
+        portalDestination: portalDestination || null,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      });
+
+      return { success: true, destination: portalDestination?.path || '/dashboard' };
+    } catch (err: any) {
+      const message = err.message || 'Google authentication failed. Please try again.';
       set({ isLoading: false, error: message });
       return { success: false, error: message };
     }

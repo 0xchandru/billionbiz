@@ -5,8 +5,8 @@ import { useAuthStore } from '../../store/authStore';
 import { api } from '../../api/services';
 import { CountryPhoneInput, COUNTRIES } from '../../components/auth/CountryPhoneInput';
 import type { Country } from '../../components/auth/CountryPhoneInput';
-import { validateContactInput, validateOtpCode, validateStoreDetails } from '../../utils/validators';
-import { getPortalUrl } from '../../utils/subdomain';
+import { validateContactInput, validateOtpCode } from '../../utils/validators';
+import { initiateGoogleSignIn } from '../../utils/googleAuth';
 import {
   Store,
   User,
@@ -16,15 +16,12 @@ import {
   ArrowRight,
   ArrowLeft,
   AlertCircle,
-  RefreshCw,
-  CheckCircle2,
-  Check,
-  ShieldCheck
+  RefreshCw
 } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { registerStreamlined, isAuthenticated, isLoading: isStoreLoading, error: storeError, clearError } = useAuthStore();
+  const { registerStreamlined, loginGoogle, isAuthenticated, isLoading: isStoreLoading, error: storeError, clearError } = useAuthStore();
 
   // If already authenticated, redirect straight to dashboard
   useEffect(() => {
@@ -33,29 +30,26 @@ export default function RegisterPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Phase: 1 = Contact Input, 2 = OTP Verification, 3 = Store Details, 4 = Plan Purchasing
-  const [phase, setPhase] = useState<1 | 2 | 3 | 4>(1);
+  // Phase: 1 = Store Name (Minimal), 2 = Contact & OTP, 3 = Account & Password
+  const [phase, setPhase] = useState<1 | 2 | 3>(1);
 
-  // Phase 1 State (Contact)
+  // Phase 1 State (Store / Brand Name)
+  const [storeName, setStoreName] = useState('');
+  const customSlug = '';
+
+  // Phase 2 State (Contact & OTP)
   const [rawIdentifier, setRawIdentifier] = useState('');
   const [formattedIdentifier, setFormattedIdentifier] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
-
-  // Phase 2 State (OTP)
+  const [isOtpSent, setIsOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Phase 3 State (Merchant & Store Details - Defaults to Ecommerce)
+  // Phase 3 State (Account & Password)
   const [fullName, setFullName] = useState('');
-  const [storeName, setStoreName] = useState('');
-  const [customSlug, setCustomSlug] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const capabilityMode = 'COMMERCE';
-
-  // Phase 4 State (Plan Purchasing in INR ₹)
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
-  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'growth' | 'enterprise'>('growth');
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +57,7 @@ export default function RegisterPage() {
 
   const targetIdentifier = (formattedIdentifier || rawIdentifier).trim();
 
-  // Auto-generate slug as user types storeName if not manually overridden
+  // Auto-generate slug from storeName
   const derivedSlug = (customSlug || storeName)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -78,9 +72,24 @@ export default function RegisterPage() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  // Phase 1 -> Send OTP
-  const handleSendOtp = async (e: FormEvent) => {
+  // Phase 1 Submit -> Proceed to Contact
+  const handleStoreNameSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setUiError(null);
+    clearError();
+
+    const cleanName = storeName.trim();
+    if (!cleanName || cleanName.length < 2) {
+      setUiError('Please enter a shop or brand name (at least 2 characters).');
+      return;
+    }
+
+    setPhase(2);
+  };
+
+  // Phase 2 Step A -> Send OTP
+  const handleSendOtp = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
     setUiError(null);
     clearError();
 
@@ -101,7 +110,7 @@ export default function RegisterPage() {
       });
 
       setResendCooldown(45);
-      setPhase(2);
+      setIsOtpSent(true);
     } catch (err: any) {
       setUiError(err.message || 'Failed to send verification code. Please check your details.');
     } finally {
@@ -109,7 +118,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Phase 2 -> Verify OTP
+  // Phase 2 Step B -> Verify OTP & Proceed to Phase 3
   const handleVerifyOtp = async (e: FormEvent) => {
     e.preventDefault();
     setUiError(null);
@@ -131,7 +140,6 @@ export default function RegisterPage() {
         type: 'REGISTER'
       });
 
-      // Verification successful -> advance to Phase 3 (Store Details)
       setPhase(3);
     } catch (err: any) {
       setUiError(err.message || 'Invalid or expired verification code.');
@@ -140,91 +148,91 @@ export default function RegisterPage() {
     }
   };
 
-  // Phase 3 -> Store Details Submit
-  const handleStoreDetailsSubmit = (e: FormEvent) => {
+  // Phase 3 Submit -> Complete registration & launch
+  const handleFinalSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setUiError(null);
+    clearError();
 
-    const validation = validateStoreDetails(fullName, storeName, customSlug || derivedSlug, password);
-    if (!validation.isValid) {
-      setUiError(validation.errorMessage || 'Please complete all required fields.');
+    if (!password || password.length < 6) {
+      setUiError('Password must be at least 6 characters.');
       return;
     }
 
-    // Advance to Phase 4 (Plan Purchasing in INR ₹)
-    setPhase(4);
-  };
-
-  // Phase 4 -> Complete Plan Purchasing & Launch Store
-  const handleCompleteRegistration = async () => {
-    setUiError(null);
-    clearError();
+    if (confirmPassword && password !== confirmPassword) {
+      setUiError('Passwords do not match.');
+      return;
+    }
 
     const contactValidation = validateContactInput(rawIdentifier, selectedCountry.code);
     const finalIdentifier = contactValidation.isValid ? contactValidation.cleanValue : targetIdentifier;
 
-    const res = await registerStreamlined({
-      storeName: storeName.trim(),
-      slug: (customSlug || derivedSlug).trim().toLowerCase(),
-      identifier: finalIdentifier,
-      capabilityMode,
-      fullName: fullName.trim(),
-      password: password.trim() ? password.trim() : undefined
-    });
+    setIsSubmitting(true);
+    try {
+      const res = await registerStreamlined({
+        storeName: storeName.trim(),
+        slug: derivedSlug,
+        identifier: finalIdentifier,
+        capabilityMode: 'COMMERCE',
+        fullName: fullName.trim() || storeName.trim(),
+        password: password.trim()
+      });
 
-    if (res.success) {
-      navigate('/dashboard', { replace: true });
-    } else if (res.error) {
-      setUiError(res.error);
+      if (res.success) {
+        navigate('/dashboard', { replace: true });
+      } else if (res.error) {
+        setUiError(res.error);
+      }
+    } catch (err: any) {
+      setUiError(err.message || 'Failed to complete registration.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Google OAuth Handler
+  const handleGoogleAuth = async () => {
+    setUiError(null);
+    clearError();
+    setIsSubmitting(true);
+    try {
+      await initiateGoogleSignIn(
+        async (credential) => {
+          const res = await loginGoogle({ credential });
+          setIsSubmitting(false);
+          if (res.success) {
+            navigate('/dashboard', { replace: true });
+          } else if (res.error) {
+            setUiError(res.error);
+          }
+        },
+        (err) => {
+          setIsSubmitting(false);
+          setUiError(err);
+        }
+      );
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setUiError(err.message || 'Google sign-in could not be completed.');
     }
   };
 
   return (
     <div className="auth-wrapper">
       {/* Brand Header */}
-      <Link to="/" className="auth-brand">
-        <div className="auth-brand-logo">
-          <Store style={{ width: 22, height: 22 }} />
-        </div>
-        <div className="auth-brand-text">
-          <span className="auth-brand-title">BillionBiz</span>
-          <span className="auth-brand-subtitle">Store Registration</span>
-        </div>
+      <Link to="/" className="auth-brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+        <img 
+          src="/billionbiz-logo.png" 
+          alt="BillionBiz" 
+          style={{ height: '42px', width: 'auto', objectFit: 'contain' }} 
+        />
+        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          Business Platform
+        </span>
       </Link>
 
       {/* Main Register Card */}
-      <div className="auth-card" style={{ maxWidth: phase === 4 ? '520px' : '460px', transition: 'max-width 0.2s ease' }}>
-        {/* Step Progress Indicators */}
-        <div className="auth-steps">
-          <div className="auth-step-item">
-            <div className={`auth-step-badge ${phase === 1 ? 'active' : phase > 1 ? 'completed' : ''}`}>
-              {phase > 1 ? '✓' : '1'}
-            </div>
-            <span className="auth-step-label">Contact</span>
-          </div>
-          <div className="auth-step-line" />
-          <div className="auth-step-item">
-            <div className={`auth-step-badge ${phase === 2 ? 'active' : phase > 2 ? 'completed' : ''}`}>
-              {phase > 2 ? '✓' : '2'}
-            </div>
-            <span className="auth-step-label">Verify</span>
-          </div>
-          <div className="auth-step-line" />
-          <div className="auth-step-item">
-            <div className={`auth-step-badge ${phase === 3 ? 'active' : phase > 3 ? 'completed' : ''}`}>
-              {phase > 3 ? '✓' : '3'}
-            </div>
-            <span className="auth-step-label">Store</span>
-          </div>
-          <div className="auth-step-line" />
-          <div className="auth-step-item">
-            <div className={`auth-step-badge ${phase === 4 ? 'active' : ''}`}>
-              4
-            </div>
-            <span className="auth-step-label">Plan</span>
-          </div>
-        </div>
-
+      <div className="auth-card" style={{ maxWidth: '440px' }}>
         {/* Error Alert */}
         {(uiError || storeError) && (
           <div className="auth-alert-error">
@@ -234,50 +242,48 @@ export default function RegisterPage() {
         )}
 
         {/* ======================================================== */}
-        {/* PHASE 1: CONTACT INPUT (MOBILE / EMAIL)                  */}
+        {/* PHASE 1: MINIMAL SHOP NAME & BRAND                       */}
         {/* ======================================================== */}
         {phase === 1 && (
           <div>
             <div className="auth-card-header">
               <h1 className="auth-card-title">Create Your Store</h1>
               <p className="auth-card-desc">
-                Enter your mobile number or email address to get started.
+                Enter your brand or shop name to get started.
               </p>
             </div>
 
-            <form onSubmit={handleSendOtp}>
+            <form onSubmit={handleStoreNameSubmit}>
               <div className="auth-form-group">
-                <label className="auth-label">Mobile Number or Email</label>
-                <CountryPhoneInput
-                  value={rawIdentifier}
-                  onChange={(raw, _isMail, formatted, country) => {
-                    setRawIdentifier(raw);
-                    setFormattedIdentifier(formatted);
-                    if (country) setSelectedCountry(country);
-                  }}
-                  onCountryChange={setSelectedCountry}
-                  placeholder="Enter your mobile number or email"
-                  autoFocus
-                  required
-                />
+                <label className="auth-label">Shop Name</label>
+                <div className="auth-input-wrapper">
+                  <div className="auth-input-icon">
+                    <Store style={{ width: 18, height: 18 }} />
+                  </div>
+                  <input
+                    type="text"
+                    value={storeName}
+                    onChange={(e) => setStoreName(e.target.value)}
+                    placeholder="e.g. Aura Studio, Zenith Apparel"
+                    className="auth-input"
+                    autoFocus
+                    required
+                  />
+                </div>
+                {storeName.trim() && (
+                  <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#64748b' }}>
+                    Store link: <span style={{ color: '#083e47', fontWeight: 600 }}>{derivedSlug}.stores.chandraprakash.codes</span>
+                  </div>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled={isSubmitting || !rawIdentifier.trim()}
+                disabled={!storeName.trim() || storeName.trim().length < 2}
                 className="auth-btn-primary"
               >
-                {isSubmitting ? (
-                  <>
-                    <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
-                    Sending Code...
-                  </>
-                ) : (
-                  <>
-                    Send Verification Code
-                    <ArrowRight style={{ width: 16, height: 16 }} />
-                  </>
-                )}
+                <span>Continue</span>
+                <ArrowRight style={{ width: 16, height: 16 }} />
               </button>
             </form>
 
@@ -290,9 +296,8 @@ export default function RegisterPage() {
             {/* Google Signup Button */}
             <button
               type="button"
-              onClick={() => {
-                setUiError('Google Sign-In ready. In production, configure Google Client ID.');
-              }}
+              onClick={handleGoogleAuth}
+              disabled={isSubmitting || isStoreLoading}
               className="auth-google-btn"
             >
               <svg style={{ width: 18, height: 18 }} viewBox="0 0 24 24">
@@ -319,7 +324,7 @@ export default function RegisterPage() {
         )}
 
         {/* ======================================================== */}
-        {/* PHASE 2: ONLY ASK THE OTP                                */}
+        {/* PHASE 2: CONTACT & VERIFICATION                          */}
         {/* ======================================================== */}
         {phase === 2 && (
           <div>
@@ -327,99 +332,149 @@ export default function RegisterPage() {
               type="button"
               onClick={() => {
                 setPhase(1);
+                setIsOtpSent(false);
                 setOtpCode('');
                 setUiError(null);
               }}
               className="auth-back-btn"
             >
               <ArrowLeft style={{ width: 14, height: 14 }} />
-              <span>Change email or phone</span>
+              <span>Back to shop name</span>
             </button>
 
             <div className="auth-card-header" style={{ marginTop: '0.5rem' }}>
-              <h1 className="auth-card-title">Enter Verification Code</h1>
+              <h1 className="auth-card-title">
+                {isOtpSent ? 'Enter Verification Code' : 'Contact Information'}
+              </h1>
               <p className="auth-card-desc">
-                We sent a 6-digit verification code to{' '}
-                <strong style={{ color: '#0f172a' }}>{targetIdentifier}</strong>.
+                {isOtpSent
+                  ? `Enter the 6-digit code sent to ${targetIdentifier}`
+                  : 'Enter your mobile number or email to secure your account.'}
               </p>
             </div>
 
-            <form onSubmit={handleVerifyOtp}>
-              <div className="auth-form-group">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder="123456"
-                  className="auth-otp-input"
-                  autoFocus
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', marginTop: '0.5rem', color: '#64748b' }}>
-                  <span>Code valid for 10 mins</span>
-                  <button
-                    type="button"
-                    disabled={resendCooldown > 0 || isSubmitting}
-                    onClick={handleSendOtp}
-                    style={{
-                      color: resendCooldown > 0 ? '#94a3b8' : '#2563eb',
-                      fontWeight: 600,
-                      border: 'none',
-                      background: 'none',
-                      cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer'
+            {!isOtpSent ? (
+              <form onSubmit={handleSendOtp}>
+                <div className="auth-form-group">
+                  <label className="auth-label">Mobile Number or Email</label>
+                  <CountryPhoneInput
+                    value={rawIdentifier}
+                    onChange={(raw, _isMail, formatted, country) => {
+                      setRawIdentifier(raw);
+                      setFormattedIdentifier(formatted);
+                      if (country) setSelectedCountry(country);
                     }}
-                  >
-                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
-                  </button>
+                    onCountryChange={setSelectedCountry}
+                    placeholder="Enter your mobile number or email"
+                    autoFocus
+                    required
+                  />
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting || otpCode.replace(/[^0-9]/g, '').length !== 6}
-                className="auth-btn-primary"
-              >
-                {isSubmitting ? (
-                  <>
-                    <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    Verify & Continue
-                    <ArrowRight style={{ width: 16, height: 16 }} />
-                  </>
-                )}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !rawIdentifier.trim()}
+                  className="auth-btn-primary"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
+                      Sending Code...
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Verification Code</span>
+                      <ArrowRight style={{ width: 16, height: 16 }} />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp}>
+                <div className="auth-form-group">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="123456"
+                    className="auth-otp-input"
+                    autoFocus
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', marginTop: '0.5rem', color: '#64748b' }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsOtpSent(false)}
+                      style={{ color: '#2563eb', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 500 }}
+                    >
+                      Change contact
+                    </button>
+                    <button
+                      type="button"
+                      disabled={resendCooldown > 0 || isSubmitting}
+                      onClick={() => handleSendOtp()}
+                      style={{
+                        color: resendCooldown > 0 ? '#94a3b8' : '#2563eb',
+                        fontWeight: 600,
+                        border: 'none',
+                        background: 'none',
+                        cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || otpCode.length !== 6}
+                  className="auth-btn-primary"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <span>Verify & Continue</span>
+                      <ArrowRight style={{ width: 16, height: 16 }} />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         )}
 
         {/* ======================================================== */}
-        {/* PHASE 3: COMPACT STORE & MERCHANT DETAILS                */}
+        {/* PHASE 3: SET PASSWORD & LAUNCH                           */}
         {/* ======================================================== */}
         {phase === 3 && (
           <div>
             <button
               type="button"
-              onClick={() => setPhase(2)}
+              onClick={() => {
+                setPhase(2);
+                setUiError(null);
+              }}
               className="auth-back-btn"
             >
               <ArrowLeft style={{ width: 14, height: 14 }} />
-              <span>Back to verification</span>
+              <span>Back to contact</span>
             </button>
 
             <div className="auth-card-header" style={{ marginTop: '0.5rem' }}>
-              <h1 className="auth-card-title">Set Up Your Store</h1>
+              <h1 className="auth-card-title">Set Your Password</h1>
               <p className="auth-card-desc">
-                Enter your details to configure your online store.
+                Create a secure password for <strong style={{ color: '#083e47' }}>{storeName}</strong>.
               </p>
             </div>
 
-            <form onSubmit={handleStoreDetailsSubmit}>
-              {/* 1. Merchant Full Name */}
+            <form onSubmit={handleFinalSubmit}>
               <div className="auth-form-group">
-                <label className="auth-label">Merchant Name</label>
+                <label className="auth-label">Your Full Name (Optional)</label>
                 <div className="auth-input-wrapper">
                   <div className="auth-input-icon">
                     <User style={{ width: 18, height: 18 }} />
@@ -428,55 +483,14 @@ export default function RegisterPage() {
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Chandra Prakash"
+                    placeholder="Enter your name"
                     className="auth-input"
-                    autoFocus
-                    required
                   />
                 </div>
               </div>
 
-              {/* 2. Business / Store Name */}
               <div className="auth-form-group">
-                <label className="auth-label">Business / Store Name</label>
-                <div className="auth-input-wrapper">
-                  <div className="auth-input-icon">
-                    <Store style={{ width: 18, height: 18 }} />
-                  </div>
-                  <input
-                    type="text"
-                    value={storeName}
-                    onChange={(e) => setStoreName(e.target.value)}
-                    placeholder="e.g. Acme Studio"
-                    className="auth-input"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* 3. Domain / Slug */}
-              <div className="auth-form-group">
-                <label className="auth-label">Storefront Web Address</label>
-                <div className="auth-input-wrapper" style={{ padding: '0 0.75rem', backgroundColor: '#f8fafc' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>https://</span>
-                  <input
-                    type="text"
-                    value={customSlug || derivedSlug}
-                    onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    placeholder="store-name"
-                    className="auth-input"
-                    style={{ paddingLeft: '0.25rem', paddingRight: '0.25rem', fontFamily: 'monospace', fontWeight: 600, color: '#064652' }}
-                  />
-                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>.stores.chandraprakash.codes</span>
-                </div>
-              </div>
-
-              {/* 4. Password (Optional) */}
-              <div className="auth-form-group">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <label className="auth-label" style={{ marginBottom: 0 }}>Create Password (Optional)</label>
-                  <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Or log in via email code</span>
-                </div>
+                <label className="auth-label">Password</label>
                 <div className="auth-input-wrapper">
                   <div className="auth-input-icon">
                     <Lock style={{ width: 18, height: 18 }} />
@@ -485,9 +499,10 @@ export default function RegisterPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Leave blank or min. 6 characters"
+                    placeholder="At least 6 characters"
                     className="auth-input"
                     autoComplete="new-password"
+                    required
                   />
                   <button
                     type="button"
@@ -499,195 +514,50 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              <div className="auth-form-group">
+                <label className="auth-label">Confirm Password</label>
+                <div className="auth-input-wrapper">
+                  <div className="auth-input-icon">
+                    <Lock style={{ width: 18, height: 18 }} />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    className="auth-input"
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+              </div>
+
               <button
                 type="submit"
-                disabled={!fullName.trim() || !storeName.trim() || (password.length > 0 && password.length < 6)}
+                disabled={isSubmitting || isStoreLoading || !password || password.length < 6}
                 className="auth-btn-primary"
-                style={{ marginTop: '1.25rem' }}
               >
-                <span>Continue to Select Plan</span>
-                <ArrowRight style={{ width: 16, height: 16 }} />
+                {isSubmitting || isStoreLoading ? (
+                  <>
+                    <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
+                    Launching Store...
+                  </>
+                ) : (
+                  <>
+                    <span>Create Store & Go to Dashboard</span>
+                    <ArrowRight style={{ width: 16, height: 16 }} />
+                  </>
+                )}
               </button>
             </form>
           </div>
         )}
-
-        {/* ======================================================== */}
-        {/* PHASE 4: PLAN PURCHASING IN INR (₹)                      */}
-        {/* ======================================================== */}
-        {phase === 4 && (
-          <div>
-            <button
-              type="button"
-              onClick={() => setPhase(3)}
-              className="auth-back-btn"
-            >
-              <ArrowLeft style={{ width: 14, height: 14 }} />
-              <span>Back to store details</span>
-            </button>
-
-            <div className="auth-card-header" style={{ marginTop: '0.5rem' }}>
-              <h1 className="auth-card-title">Select Your Plan</h1>
-              <p className="auth-card-desc">
-                All plans include a <strong>14-day free trial</strong>. You can change or cancel anytime.
-              </p>
-            </div>
-
-            {/* Monthly / Annual Toggle */}
-            <div style={{ display: 'flex', justifyContent: 'center', margin: '0.75rem 0 1.25rem 0' }}>
-              <div style={{ display: 'flex', backgroundColor: '#f1f5f9', borderRadius: '8px', padding: '3px' }}>
-                <button
-                  type="button"
-                  onClick={() => setBillingCycle('monthly')}
-                  style={{
-                    padding: '0.4rem 1rem',
-                    borderRadius: '6px',
-                    border: 'none',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    backgroundColor: billingCycle === 'monthly' ? '#ffffff' : 'transparent',
-                    color: billingCycle === 'monthly' ? '#0f172a' : '#64748b',
-                    boxShadow: billingCycle === 'monthly' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  Monthly
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBillingCycle('annual')}
-                  style={{
-                    padding: '0.4rem 1rem',
-                    borderRadius: '6px',
-                    border: 'none',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    backgroundColor: billingCycle === 'annual' ? '#ffffff' : 'transparent',
-                    color: billingCycle === 'annual' ? '#0f172a' : '#64748b',
-                    boxShadow: billingCycle === 'annual' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <span>Annual</span>
-                  <span style={{ fontSize: '0.65rem', backgroundColor: '#dcfce7', color: '#166534', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
-                    SAVE 20%
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Plan Cards in INR (₹) */}
-            <div className="auth-plan-grid">
-              {/* Plan 1: Starter */}
-              <div
-                className={`auth-plan-card ${selectedPlan === 'starter' ? 'selected' : ''}`}
-                onClick={() => setSelectedPlan('starter')}
-              >
-                <div className="auth-plan-header">
-                  <div className="auth-plan-name">
-                    <CheckCircle2 style={{ width: 16, height: 16, color: selectedPlan === 'starter' ? '#064652' : '#94a3b8' }} />
-                    <span>Starter Plan</span>
-                  </div>
-                  <div className="auth-plan-price">
-                    {billingCycle === 'monthly' ? '₹999' : '₹799'}
-                    <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#64748b' }}>/mo</span>
-                  </div>
-                </div>
-                <p className="auth-plan-desc">
-                  Ideal for solo creators and new businesses. Includes Online Store, 1 Cashier POS Station, and standard email dispatch.
-                </p>
-              </div>
-
-              {/* Plan 2: Growth (Recommended) */}
-              <div
-                className={`auth-plan-card ${selectedPlan === 'growth' ? 'selected' : ''}`}
-                onClick={() => setSelectedPlan('growth')}
-              >
-                <div style={{ position: 'absolute', top: '-10px', right: '16px', backgroundColor: '#064652', color: '#ffffff', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '99px', letterSpacing: '0.04em' }}>
-                  POPULAR
-                </div>
-                <div className="auth-plan-header">
-                  <div className="auth-plan-name">
-                    <CheckCircle2 style={{ width: 16, height: 16, color: selectedPlan === 'growth' ? '#064652' : '#94a3b8' }} />
-                    <span>Growth Plan</span>
-                  </div>
-                  <div className="auth-plan-price">
-                    {billingCycle === 'monthly' ? '₹2,499' : '₹1,999'}
-                    <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#64748b' }}>/mo</span>
-                  </div>
-                </div>
-                <p className="auth-plan-desc">
-                  Unlimited products & appointments, 3 POS counters, custom domain integration, Razorpay, Shiprocket & real-time inventory.
-                </p>
-              </div>
-
-              {/* Plan 3: Enterprise */}
-              <div
-                className={`auth-plan-card ${selectedPlan === 'enterprise' ? 'selected' : ''}`}
-                onClick={() => setSelectedPlan('enterprise')}
-              >
-                <div className="auth-plan-header">
-                  <div className="auth-plan-name">
-                    <CheckCircle2 style={{ width: 16, height: 16, color: selectedPlan === 'enterprise' ? '#064652' : '#94a3b8' }} />
-                    <span>Enterprise Plan</span>
-                  </div>
-                  <div className="auth-plan-price">
-                    {billingCycle === 'monthly' ? '₹7,999' : '₹6,499'}
-                    <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#64748b' }}>/mo</span>
-                  </div>
-                </div>
-                <p className="auth-plan-desc">
-                  Multi-location retail outlets, unlimited cashier counters, priority account manager, and high-volume order APIs.
-                </p>
-              </div>
-            </div>
-
-            {/* Plan Guarantee Note */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#64748b', marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-              <ShieldCheck style={{ width: 16, height: 16, color: '#10b981', flexShrink: 0 }} />
-              <span>14-day free trial. You won't be charged today. Change or cancel anytime.</span>
-            </div>
-
-            {/* Launch Button */}
-            <button
-              type="button"
-              disabled={isStoreLoading}
-              onClick={handleCompleteRegistration}
-              className="auth-btn-primary"
-              style={{ marginTop: '1rem' }}
-            >
-              {isStoreLoading ? (
-                <>
-                  <RefreshCw style={{ width: 16, height: 16 }} className="animate-spin" />
-                  <span>Provisioning Your Store...</span>
-                </>
-              ) : (
-                <>
-                  <Check style={{ width: 16, height: 16 }} />
-                  <span>Activate Free Trial & Launch Store</span>
-                  <ArrowRight style={{ width: 16, height: 16 }} />
-                </>
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* Security Footer */}
-        <div className="auth-security-footer">
-          <ShieldCheck style={{ width: 15, height: 15, color: '#10b981' }} />
-          <span>Encrypted with TLS 1.3 & Multi-Tenant Data Isolation</span>
-        </div>
       </div>
 
-      {/* Footer Link: Sign In */}
+      {/* Footer: Sign in link */}
       <p className="auth-footer-link">
-        Already have a store account?{' '}
-        <a href={getPortalUrl('admin', '/login')}>Sign In</a>
+        Already have an account?{' '}
+        <Link to="/login">Sign in</Link>
       </p>
     </div>
   );

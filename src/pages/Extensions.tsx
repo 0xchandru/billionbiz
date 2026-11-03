@@ -133,13 +133,24 @@ const EXTENSIONS_CATALOG: ExtensionDefinition[] = [
   }
 ];
 
-export const ExtensionsPage: React.FC = () => {
+interface ExtensionsPageProps {
+  defaultTab?: 'all' | 'installed' | 'marketplace';
+}
+
+export const ExtensionsPage: React.FC<ExtensionsPageProps> = ({ defaultTab = 'all' }) => {
   const [connections, setConnections] = useState<ProviderConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'installed' | 'marketplace'>(defaultTab);
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [testResult, setTestResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
 
   // Credential configuration modal
   const [activeModal, setActiveModal] = useState<'razorpay' | 'shiprocket' | null>(null);
@@ -294,12 +305,16 @@ export const ExtensionsPage: React.FC = () => {
     }
   };
 
-  // Filter extensions based on search query and category
+  // Filter extensions based on search query, category, and activeTab
   const filteredExtensions = EXTENSIONS_CATALOG.filter(ext => {
     const matchesSearch = ext.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           ext.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCat = activeCategory === 'all' || ext.category === activeCategory;
-    return matchesSearch && matchesCat;
+    const isConn = connections.some(c => c.provider_key === ext.id && (c.status === 'CONNECTED' || c.status === 'ACTIVE'));
+    const matchesTab = activeTab === 'all' || 
+                       (activeTab === 'installed' && isConn) || 
+                       (activeTab === 'marketplace' && !isConn);
+    return matchesSearch && matchesCat && matchesTab;
   });
 
   return (
@@ -335,6 +350,45 @@ export const ExtensionsPage: React.FC = () => {
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           <span>Refresh</span>
         </button>
+      </div>
+
+      {/* Modern Tabs Bar */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          borderBottom: '1px solid #e2e8f0',
+          paddingBottom: '2px'
+        }}
+      >
+        {[
+          { id: 'all', label: 'All Plugins' },
+          { id: 'installed', label: 'Installed Plugins' },
+          { id: 'marketplace', label: 'Marketplace' }
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                border: 'none',
+                background: 'transparent',
+                borderBottom: isActive ? '2px solid #0d9488' : '2px solid transparent',
+                color: isActive ? '#0d9488' : '#64748b',
+                fontWeight: isActive ? 600 : 500,
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Alert Banner */}

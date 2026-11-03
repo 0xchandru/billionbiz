@@ -9,17 +9,22 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
   const location = useLocation();
-  const { isAuthenticated, isCheckingAuth, checkAuth, role } = useAuthStore();
+  const { isAuthenticated, isCheckingAuth, checkAuth, role, user } = useAuthStore();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    // Only check auth from server if user details are not yet hydrated
+    if (!user && localStorage.getItem('billionbiz_token')) {
+      checkAuth();
+    }
+  }, [user]);
 
-  if (isCheckingAuth) {
+  // Only show loader if we have a token but haven't determined auth state yet
+  if (isCheckingAuth && !isAuthenticated) {
     return <AnimatedLoader message="Securing session..." />;
   }
 
-  if (!isAuthenticated) {
+  // If definitely not authenticated and no token in storage
+  if (!isAuthenticated && !localStorage.getItem('billionbiz_token')) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
