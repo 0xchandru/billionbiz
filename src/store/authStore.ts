@@ -1,5 +1,16 @@
 import { create } from 'zustand';
 import { api, type UserProfile, type AuthResponse } from '../api/services';
+import { syncAuthFromUrlOrCookie, persistAuthSession, clearAuthSession } from '../utils/crossDomainAuth';
+
+export interface AuthActionResult {
+  success: boolean;
+  destination?: string;
+  error?: string;
+  token?: string;
+  orgId?: string;
+  storeId?: string;
+  storeSlug?: string;
+}
 
 export interface AuthState {
   token: string | null;
@@ -20,16 +31,16 @@ export interface AuthState {
   error: string | null;
 
   // Actions
-  login: (email: string, password: string) => Promise<{ success: boolean; destination?: string; error?: string }>;
-  loginUnified: (identifier: string, authFactor: { password?: string; otp?: string }) => Promise<{ success: boolean; destination?: string; error?: string }>;
-  loginGoogle: (payload: { credential?: string; idToken?: string; code?: string; redirectUri?: string }) => Promise<{ success: boolean; destination?: string; error?: string }>;
+  login: (email: string, password: string) => Promise<AuthActionResult>;
+  loginUnified: (identifier: string, authFactor: { password?: string; otp?: string }) => Promise<AuthActionResult>;
+  loginGoogle: (payload: { credential?: string; idToken?: string; code?: string; redirectUri?: string }) => Promise<AuthActionResult>;
   register: (payload: {
     fullName: string;
     email: string;
     password: string;
     storeName: string;
     capabilityMode?: string;
-  }) => Promise<{ success: boolean; destination?: string; error?: string }>;
+  }) => Promise<AuthActionResult>;
   registerStreamlined: (data: {
     identifier: string;
     storeName: string;
@@ -38,27 +49,30 @@ export interface AuthState {
     password?: string;
     fullName?: string;
     plan?: string;
-  }) => Promise<{ success: boolean; destination?: string; error?: string }>;
+  }) => Promise<AuthActionResult>;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
   switchStore: (storeId: string, orgId?: string) => void;
   clearError: () => void;
 }
 
+// Hydrate session from URL params (cross-subdomain handoff), cookies, or localStorage
+const initialSession = typeof window !== 'undefined' ? syncAuthFromUrlOrCookie() : null;
+
 export const useAuthStore = create<AuthState>((set) => ({
-  token: localStorage.getItem('billionbiz_token'),
+  token: initialSession?.token || null,
   user: null,
   role: null,
   permissions: [],
-  organizationId: localStorage.getItem('billionbiz_org_id'),
+  organizationId: initialSession?.orgId || null,
   organizationName: null,
-  storeId: localStorage.getItem('billionbiz_store_id'),
+  storeId: initialSession?.storeId || null,
   storeName: null,
-  storeSlug: null,
+  storeSlug: initialSession?.storeSlug || null,
   organizations: [],
   onboardingChecklist: [],
   portalDestination: null,
-  isAuthenticated: !!localStorage.getItem('billionbiz_token'),
+  isAuthenticated: !!initialSession?.token,
   isLoading: false,
   isCheckingAuth: false,
   error: null,
@@ -77,10 +91,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const storeSlug = primaryOrg?.store_slug || 'my-store';
       const role = primaryOrg?.role || 'OWNER';
 
-      localStorage.setItem('billionbiz_token', token);
-      localStorage.setItem('billionbiz_org_id', orgId);
-      localStorage.setItem('billionbiz_store_id', storeId);
-      localStorage.setItem('billionbiz_store_slug', storeSlug);
+      persistAuthSession({
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      });
 
       set({
         token,
@@ -98,7 +114,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null
       });
 
-      return { success: true, destination: portalDestination?.path || '/dashboard' };
+      return {
+        success: true,
+        destination: portalDestination?.path || '/dashboard',
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      };
     } catch (err: any) {
       const message = err.message || 'Login failed. Please check your credentials.';
       set({ isLoading: false, error: message });
@@ -123,10 +146,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const storeSlug = primaryOrg?.store_slug || 'my-store';
       const role = primaryOrg?.role || 'OWNER';
 
-      localStorage.setItem('billionbiz_token', token);
-      localStorage.setItem('billionbiz_org_id', orgId);
-      localStorage.setItem('billionbiz_store_id', storeId);
-      localStorage.setItem('billionbiz_store_slug', storeSlug);
+      persistAuthSession({
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      });
 
       set({
         token,
@@ -144,7 +169,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null
       });
 
-      return { success: true, destination: portalDestination?.path || '/dashboard' };
+      return {
+        success: true,
+        destination: portalDestination?.path || '/dashboard',
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      };
     } catch (err: any) {
       const message = err.message || 'Login failed. Please check your details.';
       set({ isLoading: false, error: message });
@@ -165,10 +197,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const storeSlug = primaryOrg?.store_slug || 'my-store';
       const role = primaryOrg?.role || 'OWNER';
 
-      localStorage.setItem('billionbiz_token', token);
-      localStorage.setItem('billionbiz_org_id', orgId);
-      localStorage.setItem('billionbiz_store_id', storeId);
-      localStorage.setItem('billionbiz_store_slug', storeSlug);
+      persistAuthSession({
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      });
 
       set({
         token,
@@ -186,7 +220,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null
       });
 
-      return { success: true, destination: portalDestination?.path || '/dashboard' };
+      return {
+        success: true,
+        destination: portalDestination?.path || '/dashboard',
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      };
     } catch (err: any) {
       const message = err.message || 'Google authentication failed. Please try again.';
       set({ isLoading: false, error: message });
@@ -205,10 +246,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const storeName = store?.name || payload.storeName;
       const storeSlug = store?.slug || payload.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-      localStorage.setItem('billionbiz_token', token);
-      localStorage.setItem('billionbiz_org_id', orgId);
-      localStorage.setItem('billionbiz_store_id', storeId);
-      localStorage.setItem('billionbiz_store_slug', storeSlug);
+      persistAuthSession({
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      });
 
       set({
         token,
@@ -226,7 +269,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null
       });
 
-      return { success: true, destination: '/dashboard' };
+      return {
+        success: true,
+        destination: '/dashboard',
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      };
     } catch (err: any) {
       const message = err.message || 'Registration failed. Please try again.';
       set({ isLoading: false, error: message });
@@ -245,10 +295,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const storeName = store?.name || payload.storeName;
       const storeSlug = store?.slug || payload.storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-      localStorage.setItem('billionbiz_token', token);
-      localStorage.setItem('billionbiz_org_id', orgId);
-      localStorage.setItem('billionbiz_store_id', storeId);
-      localStorage.setItem('billionbiz_store_slug', storeSlug);
+      persistAuthSession({
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      });
 
       set({
         token,
@@ -267,7 +319,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: null
       });
 
-      return { success: true, destination: '/dashboard' };
+      return {
+        success: true,
+        destination: '/dashboard',
+        token,
+        orgId,
+        storeId,
+        storeSlug
+      };
     } catch (err: any) {
       const message = err.message || 'Registration failed. Please try again.';
       set({ isLoading: false, error: message });
@@ -276,9 +335,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('billionbiz_token');
-    localStorage.removeItem('billionbiz_org_id');
-    localStorage.removeItem('billionbiz_store_id');
+    clearAuthSession();
 
     set({
       token: null,

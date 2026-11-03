@@ -234,10 +234,10 @@ export const HostDispatcher: React.FC = () => {
         <Route path="/login" element={<ExternalRedirect to={getPortalUrl('admin', '/login')} />} />
         <Route path="/forgot-password" element={<ExternalRedirect to={getPortalUrl('admin', '/forgot-password')} />} />
 
-        {/* Admin workspace routes are strictly NOT accessible on marketing apex -> 404 */}
+        {/* If user navigates to /dashboard on root domain, seamlessly redirect to admin portal */}
         <Route
           path="/dashboard"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<ExternalRedirect to={getPortalUrl('admin', '/dashboard')} />}
         />
         <Route
           path="/orders/*"

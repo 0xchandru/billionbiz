@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { syncAuthFromUrlOrCookie } from '../../utils/crossDomainAuth';
 import AnimatedLoader from '../common/AnimatedLoader';
 
 interface ProtectedRouteProps {
@@ -10,6 +11,11 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
   const location = useLocation();
   const { isAuthenticated, isCheckingAuth, checkAuth, role, user } = useAuthStore();
+
+  // Run synchronous check in case we arrived via cross-subdomain handoff (?token=...)
+  if (typeof window !== 'undefined' && !localStorage.getItem('billionbiz_token')) {
+    syncAuthFromUrlOrCookie();
+  }
 
   useEffect(() => {
     // Only check auth from server if user details are not yet hydrated

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../api/services';
 import { CountryPhoneInput, COUNTRIES } from '../../components/auth/CountryPhoneInput';
 import type { Country } from '../../components/auth/CountryPhoneInput';
 import { validateContactInput, validateOtpCode } from '../../utils/validators';
-import { initiateGoogleSignIn } from '../../utils/googleAuth';
+import { initiateGoogleSignIn, decodeGoogleCredential } from '../../utils/googleAuth';
+import { redirectToAdminDashboard } from '../../utils/crossDomainAuth';
 import logoLightBg from '../../assets/logo-light-bg.png';
 import {
   Store,
@@ -80,34 +81,20 @@ const PLANS: PlanOption[] = [
   }
 ];
 
-function decodeGoogleCredential(credential: string): { email?: string; name?: string; sub?: string } | null {
-  try {
-    const parts = credential.split('.');
-    if (parts.length !== 3) return null;
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
-
 export default function RegisterPage() {
-  const navigate = useNavigate();
   const { registerStreamlined, isAuthenticated, isLoading: isStoreLoading, error: storeError, clearError } = useAuthStore();
+
+  // UI status
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uiError, setUiError] = useState<string | null>(null);
+  const [quotaNotice, setQuotaNotice] = useState<string | null>(null);
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+    if (isAuthenticated && !isSubmitting) {
+      redirectToAdminDashboard();
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isSubmitting]);
 
   // Phase flow: contact -> otp -> details -> plan
   const [phase, setPhase] = useState<RegisterPhase>('contact');
@@ -138,10 +125,6 @@ export default function RegisterPage() {
 
   // Phase 4: Plan Selection
   const [selectedPlan, setSelectedPlan] = useState<string>('GROWTH');
-
-  // UI status
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uiError, setUiError] = useState<string | null>(null);
 
   const targetIdentifier = (formattedIdentifier || rawIdentifier).trim();
 
@@ -232,7 +215,15 @@ export default function RegisterPage() {
       });
 
       if ((res as any)?.previewCode) {
-        setOtpCode(String((res as any).previewCode));
+        const preview = String((res as any).previewCode);
+        setOtpCode(preview);
+        if ((res as any)?.quotaReached || (res as any)?.message?.toLowerCase().includes('quota')) {
+          setQuotaNotice(`Notice: Outbound email service (Resend) daily sending quota was reached. Your verification code is ${preview} (automatically filled below).`);
+        } else {
+          setQuotaNotice(`Verification code: ${preview} (auto-filled for preview).`);
+        }
+      } else {
+        setQuotaNotice(null);
       }
 
       setResendCooldown(45);
@@ -374,7 +365,12 @@ export default function RegisterPage() {
       });
 
       if (res.success) {
-        navigate('/dashboard', { replace: true });
+        redirectToAdminDashboard({
+          token: res.token,
+          orgId: res.orgId,
+          storeId: res.storeId,
+          storeSlug: res.storeSlug
+        });
       } else if (res.error) {
         setUiError(res.error);
       }
@@ -516,6 +512,24 @@ export default function RegisterPage() {
                 Enter the 6-digit code sent to <strong style={{ color: '#083e47' }}>{targetIdentifier}</strong>
               </p>
             </div>
+
+            {quotaNotice && (
+              <div style={{
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: '10px',
+                padding: '12px 14px',
+                marginBottom: '1rem',
+                fontSize: '0.85rem',
+                color: '#92400e',
+                lineHeight: 1.45
+              }}>
+                <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                  <span>⚠️</span> Provider Quota Notice
+                </div>
+                <div>{quotaNotice}</div>
+              </div>
+            )}
 
             <form onSubmit={handleVerifyOtp}>
               <div className="auth-form-group">

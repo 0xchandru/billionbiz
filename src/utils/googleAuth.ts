@@ -105,3 +105,30 @@ export async function initiateGoogleSignIn(
   }
 }
 
+/**
+ * Decodes Google JWT id_token payload into user profile details
+ */
+export function decodeGoogleCredential(credential: string): { email?: string; name?: string; picture?: string; sub?: string } | null {
+  try {
+    const parts = credential.split('.');
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    return {
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture,
+      sub: payload.sub
+    };
+  } catch (e) {
+    console.error('[Google Auth] Failed to decode credential token', e);
+    return null;
+  }
+}
+
