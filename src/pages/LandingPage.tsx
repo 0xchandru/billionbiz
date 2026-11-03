@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getPortalUrl } from '../utils/subdomain';
+import logoLightBg from '../assets/logo-light-bg.png';
+import logoDarkBg from '../assets/logo-dark-bg.png';
 import {
   Calendar,
   CreditCard,
@@ -70,7 +72,7 @@ export default function LandingPage() {
           {/* Logo */}
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none' }}>
             <img 
-              src="/billionbiz-logo.png" 
+              src={logoLightBg} 
               alt="BillionBiz" 
               style={{ height: '38px', width: 'auto', objectFit: 'contain' }} 
             />
@@ -667,7 +669,7 @@ export default function LandingPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <img 
-                src="/billionbiz-logo.png" 
+                src={logoDarkBg} 
                 alt="BillionBiz" 
                 style={{ height: '32px', width: 'auto', objectFit: 'contain' }} 
               />

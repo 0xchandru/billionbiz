@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../api/services';
+import logoDarkBg from '../../assets/logo-dark-bg.png';
 import styles from './Header.module.css';
 
 const Header: FC = () => {
@@ -78,7 +79,7 @@ const Header: FC = () => {
       <div className={styles.left}>
         <a href="/dashboard" className={styles.logoLink} title="BillionBiz Dashboard">
           <img 
-            src="/billionbiz-logo.png" 
+            src={logoDarkBg} 
             alt="BillionBiz" 
             style={{ height: '32px', width: 'auto', objectFit: 'contain', display: 'block' }} 
           />

@@ -7,6 +7,7 @@ import { CountryPhoneInput, COUNTRIES } from '../../components/auth/CountryPhone
 import type { Country } from '../../components/auth/CountryPhoneInput';
 import { validateContactInput, validateOtpCode } from '../../utils/validators';
 import { initiateGoogleSignIn } from '../../utils/googleAuth';
+import logoLightBg from '../../assets/logo-light-bg.png';
 import {
   Lock,
   Eye,
@@ -176,7 +177,7 @@ export default function LoginPage() {
       {/* Brand Header */}
       <Link to="/" className="auth-brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
         <img 
-          src="/billionbiz-logo.png" 
+          src={logoLightBg} 
           alt="BillionBiz" 
           style={{ height: '42px', width: 'auto', objectFit: 'contain' }} 
         />
