@@ -1,32 +1,30 @@
-# React + TypeScript + Vite
+# BillionBiz Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Single-page application for the BillionBiz Multi-Tenant Platform built with React 19, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## Available Portals & Routes
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `/` – Marketing and streamlined public registration / OTP login
+- `/dashboard` – Merchant Admin Dashboard and business metrics
+- `/orders` – Real-time order fulfillment and invoice management
+- `/appointments` – Service bookings and staff scheduling
+- `/products` – Inventory, variants, and price lists
+- `/people` – Customer CRM and support tickets
+- `/team` – Staff members, operational responsibilities, and permission matrix
+- `/pos-counters` – POS registers, cashier floats, and end-of-shift reconciliations
+- `/pos` – Dedicated full-screen cashier terminal
+- `/online-store` – Visual Storefront Editor, theme customizer, and page manager
+- `/settings` – Multi-tenant store profile, payments, and notifications
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Production Build
+
+```bash
+npm run build
+```
