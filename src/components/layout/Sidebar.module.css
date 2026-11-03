@@ -170,65 +170,29 @@
   font-weight: 700 !important;
 }
 
-/* DOCKED BOTTOM FOOTER: Account, Plan & Logout */
+/* DOCKED BOTTOM FOOTER: Static User Identity */
 .bottomFooter {
-  padding: 12px;
+  padding: 14px 16px;
   border-top: 1px solid #e2e8f0;
-  background-color: #f8fafc;
+  background-color: #ffffff;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
   flex-shrink: 0;
 }
 
-/* Plan Badge Pill */
-.planBadge {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(8, 62, 71, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%);
-  border: 1px solid #cbd5e1;
-  font-size: 11.5px;
-  color: #083e47;
-  font-weight: 600;
-}
-
-.planBadgeLeft {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* User Profile Row */
-.profileRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.profileRow:hover {
-  border-color: #cbd5e1;
-  background-color: #f1f5f9;
-}
-
-.profileLeft {
+.profileRowStatic {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   overflow: hidden;
+  user-select: none;
+  cursor: default;
 }
 
 .avatarCircle {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background-color: #083e47;
   color: #ffffff;
@@ -258,37 +222,10 @@
 .profileRole {
   font-size: 11px;
   color: #64748b;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Logout Button */
-.logoutBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  padding: 7px 12px;
-  border-radius: 6px;
-  border: 1px solid #fecaca;
-  background-color: #ffffff;
-  color: #dc2626;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.logoutBtn:hover {
-  background-color: #fef2f2;
-  border-color: #f87171;
-  color: #b91c1c;
-}
-
-.logoutIcon {
-  color: #dc2626;
 }
 
 @media (max-width: 768px) {

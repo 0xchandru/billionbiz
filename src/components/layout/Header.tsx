@@ -2,16 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { 
   Search, Globe, HelpCircle, Bell, ChevronDown, 
-  LogOut, Store, Shield
+  LogOut, Store, Shield, User
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../api/services';
+import ProfileModal from './ProfileModal';
 import logoDarkBg from '../../assets/logo-dark-bg.png';
 import styles from './Header.module.css';
 
 const Header: FC = () => {
   const { user, role, logout } = useAuthStore();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [activeVersion, setActiveVersion] = useState<'v1' | 'v2'>('v2');
   const [searchQuery, setSearchQuery] = useState('');
@@ -229,6 +231,18 @@ const Header: FC = () => {
                 </div>
               </div>
 
+              <button
+                type="button"
+                onClick={() => {
+                  setIsProfileModalOpen(true);
+                  setIsProfileOpen(false);
+                }}
+                className={styles.menuItem}
+                style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <User size={15} /> Account Profile & Security
+              </button>
+
               <a
                 href="/settings"
                 className={styles.menuItem}
@@ -257,6 +271,9 @@ const Header: FC = () => {
           )}
         </div>
       </div>
+
+      {/* Profile Management Modal triggered from top right profile */}
+      <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
     </header>
   );
 };

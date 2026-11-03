@@ -13,13 +13,9 @@ import {
   Zap,
   Settings as SettingsIcon,
   ChevronDown,
-  ChevronUp,
-  LogOut,
-  Sparkles,
-  ChevronRight
+  ChevronUp
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import ProfileModal from './ProfileModal';
 import styles from './Sidebar.module.css';
 
 export interface SubItem {
@@ -147,10 +143,9 @@ export const navSections: NavSection[] = [
 export const Sidebar: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, storeName, role, logout } = useAuthStore();
+  const { user, storeName, role } = useAuthStore();
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>('orders');
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Sync active accordion dropdown with current URL path on load, refresh, or back/forward
   useEffect(() => {
@@ -203,12 +198,9 @@ export const Sidebar: FC = () => {
     return currentPath === item.path || currentPath.startsWith(`${item.path}/`);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
-
-  const userInitial = (user?.fullName || user?.email || 'M').charAt(0).toUpperCase();
+  const displayName = user?.fullName || storeName || 'Merchant';
+  const roleDisplay = role === 'OWNER' ? 'Super Admin' : (role || 'Super Admin');
+  const userInitial = displayName.charAt(0).toUpperCase() || 'M';
 
   return (
     <>
@@ -274,48 +266,17 @@ export const Sidebar: FC = () => {
           })}
         </nav>
 
-        {/* DOCKED BOTTOM FOOTER: Plan, Profile & Logout */}
+        {/* DOCKED BOTTOM FOOTER: Only Name & Role (Non-clickable) */}
         <div className={styles.bottomFooter}>
-          {/* Subscription Plan */}
-          <div className={styles.planBadge}>
-            <div className={styles.planBadgeLeft}>
-              <Sparkles size={13} style={{ color: '#083e47' }} />
-              <span>Growth Plan</span>
+          <div className={styles.profileRowStatic}>
+            <div className={styles.avatarCircle}>{userInitial}</div>
+            <div className={styles.profileInfo}>
+              <span className={styles.profileName}>{displayName}</span>
+              <span className={styles.profileRole}>{roleDisplay}</span>
             </div>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Active</span>
           </div>
-
-          {/* Profile Card & Account Trigger */}
-          <div
-            className={styles.profileRow}
-            onClick={() => setIsProfileOpen(true)}
-            title="Open Account & Profile Settings"
-          >
-            <div className={styles.profileLeft}>
-              <div className={styles.avatarCircle}>{userInitial}</div>
-              <div className={styles.profileInfo}>
-                <span className={styles.profileName}>{user?.fullName || storeName || 'Merchant'}</span>
-                <span className={styles.profileRole}>{role || 'OWNER'}</span>
-              </div>
-            </div>
-            <ChevronRight size={15} color="#94a3b8" />
-          </div>
-
-          {/* Logout Button */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className={styles.logoutBtn}
-            title="Sign out of BillionBiz Merchant Admin"
-          >
-            <LogOut size={15} className={styles.logoutIcon} />
-            <span>Logout</span>
-          </button>
         </div>
       </aside>
-
-      {/* Profile Management Modal */}
-      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </>
   );
 };
