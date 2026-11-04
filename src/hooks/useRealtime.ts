@@ -118,8 +118,16 @@ export function useRealtime(onEvent?: (event: RealtimeMessage) => void) {
         reconnectTimeoutRef.current = null;
       }
       if (wsRef.current) {
-        wsRef.current.close();
+        const socket = wsRef.current;
         wsRef.current = null;
+        if (socket.readyState === WebSocket.CONNECTING) {
+          socket.onopen = () => {
+            try { socket.close(); } catch {}
+          };
+          socket.onerror = () => {};
+        } else {
+          try { socket.close(); } catch {}
+        }
       }
     };
   }, [connect]);
