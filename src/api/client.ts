@@ -21,9 +21,9 @@ export function getApiBaseUrl(): string {
     url = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
   }
 
-  // 3. Fallback to authoritative ngrok URL
+  // 3. Fallback to authoritative Cloudflare API URL
   if (!url) {
-    url = 'https://pseudoapprehensive-neida-unbarking.ngrok-free.dev/api/v1';
+    url = 'https://api.chandraprakash.codes/api/v1';
   }
 
   url = url.replace(/\/+$/, '');
