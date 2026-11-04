@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../api/services';
 import { CountryPhoneInput, COUNTRIES } from '../../components/auth/CountryPhoneInput';
@@ -39,9 +39,12 @@ export default function LoginPage() {
   // Current view: PASSWORD (default), OTP_REQUEST (single input), OTP_VERIFY (enter code)
   const [view, setView] = useState<LoginView>('PASSWORD');
 
+  const [searchParams] = useSearchParams();
+  const initialIdentifier = searchParams.get('identifier') || (location.state as any)?.identifier || '';
+
   // Input states — shared across views so entering in phase 1 autofills phase 2!
-  const [rawIdentifier, setRawIdentifier] = useState('');
-  const [formattedIdentifier, setFormattedIdentifier] = useState('');
+  const [rawIdentifier, setRawIdentifier] = useState(initialIdentifier);
+  const [formattedIdentifier, setFormattedIdentifier] = useState(initialIdentifier);
   const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
   const [password, setPassword] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -60,6 +63,14 @@ export default function LoginPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [resendCooldown]);
+
+  useEffect(() => {
+    const idParam = searchParams.get('identifier');
+    if (idParam) {
+      setRawIdentifier(idParam);
+      setFormattedIdentifier(idParam);
+    }
+  }, [searchParams]);
 
   const targetIdentifier = (formattedIdentifier || rawIdentifier).trim();
 

@@ -64,6 +64,7 @@ import FulfillmentSettingsPage from '../../pages/FulfillmentSettings';
 import NotificationsSettingsPage from '../../pages/NotificationsSettings';
 import IntegrationsSettingsPage from '../../pages/IntegrationsSettings';
 import ThemeStyles from '../../pages/ThemeStyles';
+import OnlineStoreOverview from '../../pages/OnlineStoreOverview';
 import EditorLayout from '../../pages/editor/EditorLayout';
 
 // Dedicated Subdomain Portals
@@ -134,6 +135,8 @@ const renderAdminRoutes = (): React.ReactElement => (
       <Route path="/pos-counters/shifts" element={<POSShiftsPage />} />
 
       {/* Online Store & Themes - Dedicated Individual Pages */}
+      <Route path="/online-store" element={<OnlineStoreOverview />} />
+      <Route path="/online-store/overview" element={<OnlineStoreOverview />} />
       <Route path="/pages" element={<Pages />} />
       <Route path="/online-store/pages" element={<Pages />} />
       <Route path="/online-store/themes" element={<ThemeStyles />} />

@@ -114,8 +114,11 @@ const GeneralView: React.FC<{ settings: Record<string, any>; updateSettings: (s:
               />
               <div className={styles.cardBody}>
               <div className={styles.scFormGroup}>
-                <label>Store Name</label>
-                <input type="text" value={settings.storeName || settings.siteName || ''} onChange={(e) => updateSettings({ storeName: e.target.value })} placeholder="Shoum" />
+                <label>Business &amp; Store Name</label>
+                <input type="text" value={settings.storeName || settings.siteName || ''} onChange={(e) => updateSettings({ storeName: e.target.value, name: e.target.value })} placeholder="Store Name" />
+                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                  Inherited from and synchronized with Admin Settings. Changes update across your platform automatically.
+                </span>
               </div>
               <div className={styles.scFormGroup}>
                 <label>Legal Business Name</label>
@@ -987,7 +990,21 @@ const BusinessDetailsView: React.FC<{ settings: Record<string, any>; updateSetti
       <div className={styles.settingsInner}>
         <div className={styles.scHeader}>
           <h2>Business Details &amp; Registration</h2>
-          <p>Manage your legal business entity name, official physical address, operating schedule, and tax identification.</p>
+          <p>Authoritative legal details are managed in Admin Settings. Storefront displays approved public records.</p>
+        </div>
+
+        {/* Canonical Admin Settings Notice */}
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Shield size={20} color="#16a34a" />
+            <div>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#166534', display: 'block' }}>Authoritative Admin Settings Source</span>
+              <span style={{ fontSize: '12px', color: '#15803d' }}>Tax registration (GST/EIN), CIN, and legal corporate address originate in your Admin Settings. Changes there sync here automatically.</span>
+            </div>
+          </div>
+          <a href="/settings" style={{ fontSize: '12px', fontWeight: 600, color: '#166534', background: '#dcfce7', padding: '6px 12px', borderRadius: '8px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Manage in Admin →
+          </a>
         </div>
 
         <div className={styles.scGrid}>

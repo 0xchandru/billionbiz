@@ -108,10 +108,12 @@ export const navSections: NavSection[] = [
     label: 'Online Store',
     icon: Palette,
     items: [
+      { id: 'overview', label: 'Overview', path: '/online-store' },
       { id: 'pages', label: 'Pages', path: '/online-store/pages' },
       { id: 'store-editor', label: 'Store Editor', path: '/editor' },
       { id: 'themes', label: 'Themes', path: '/online-store/themes' },
       { id: 'navigation', label: 'Navigation', path: '/online-store/navigation' },
+      { id: 'header-footer', label: 'Header & Footer', path: '/editor/pages?pageId=header-global' },
     ]
   },
   {

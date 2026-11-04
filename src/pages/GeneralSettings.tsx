@@ -80,6 +80,12 @@ export const GeneralSettingsPage: React.FC = () => {
         homePage
       });
 
+      // Synchronize business identity across Admin Settings & Store Editor
+      await api.updateStoreIdentity(store.id, {
+        name: storeName,
+        currency
+      });
+
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3500);
       await loadSettings();

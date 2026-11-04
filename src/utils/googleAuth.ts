@@ -81,22 +81,26 @@ export async function initiateGoogleSignIn(
 
     window.google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
-      callback: (res) => {
+      callback: (res: { credential?: string }) => {
         if (res.credential) {
           onSuccess(res.credential);
         } else {
           onError('Google Sign-In was cancelled or did not return credentials.');
         }
       },
-      cancel_on_tap_outside: true
-    });
+      cancel_on_tap_outside: true,
+      use_fedcm_for_prompt: true
+    } as any);
 
     // Prompt user with Google One-Tap / Account Chooser
     window.google.accounts.id.prompt((notification) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // Fallback: If One Tap is suppressed (e.g. in test or cookies disabled),
-        // we provide a popup fallback or notify user
-        console.warn('[Google Auth] Prompt not displayed:', notification.getNotDisplayedReason());
+        const reason = notification.getNotDisplayedReason ? notification.getNotDisplayedReason() : 'unknown';
+        if (reason === 'unregistered_origin') {
+          console.info('[Google Auth] Origin not registered for Google One-Tap (normal for localhost development). Use direct login.');
+        } else {
+          console.warn('[Google Auth] Prompt not displayed:', reason);
+        }
       }
     });
   } catch (err: any) {

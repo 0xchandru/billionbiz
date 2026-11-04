@@ -84,6 +84,11 @@ const EditorLayout: React.FC = () => {
   const { setActivePanel, setSelectedPageId, setRightSidebarOpen, isFullPageMode, navigateToPage, pendingEditorSwitch, setPendingEditorSwitch } = useLandingEditorStore();
   const lastProcessedUrlRef = useRef<string>('');
 
+  // Hydrate Store Editor with real database tenant pages, theme, brand, and settings
+  useEffect(() => {
+    useSiteStore.getState().fetchLiveStoreData();
+  }, []);
+
   useEffect(() => {
     const currentUrlKey = `${tabParam}|${pageIdParam || ''}|${sectionIdParam || ''}`;
     if (lastProcessedUrlRef.current === currentUrlKey) {

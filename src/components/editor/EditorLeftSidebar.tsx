@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import {
   Files, Store, Palette, Settings,
-  Plus, Home, ShoppingBag, ShoppingCart,
+  Home, ShoppingBag, ShoppingCart,
   Search as SearchIcon, AlertTriangle, Cookie, Bell, FileText,
   Shield, Truck, RotateCcw, Phone, Heart,
   HelpCircle, Layout, PanelLeftClose, PanelLeftOpen,
@@ -22,10 +22,6 @@ import { scrollPreviewToHeaderSection } from './utils/previewScroll';
 import { useLandingEditorStore } from '../../store/landingEditorStore';
 import { useSiteStore } from '../../store/siteStore';
 import { getPageConfig } from './pageConfigs';
-import { SortableItem } from './SortableItem';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import styles from '../../pages/editor/EditorLayout.module.css';
 import type { EditorPanelType } from '../../store/landingEditorStore';
 import { getEditorPath, resolveHeaderRowId } from './utils/editorNavigation';
@@ -138,13 +134,13 @@ export const EditorLeftSidebar: React.FC = () => {
   const navigate = useNavigate();
   const {
     activePanel, setActivePanel,
-    selectedSectionId, setSelectedSectionId,
-    setAddSectionWidgetOpen, selectedPageId,
+    selectedSectionId: _selectedSectionId, setSelectedSectionId,
+    selectedPageId,
     isLeftSidebarCollapsed, setLeftSidebarCollapsed,
     pagesNavLevel, navigateToPage,
     isRightSidebarOpen, setRightSidebarOpen,
   } = useLandingEditorStore();
-  const { pages, toggleSectionVisibility, removeSection, updatePageProps } = useSiteStore();
+  const { pages, updatePageProps, removeSection } = useSiteStore();
   const activePage = pages.find(p => p.id === selectedPageId) || pages[0];
 
   const headerBarTypes = ['AnnouncementBar', 'UtilityBar'];
@@ -247,98 +243,6 @@ export const EditorLeftSidebar: React.FC = () => {
   // Search state in Pages tab
   const [pageSearch, setPageSearch] = useState('');
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const moveTemplateSection = (sectionId: string, direction: 'up' | 'down') => {
-    if (!activePage) return;
-    const currentTemplate = activePage.sections.filter(
-      s => !headerBarTypes.includes(s.type) && s.type !== 'Header' && !footerBarTypes.includes(s.type) && !isFooterMain(s.type)
-    );
-    const idx = currentTemplate.findIndex(s => s.id === sectionId);
-    if (idx === -1) return;
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= currentTemplate.length) return;
-
-    const reordered = [...currentTemplate];
-    const [removed] = reordered.splice(idx, 1);
-    reordered.splice(targetIdx, 0, removed);
-
-    const headers = activePage.sections.filter(s => headerBarTypes.includes(s.type) || s.type === 'Header');
-    const footers = activePage.sections.filter(s => footerBarTypes.includes(s.type) || isFooterMain(s.type));
-    updatePageProps(activePage.id, { sections: [...headers, ...reordered, ...footers] });
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id || !activePage) return;
-
-    const sections = [...activePage.sections];
-    const activeSection = sections.find(s => s.id === active.id);
-    const overSection = sections.find(s => s.id === over.id);
-    if (!activeSection || !overSection) return;
-
-    if (activeSection.type === 'Header' || isFooterMain(activeSection.type)) return;
-
-    const isHeaderBar = headerBarTypes.includes(activeSection.type);
-    const isFooterBar = footerBarTypes.includes(activeSection.type);
-    const isTemplate = !isHeaderBar && !isFooterBar;
-
-    if (isHeaderBar) {
-      const currentBars = sections.filter(s => headerBarTypes.includes(s.type));
-      const oldBarIndex = currentBars.findIndex(s => s.id === active.id);
-      let newBarIndex = currentBars.findIndex(s => s.id === over.id);
-      if (overSection.type === 'Header' || newBarIndex === -1) newBarIndex = currentBars.length - 1;
-      if (oldBarIndex !== -1 && newBarIndex !== -1 && oldBarIndex !== newBarIndex) {
-        const reordered = Array.from(currentBars);
-        const [removed] = reordered.splice(oldBarIndex, 1);
-        reordered.splice(newBarIndex, 0, removed);
-        const header = sections.find(s => s.type === 'Header');
-        const otherSections = sections.filter(s => !headerBarTypes.includes(s.type) && s.type !== 'Header');
-        updatePageProps(activePage.id, { sections: [...reordered, ...(header ? [header] : []), ...otherSections] });
-      }
-      return;
-    }
-
-    if (isFooterBar) {
-      const currentBars = sections.filter(s => footerBarTypes.includes(s.type));
-      const oldBarIndex = currentBars.findIndex(s => s.id === active.id);
-      let newBarIndex = currentBars.findIndex(s => s.id === over.id);
-      if (isFooterMain(overSection.type) || newBarIndex === -1) newBarIndex = currentBars.length - 1;
-      if (oldBarIndex !== -1 && newBarIndex !== -1 && oldBarIndex !== newBarIndex) {
-        const reordered = Array.from(currentBars);
-        const [removed] = reordered.splice(oldBarIndex, 1);
-        reordered.splice(newBarIndex, 0, removed);
-        const nonFooterSections = sections.filter(s => !footerBarTypes.includes(s.type) && !isFooterMain(s.type));
-        const footer = sections.find(s => isFooterMain(s.type));
-        updatePageProps(activePage.id, { sections: [...nonFooterSections, ...reordered, ...(footer ? [footer] : [])] });
-      }
-      return;
-    }
-
-    if (isTemplate) {
-      const currentTemplate = sections.filter(
-        s => !headerBarTypes.includes(s.type) && s.type !== 'Header' && !footerBarTypes.includes(s.type) && !isFooterMain(s.type)
-      );
-      const oldTemplateIndex = currentTemplate.findIndex(s => s.id === active.id);
-      let newTemplateIndex = currentTemplate.findIndex(s => s.id === over.id);
-      if (headerBarTypes.includes(overSection.type) || overSection.type === 'Header') newTemplateIndex = 0;
-      else if (footerBarTypes.includes(overSection.type) || isFooterMain(overSection.type)) newTemplateIndex = currentTemplate.length - 1;
-      if (oldTemplateIndex !== -1 && newTemplateIndex !== -1 && oldTemplateIndex !== newTemplateIndex) {
-        const reordered = Array.from(currentTemplate);
-        const [removed] = reordered.splice(oldTemplateIndex, 1);
-        reordered.splice(newTemplateIndex, 0, removed);
-        const headerSections = sections.filter(s => headerBarTypes.includes(s.type) || s.type === 'Header');
-        const footerSections = sections.filter(s => footerBarTypes.includes(s.type) || isFooterMain(s.type));
-        updatePageProps(activePage.id, { sections: [...headerSections, ...reordered, ...footerSections] });
-      }
-    }
-  };
-
   // ─── TAB CLICK HANDLER ───
   const handleTabClick = (tabId: EditorPanelType) => {
     setActivePanel(tabId);
@@ -438,59 +342,72 @@ export const EditorLeftSidebar: React.FC = () => {
     const filterFn = (p: typeof pages[0]) => {
       if (!pageSearch.trim()) return true;
       const q = pageSearch.toLowerCase();
-      return p.name.toLowerCase().includes(q) || p.path.toLowerCase().includes(q);
+      return (p.name || '').toLowerCase().includes(q) || (p.path || '').toLowerCase().includes(q);
     };
 
-    const getOrderedPages = (pageIds: string[]) => {
-      return pageIds
-        .map(id => pages.find(p => p.id === id || p.type === id))
-        .filter((p): p is typeof pages[0] => Boolean(p && filterFn(p)));
-    };
+    const allFilteredPages = pages.filter(filterFn);
 
-    // 1. HOME 2 (Landing page, Maintenance)
-    const homePages = getOrderedPages(['landing-page', 'maintenance-page']);
+    // 1. COMMERCE & STOREFRONT: Home, Shop, Collections, Product Details, Cart, Checkout
+    const commercePages = allFilteredPages.filter(p =>
+      p.path === '/' ||
+      p.path === '/shop' ||
+      p.path.startsWith('/collections') ||
+      p.path.startsWith('/products') ||
+      p.path === '/cart' ||
+      p.path === '/checkout' ||
+      ['landing', 'landing-page', 'shop', 'shop-page', 'product-details', 'product-details-page', 'cart', 'cart-page', 'checkout', 'checkout-page', 'collections', 'collections-page', 'wishlist-page'].includes(p.id) ||
+      ['landing', 'shop', 'product_detail', 'cart', 'checkout', 'collection'].includes(p.type)
+    );
 
-    // 2. BROWSE 3 (Product Detail, Product Listing, Wishlist)
-    const browsePages = getOrderedPages(['product-details-page', 'shop-page', 'wishlist-page']);
+    // 2. CUSTOMER & SERVICES: Account, Book Appointment, Order History
+    const servicesPages = allFilteredPages.filter(p =>
+      !commercePages.includes(p) && (
+        p.path === '/account' ||
+        p.path.startsWith('/account/') ||
+        p.path === '/book' ||
+        p.path === '/booking' ||
+        ['account', 'account-page', 'booking', 'booking-page', 'order-history', 'order-history-page', 'order-details', 'order-details-page', 'order-tracking', 'order-tracking-page', 'login-page', 'register-page'].includes(p.id) ||
+        ['account', 'booking'].includes(p.type)
+      )
+    );
 
-    // 3. BUY 3 (Cart, Checkout, Booking)
-    const buyPages = getOrderedPages(['cart-page', 'checkout-page', 'booking-page']);
+    // 3. LEGAL POLICIES: Privacy, Terms, Refund, Shipping
+    const legalPages = allFilteredPages.filter(p =>
+      !commercePages.includes(p) && !servicesPages.includes(p) && (
+        p.path.startsWith('/policies/') ||
+        ['/privacy', '/terms', '/refund', '/shipping'].includes(p.path) ||
+        ['privacy-policy-page', 'privacy-page', 'terms-conditions-page', 'terms-page', 'return-policy-page', 'returns-refunds-page', 'refund-policy-page', 'shipping-policy-page'].includes(p.id) ||
+        p.type === 'policy'
+      )
+    );
 
-    // 4. COMPLETE 5 (Order Confirmation, Thank You, Order Listing, Order Detail, Order Tracking)
-    const completePages = getOrderedPages([
-      'order-confirmation-page',
-      'thank-you-page',
-      'order-history-page',
-      'order-details-page',
-      'order-tracking-page'
-    ]);
+    // 4. SYSTEM & UTILITY: Contact, 404, Password, Maintenance
+    const systemPages = allFilteredPages.filter(p =>
+      !commercePages.includes(p) && !servicesPages.includes(p) && !legalPages.includes(p) && (
+        p.path === '/contact' ||
+        p.path === '/404' ||
+        p.path === '/password' ||
+        p.path === '/maintenance' ||
+        ['contact', 'contact-page', 'not-found', 'not-found-page', 'maintenance', 'maintenance-page', 'password', 'password-page'].includes(p.id) ||
+        ['contact', 'maintenance', 'system', '404', 'password'].includes(p.type) ||
+        (p as any).is_system
+      )
+    );
 
-    // 5. ACCOUNT 5 (Login, Sign Up, Forgot Password, Email Verification, Profile)
-    const accountPages = getOrderedPages([
-      'login-page',
-      'register-page',
-      'forgot-password-page',
-      'email-verification-page',
-      'account-page'
-    ]);
+    // 5. CUSTOM PAGES: Any user-created custom pages
+    const customPages = allFilteredPages.filter(p =>
+      !commercePages.includes(p) &&
+      !servicesPages.includes(p) &&
+      !legalPages.includes(p) &&
+      !systemPages.includes(p)
+    );
 
-    // 6. CONTENT 3 (About Us, Contact Us, 404 / Not Found)
-    const contentPages = getOrderedPages(['about-page', 'contact-page', 'not-found-page']);
-
-    // 7. CHROME 4 (Header, Footer, Toaster, Cookie / Consent)
+    // 6. GLOBAL CHROME: Header, Footer, Toaster, Cookie / Consent
     const chromeComponentsFiltered = CHROME_COMPONENTS.filter(gc =>
       !pageSearch.trim() ||
       gc.label.toLowerCase().includes(pageSearch.toLowerCase()) ||
       gc.badge.toLowerCase().includes(pageSearch.toLowerCase())
     );
-
-    // 8. LEGAL 4 (Privacy Policy, Terms & Conditions, Refund Policy, Shipping Policy)
-    const legalPages = [
-      pages.find(p => ['privacy-policy-page', 'privacy-page'].includes(p.id)),
-      pages.find(p => ['terms-conditions-page', 'terms-page'].includes(p.id)),
-      pages.find(p => ['return-policy-page', 'returns-refunds-page', 'refund-policy-page'].includes(p.id)),
-      pages.find(p => ['shipping-policy-page', 'shipping-page'].includes(p.id)),
-    ].filter((p): p is typeof pages[0] => Boolean(p && filterFn(p)));
 
     return (
       <div className={styles.contextPanelInner}>
@@ -529,73 +446,62 @@ export const EditorLeftSidebar: React.FC = () => {
             pagesListScrollTopRef.current = e.currentTarget.scrollTop;
           }}
         >
-          {/* Group 1: HOME */}
-          {homePages.length > 0 && (
+          {/* Group 1: COMMERCE & STOREFRONT */}
+          {commercePages.length > 0 && (
             <div className={styles.navGroup} style={{ marginBottom: '14px' }}>
               <div className={styles.referenceGroupHeader}>
-                <span>HOME</span>
-                <span className={styles.referenceGroupCount}>{homePages.length}</span>
+                <span>COMMERCE</span>
+                <span className={styles.referenceGroupCount}>{commercePages.length}</span>
               </div>
-              {homePages.map(page => renderPageListItem(page))}
+              {commercePages.map(page => renderPageListItem(page))}
             </div>
           )}
 
-          {/* Group 2: BROWSE */}
-          {browsePages.length > 0 && (
+          {/* Group 2: CUSTOMER & SERVICES */}
+          {servicesPages.length > 0 && (
             <div className={styles.navGroup} style={{ marginBottom: '14px' }}>
               <div className={styles.referenceGroupHeader}>
-                <span>BROWSE</span>
-                <span className={styles.referenceGroupCount}>{browsePages.length}</span>
+                <span>SERVICES &amp; ACCOUNT</span>
+                <span className={styles.referenceGroupCount}>{servicesPages.length}</span>
               </div>
-              {browsePages.map(page => renderPageListItem(page))}
+              {servicesPages.map(page => renderPageListItem(page))}
             </div>
           )}
 
-          {/* Group 3: BUY */}
-          {buyPages.length > 0 && (
+          {/* Group 3: LEGAL POLICIES */}
+          {legalPages.length > 0 && (
             <div className={styles.navGroup} style={{ marginBottom: '14px' }}>
               <div className={styles.referenceGroupHeader}>
-                <span>BUY</span>
-                <span className={styles.referenceGroupCount}>{buyPages.length}</span>
+                <span>LEGAL POLICIES</span>
+                <span className={styles.referenceGroupCount}>{legalPages.length}</span>
               </div>
-              {buyPages.map(page => renderPageListItem(page))}
+              {legalPages.map(page => renderPageListItem(page))}
             </div>
           )}
 
-          {/* Group 4: COMPLETE */}
-          {completePages.length > 0 && (
+          {/* Group 4: SYSTEM & UTILITY */}
+          {systemPages.length > 0 && (
             <div className={styles.navGroup} style={{ marginBottom: '14px' }}>
               <div className={styles.referenceGroupHeader}>
-                <span>COMPLETE</span>
-                <span className={styles.referenceGroupCount}>{completePages.length}</span>
+                <span>SYSTEM &amp; UTILITY</span>
+                <span className={styles.referenceGroupCount}>{systemPages.length}</span>
               </div>
-              {completePages.map(page => renderPageListItem(page))}
+              {systemPages.map(page => renderPageListItem(page))}
             </div>
           )}
 
-          {/* Group 5: ACCOUNT */}
-          {accountPages.length > 0 && (
+          {/* Group 5: CUSTOM PAGES (if any created) */}
+          {customPages.length > 0 && (
             <div className={styles.navGroup} style={{ marginBottom: '14px' }}>
               <div className={styles.referenceGroupHeader}>
-                <span>ACCOUNT</span>
-                <span className={styles.referenceGroupCount}>{accountPages.length}</span>
+                <span>CUSTOM PAGES</span>
+                <span className={styles.referenceGroupCount}>{customPages.length}</span>
               </div>
-              {accountPages.map(page => renderPageListItem(page))}
+              {customPages.map(page => renderPageListItem(page))}
             </div>
           )}
 
-          {/* Group 6: CONTENT */}
-          {contentPages.length > 0 && (
-            <div className={styles.navGroup} style={{ marginBottom: '14px' }}>
-              <div className={styles.referenceGroupHeader}>
-                <span>CONTENT</span>
-                <span className={styles.referenceGroupCount}>{contentPages.length}</span>
-              </div>
-              {contentPages.map(page => renderPageListItem(page))}
-            </div>
-          )}
-
-          {/* Group 7: CHROME */}
+          {/* Group 6: CHROME */}
           {chromeComponentsFiltered.length > 0 && (
             <div className={styles.navGroup} style={{ marginBottom: '14px' }}>
               <div className={styles.referenceGroupHeader}>
@@ -681,11 +587,13 @@ export const EditorLeftSidebar: React.FC = () => {
   const renderPageListItem = (page: typeof pages[0]) => {
     const isSelected = page.id === selectedPageId && pagesNavLevel === 'page-detail' && isRightSidebarOpen;
     const Icon = pageIconMap[page.type] || pageIconMap[page.id] || (getPageConfig(page.type)?.icon) || FileText;
+    const isSystemLocked = (page as any).is_system || (page as any).is_locked;
 
     return (
       <div
         key={page.id}
         className={`${styles.navItem} ${isSelected ? styles.navItemActive : ''}`}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '8px' }}
         onClick={() => {
           if (pagesListScrollRef.current) {
             pagesListScrollTopRef.current = pagesListScrollRef.current.scrollTop;
@@ -697,12 +605,29 @@ export const EditorLeftSidebar: React.FC = () => {
           }
         }}
       >
-        <div className={`${styles.navItemIcon} ${isSelected ? styles.navItemIconActive : ''}`}>
-          <Icon size={16} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+          <div className={`${styles.navItemIcon} ${isSelected ? styles.navItemIconActive : ''}`}>
+            <Icon size={16} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1, overflow: 'hidden' }}>
+            <span className={`${styles.navItemLabel} ${isSelected ? styles.navItemLabelActive : ''}`} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {page.name}
+            </span>
+            <span style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace' }}>
+              {page.path}
+            </span>
+          </div>
         </div>
-        <span className={`${styles.navItemLabel} ${isSelected ? styles.navItemLabelActive : ''}`}>
-          {page.name}
-        </span>
+
+        {isSystemLocked ? (
+          <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, border: '1px solid #e2e8f0' }} title="System Protected Page">
+            Locked
+          </span>
+        ) : (
+          <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', background: page.status === 'published' ? '#dcfce7' : '#fef3c7', color: page.status === 'published' ? '#15803d' : '#b45309', fontWeight: 600 }}>
+            {page.status === 'published' ? 'Live' : 'Draft'}
+          </span>
+        )}
       </div>
     );
   };
@@ -756,208 +681,111 @@ export const EditorLeftSidebar: React.FC = () => {
     );
   };
 
-  // ─── PAGE DETAIL VIEW ───
+  // ─── PAGE DETAIL VIEW (Phase 1: Page-level configuration & SEO, no section authoring) ───
   const renderPageDetailView = () => {
     if (!activePage) return null;
 
-    const isHomepage = activePage.id === 'landing-page';
+    const isSystemLocked = (activePage as any).is_system || (activePage as any).is_locked || ['/', '/shop', '/products', '/collections', '/cart', '/checkout', '/account', '/book', '/contact', '/policies/privacy', '/policies/terms', '/policies/refund', '/404', '/password'].includes(activePage.path);
 
-    // ─── HOMEPAGE ONLY: Render template sections list with DnD and gap ───
-    if (isHomepage) {
-      const templateSections = activePage.sections.filter(
-        s => !headerBarTypes.includes(s.type) && s.type !== 'Header' && !footerBarTypes.includes(s.type) && !isFooterMain(s.type)
-      );
-
-      return (
-        <div className={styles.contextPanelInner}>
-          {renderEditorDetailHeader(activePage.name, activePage.path)}
-
-          {/* Section List (Template sections only) */}
-          <div className={styles.contextPanelScroll}>
-            <div className={styles.sectionGroupWrapper}>
-              <div className={styles.sectionGroupTitle}>
-                <span>Homepage Sections ({templateSections.length})</span>
-              </div>
-
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                modifiers={[restrictToVerticalAxis]}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={templateSections.map(s => s.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {templateSections.map((section, idx) => {
-                    const storeIndex = activePage.sections.findIndex(s => s.id === section.id);
-                    return (
-                      <SortableItem
-                        key={section.id}
-                        id={section.id}
-                        section={section}
-                        isSelected={selectedSectionId === section.id && isRightSidebarOpen}
-                        onSelect={() => {
-                          useEditorContextStore.getState().selectTarget({ type: 'none' });
-                          setSelectedSectionId(section.id);
-                          setRightSidebarOpen(true);
-                          navigate(getEditorPath(activePage.id, section.id), { replace: true });
-                        }}
-                        onToggleVisibility={(e) => {
-                          e.stopPropagation();
-                          toggleSectionVisibility(activePage.id, section.id);
-                        }}
-                        onRemove={(e) => {
-                          e.stopPropagation();
-                          setSectionToDelete(section.id);
-                        }}
-                        onInsertClick={() => {
-                          useLandingEditorStore.getState().setInsertIndex(storeIndex + 1);
-                          setAddSectionWidgetOpen(true);
-                        }}
-                        onMoveUp={idx > 0 ? () => moveTemplateSection(section.id, 'up') : undefined}
-                        onMoveDown={idx < templateSections.length - 1 ? () => moveTemplateSection(section.id, 'down') : undefined}
-                      />
-                    );
-                  })}
-                </SortableContext>
-              </DndContext>
-            </div>
-          </div>
-
-          <div className={styles.stickyAddSection}>
-            <button
-              className={`btn btn-primary ${styles.addSectionBtn}`}
-              onClick={() => {
-                useLandingEditorStore.getState().setInsertIndex(activePage.sections.length);
-                setAddSectionWidgetOpen(true);
-              }}
-            >
-              <Plus size={16} />
-              Add Section
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    const pageConfig = getPageConfig(activePage.type) || getPageConfig(activePage.id.replace('-page', ''));
-    const defaultFallbackLayouts = [
-      { id: 'standard', label: 'Standard Template', description: 'Clean balanced layout with core page components' },
-      { id: 'full-width', label: 'Full Width Template', description: 'Expansive edge-to-edge layout design' },
-      { id: 'minimal', label: 'Minimalist Template', description: 'Focused, distraction-free streamlined layout' },
-      { id: 'split', label: 'Modern Split Template', description: 'Dynamic asymmetrical visual layout' },
-    ];
-    const layouts = (pageConfig?.layouts && pageConfig.layouts.length > 0) ? pageConfig.layouts : defaultFallbackLayouts;
-    const currentLayoutId = activePage.pageProps?._selectedLayout || activePage.pageProps?.selectedLayout || activePage.pageProps?.layout || layouts[0]?.id;
+    const isCommercePage = ['/', '/shop', '/products', '/collections', '/cart', '/checkout'].some(p => (activePage.path || '').startsWith(p));
+    const isServicePage = ['/book', '/booking'].includes(activePage.path);
 
     return (
-      <div className={styles.contextPanelInner}>
+      <div className={styles.contextPanelInner} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', width: '100%' }}>
         {renderEditorDetailHeader(activePage.name, activePage.path)}
 
-        <div className={styles.contextPanelScroll}>
-          {/* Templates Section Header */}
-          <div style={{ padding: '12px 16px 6px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#64748b', display: 'block' }}>
-              Layout Templates ({layouts.length})
-            </span>
-            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Click to apply layout</span>
-          </div>
-
-          {/* Templates Grid / Cards */}
-          <div style={{ padding: '0 16px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {layouts.map((layout) => {
-              const isSelected = currentLayoutId === layout.id;
-              return (
-                <div
-                  key={layout.id}
-                  onClick={() => {
-                    updatePageProps(activePage.id, {
-                      pageProps: {
-                        ...activePage.pageProps,
-                        _selectedLayout: layout.id,
-                        selectedLayout: layout.id,
-                        layout: layout.id,
-                      }
-                    });
-                  }}
-                  style={{
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: isSelected ? '2px solid #0f172a' : '1px solid #e2e8f0',
-                    backgroundColor: isSelected ? '#f8fafc' : '#ffffff',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: layout.description ? '4px' : '0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '6px',
-                        backgroundColor: isSelected ? '#0f172a' : '#f1f5f9',
-                        color: isSelected ? '#ffffff' : '#475569',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}>
-                        <Layout size={13} />
-                      </div>
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? '#0f172a' : '#334155' }}>
-                        {layout.label}
-                      </span>
-                    </div>
-                    {isSelected && (
-                      <span style={{
-                        fontSize: '9px',
-                        fontWeight: 700,
-                        color: '#0f172a',
-                        backgroundColor: '#e2e8f0',
-                        padding: '1px 5px',
-                        borderRadius: '4px',
-                      }}>
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  {layout.description && (
-                    <p style={{ margin: 0, fontSize: '11px', color: '#64748b', lineHeight: 1.35, paddingLeft: '32px' }}>
-                      {layout.description}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Sticky Fixed Bottom Customizer Button */}
-        <div className={styles.stickyPageCustomizeFooter}>
-          <button
-            onClick={() => setRightSidebarOpen(!isRightSidebarOpen)}
-            className={`${styles.customizePageBtn} ${isRightSidebarOpen ? styles.customizePageBtnActive : ''}`}
-            title={isRightSidebarOpen ? "Right Panel Editor is open" : "Open Right Panel Editor"}
-          >
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <span className={styles.customizePageTitle}>
-                {isRightSidebarOpen ? 'Right Panel Editor Active' : 'Open Right Panel Editor'}
+        <div className={styles.contextPanelScroll} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Phase 1 Page Configuration Banner */}
+          <div style={{ padding: '12px 14px', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>
+                Page Identity &amp; Type
               </span>
-              <span className={styles.customizePageSubtitle}>
-                {isRightSidebarOpen ? 'Click to toggle right panel' : 'Customize typography, fields & styling'}
+              {isSystemLocked ? (
+                <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: 600, border: '1px solid #cbd5e1' }}>
+                  Locked System Page
+                </span>
+              ) : (
+                <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#dcfce7', color: '#15803d', fontWeight: 600 }}>
+                  Custom Page
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+              {activePage.name}
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>
+              Route: {activePage.path}
+            </div>
+          </div>
+
+          {/* Page Name Field */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>Page Title</label>
+            <input
+              type="text"
+              value={activePage.name || ''}
+              onChange={(e) => updatePageProps(activePage.id, { name: e.target.value })}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#0f172a', backgroundColor: '#ffffff', outline: 'none' }}
+              placeholder="e.g. Home Page"
+            />
+          </div>
+
+          {/* Canonical Path */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>URL Path</label>
+            <input
+              type="text"
+              value={activePage.path || ''}
+              readOnly={isSystemLocked}
+              onChange={(e) => !isSystemLocked && updatePageProps(activePage.id, { path: e.target.value })}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: isSystemLocked ? '#64748b' : '#0f172a', backgroundColor: isSystemLocked ? '#f1f5f9' : '#ffffff', outline: 'none' }}
+            />
+            {isSystemLocked && (
+              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Core system routes are immutable to protect store links.</span>
+            )}
+          </div>
+
+          {/* SEO Meta Title */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>SEO Meta Title</label>
+            <input
+              type="text"
+              value={activePage.pageProps?.seoTitle || activePage.name || ''}
+              onChange={(e) => updatePageProps(activePage.id, { pageProps: { ...activePage.pageProps, seoTitle: e.target.value } })}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#0f172a', backgroundColor: '#ffffff', outline: 'none' }}
+              placeholder="Meta title for Google and social previews"
+            />
+          </div>
+
+          {/* SEO Meta Description */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>Meta Description</label>
+            <textarea
+              rows={3}
+              value={activePage.pageProps?.seoDescription || ''}
+              onChange={(e) => updatePageProps(activePage.id, { pageProps: { ...activePage.pageProps, seoDescription: e.target.value } })}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#0f172a', backgroundColor: '#ffffff', outline: 'none', resize: 'vertical' }}
+              placeholder="Brief description for search engines..."
+            />
+          </div>
+
+          {/* Authoritative Data Ownership Guidance */}
+          <div style={{ padding: '12px 14px', borderRadius: '10px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <CheckCircle2 size={15} style={{ color: '#16a34a' }} />
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#15803d' }}>
+                Authoritative Data Owner
               </span>
             </div>
-            <ChevronRight
-              size={15}
-              color="#64748b"
-              style={{
-                flexShrink: 0,
-                marginLeft: '6px',
-                transform: isRightSidebarOpen ? 'rotate(180deg)' : 'none',
-                transition: 'transform 0.2s ease'
-              }}
-            />
-          </button>
+            <p style={{ fontSize: '11.5px', color: '#166534', margin: 0, lineHeight: 1.45 }}>
+              {isCommercePage
+                ? 'Products, variants, prices, and stock are canonically owned and managed in Admin → Catalogue. This storefront preview reads live inventory records directly.'
+                : isServicePage
+                ? 'Services, staff, and appointment slots are canonically managed in Admin → Appointments.'
+                : 'Page layout, typography, and styling inherit globally from the active theme tokens in the Design tab.'}
+            </p>
+          </div>
         </div>
       </div>
     );

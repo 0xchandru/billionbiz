@@ -418,6 +418,8 @@ export const api = {
 
   // Tenancy & Capabilities
   getStoreDetails: (storeId: string) => apiClient<any>(`/tenancy/stores/${storeId}`),
+  updateStoreIdentity: (storeId: string, payload: { name?: string; slug?: string; currency?: string; timezone?: string }) =>
+    apiClient.patch(`/tenancy/stores/${storeId}`, payload),
   updateCapabilities: (storeId: string, capabilities: { productCommerceEnabled: boolean; appointmentsEnabled: boolean; restaurantPosEnabled: boolean }) =>
     apiClient(`/tenancy/stores/${storeId}/capabilities`, {
       method: 'PATCH',

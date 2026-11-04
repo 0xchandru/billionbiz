@@ -10,9 +10,15 @@ export function getApiBaseUrl(): string {
 
   // 1. Merchant or developer manual override stored in localStorage
   if (typeof window !== 'undefined') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const override = localStorage.getItem('billionbiz_api_override');
     if (override && override.trim().length > 0) {
-      url = override.trim();
+      // If running on localhost and override points to an expired/rate-limited ngrok tunnel, purge it
+      if (isLocal && (override.includes('ngrok-free.dev') || override.includes('ngrok.io') || override.includes('ngrok-free.app'))) {
+        localStorage.removeItem('billionbiz_api_override');
+      } else {
+        url = override.trim();
+      }
     }
   }
 
@@ -21,7 +27,15 @@ export function getApiBaseUrl(): string {
     url = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
   }
 
-  // 3. Sensible development fallback
+  // 3. If running locally on localhost, prioritize direct local backend on 8080 over stale ngrok tunnels
+  if (typeof window !== 'undefined') {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal && (url.includes('ngrok-free.dev') || url.includes('ngrok.io') || url.includes('ngrok-free.app') || !url)) {
+      url = 'http://localhost:8080/api/v1';
+    }
+  }
+
+  // 4. Sensible development fallback
   if (!url) {
     url = 'http://localhost:8080/api/v1';
   }
@@ -78,11 +92,13 @@ export async function apiClient<T = any>(endpoint: string, options: RequestOptio
   const token = typeof window !== 'undefined' ? localStorage.getItem('billionbiz_token') : null;
   const orgId = typeof window !== 'undefined' ? (localStorage.getItem('billionbiz_org_id') || 'org-billionbiz-default') : 'org-billionbiz-default';
   const storeId = typeof window !== 'undefined' ? (localStorage.getItem('billionbiz_store_id') || 'store-shoum-default') : 'store-shoum-default';
+  const storeSlug = typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_slug') : null;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'x-organization-id': orgId,
     'x-store-id': storeId,
+    ...(storeSlug ? { 'x-store-slug': storeSlug } : {}),
     // Critical for ngrok free-tier tunnels: bypass browser interstitial HTML page
     'ngrok-skip-browser-warning': 'true',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

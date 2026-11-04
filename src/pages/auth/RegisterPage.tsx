@@ -87,6 +87,7 @@ export default function RegisterPage() {
   // UI status
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uiError, setUiError] = useState<string | null>(null);
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
   const [quotaNotice, setQuotaNotice] = useState<string | null>(null);
 
   // Redirect if already authenticated
@@ -196,6 +197,7 @@ export default function RegisterPage() {
   const handleSendOtp = async (e?: FormEvent) => {
     if (e) e.preventDefault();
     setUiError(null);
+    setIsAlreadyRegistered(false);
     clearError();
 
     const validation = validateContactInput(rawIdentifier, selectedCountry.code);
@@ -229,7 +231,20 @@ export default function RegisterPage() {
       setResendCooldown(45);
       setPhase('otp');
     } catch (err: any) {
-      setUiError(err.message || 'Failed to send verification code. Please check your details.');
+      const msg = err.message || '';
+      const isDuplicate =
+        err.error === 'USER_ALREADY_EXISTS' ||
+        err.error === 'ACCOUNT_EXISTS' ||
+        err.status === 409 ||
+        msg.toLowerCase().includes('already registered') ||
+        msg.toLowerCase().includes('already exists');
+
+      if (isDuplicate) {
+        setIsAlreadyRegistered(true);
+        setUiError(msg || 'This email or mobile number is already registered. Please log in.');
+      } else {
+        setUiError(msg || 'Failed to send verification code. Please check your details.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -399,9 +414,35 @@ export default function RegisterPage() {
       <div className="auth-card" style={{ maxWidth: phase === 'plan' ? '480px' : '440px' }}>
         {/* Error Alert */}
         {(uiError || storeError) && (
-          <div className="auth-alert-error" style={{ marginBottom: '1.25rem' }}>
-            <AlertCircle style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2 }} />
-            <span>{uiError || storeError}</span>
+          <div className="auth-alert-error" style={{ marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+              <AlertCircle style={{ width: 16, height: 16, flexShrink: 0, marginTop: 2 }} />
+              <span style={{ flex: 1, fontSize: '13px', lineHeight: 1.4 }}>{uiError || storeError}</span>
+            </div>
+            {isAlreadyRegistered && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                <Link
+                  to={`/login?identifier=${encodeURIComponent(rawIdentifier)}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    backgroundColor: '#059669',
+                    color: '#ffffff',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    boxShadow: '0 2px 4px rgba(5, 150, 105, 0.2)',
+                    transition: 'background-color 0.15s ease'
+                  }}
+                >
+                  <span>Already registered? Please Log In</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -425,6 +466,8 @@ export default function RegisterPage() {
                   onChange={(raw, _isMail, formatted, country) => {
                     setRawIdentifier(raw);
                     setFormattedIdentifier(formatted);
+                    setIsAlreadyRegistered(false);
+                    setUiError(null);
                     if (country) setSelectedCountry(country);
                   }}
                   onCountryChange={setSelectedCountry}

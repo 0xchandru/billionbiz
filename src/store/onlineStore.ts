@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { apiClient } from '../api/client';
 import { defaultPropsMap, sectionNameMap } from '../components/editor/SectionRenderer';
 import { getAllPageConfigs } from '../components/editor/pageConfigs';
 import type { PageCategory } from '../components/editor/pageConfigs/types';
@@ -81,6 +82,12 @@ export interface OnlineStoreState {
   resetCustomCss: () => void;
   undoTheme: () => void;
   redoTheme: () => void;
+  // Real-time backend synchronization
+  isSyncing: boolean;
+  fetchLiveStoreData: () => Promise<void>;
+  saveSettingsToBackend: (settings: Record<string, any>) => Promise<void>;
+  saveThemeToBackend: (theme: Partial<ThemeData>) => Promise<void>;
+  publishStoreToBackend: (notes?: string) => Promise<any>;
   // Methods for Online Store Editor
   updatePageSettings: (pageId: string, settings: Record<string, any>) => void;
   resetPageToDefault: (pageId: string) => void;
@@ -345,6 +352,142 @@ export const useOnlineStore = create<OnlineStoreState>()(
         useSiteStore.persist?.clearStorage?.();
       },
 
+      isSyncing: false,
+
+      fetchLiveStoreData: async () => {
+        try {
+          set({ isLoading: true });
+          const [pagesRes, brandRes, settingsRes, themeRes] = await Promise.allSettled([
+            apiClient.get('/storefront/pages'),
+            apiClient.get('/storefront/brand'),
+            apiClient.get('/storefront/settings'),
+            apiClient.get('/storefront/theme'),
+          ]);
+
+          const stateUpdates: Partial<OnlineStoreState> = {};
+
+          if (pagesRes.status === 'fulfilled' && pagesRes.value?.pages && pagesRes.value.pages.length > 0) {
+            const serverPages = pagesRes.value.pages;
+            const mappedPages: PageData[] = serverPages.map((sp: any) => ({
+              id: sp.id,
+              name: sp.name,
+              path: sp.path,
+              type: sp.type || 'standard',
+              category: sp.category || (sp.is_system ? 'storefront' : 'custom'),
+              status: sp.status === 'published' ? 'published' : 'draft',
+              seoTitle: sp.seo_title || `${sp.name} - Store`,
+              seoDescription: sp.seo_description || '',
+              sections: Array.isArray(sp.sections) ? sp.sections : [],
+              pageProps: sp.page_props || {},
+              visibility: sp.visibility || { desktop: true, tablet: true, mobile: true },
+              is_system: sp.is_system,
+              is_locked: sp.is_locked,
+              template_key: sp.template_key
+            } as any));
+            stateUpdates.pages = mappedPages;
+          }
+
+          let newSettings = { ...get().settings };
+          if (brandRes.status === 'fulfilled' && brandRes.value?.brand) {
+            const b = brandRes.value.brand;
+            newSettings = {
+              ...newSettings,
+              storeName: b.name || newSettings.storeName,
+              siteName: b.name || newSettings.siteName,
+              tagline: b.tagline !== undefined ? b.tagline : newSettings.tagline,
+              logoUrl: b.logoUrl || newSettings.logoUrl,
+              faviconUrl: b.faviconUrl || newSettings.faviconUrl,
+              socialLinks: b.socialLinks || newSettings.socialLinks,
+            };
+          }
+
+          if (settingsRes.status === 'fulfilled' && settingsRes.value?.settings) {
+            const s = settingsRes.value.settings;
+            newSettings = {
+              ...newSettings,
+              mode: s.mode || newSettings.mode,
+              primaryDomain: s.primaryDomain || newSettings.primaryDomain,
+              domains: s.domains || newSettings.domains,
+              passwordEnabled: s.passwordEnabled ?? newSettings.passwordEnabled,
+              maintenanceMode: s.maintenanceMode ?? newSettings.maintenanceMode,
+              redirects: s.redirects || newSettings.redirects,
+              seoDefaults: s.seoDefaults || newSettings.seoDefaults,
+            };
+          }
+          stateUpdates.settings = newSettings;
+
+          if (themeRes.status === 'fulfilled' && themeRes.value?.theme) {
+            const t = themeRes.value.theme;
+            const currentTheme = get().theme;
+            stateUpdates.theme = {
+              ...currentTheme,
+              presetName: t.preset_name || currentTheme.presetName || 'modern',
+              palette: t.palette ? { ...currentTheme.palette, ...t.palette } : currentTheme.palette,
+              typography: t.typography ? { ...currentTheme.typography, ...t.typography } : currentTheme.typography,
+              buttons: t.buttons ? { ...currentTheme.buttons, ...t.buttons } : currentTheme.buttons,
+              effects: t.effects ? { ...currentTheme.effects, ...t.effects } : currentTheme.effects,
+            };
+          }
+
+          set({ ...stateUpdates, isLoading: false });
+        } catch (err) {
+          console.warn('[OnlineStore] fetchLiveStoreData error:', err);
+          set({ isLoading: false });
+        }
+      },
+
+      saveSettingsToBackend: async (newSettings: Record<string, any>) => {
+        try {
+          const brandFields: any = {};
+          if (newSettings.storeName || newSettings.name) brandFields.name = newSettings.storeName || newSettings.name;
+          if (newSettings.tagline !== undefined) brandFields.tagline = newSettings.tagline;
+          if (newSettings.logoUrl !== undefined) brandFields.logoUrl = newSettings.logoUrl;
+          if (newSettings.faviconUrl !== undefined) brandFields.faviconUrl = newSettings.faviconUrl;
+          if (newSettings.socialLinks !== undefined) brandFields.socialLinks = newSettings.socialLinks;
+
+          const settingFields: any = {};
+          if (newSettings.passwordEnabled !== undefined) settingFields.passwordEnabled = newSettings.passwordEnabled;
+          if (newSettings.password !== undefined) settingFields.password = newSettings.password;
+          if (newSettings.maintenanceMode !== undefined) settingFields.maintenanceMode = newSettings.maintenanceMode;
+          if (newSettings.redirects !== undefined) settingFields.redirects = newSettings.redirects;
+          if (newSettings.seoDefaults !== undefined) settingFields.seoDefaults = newSettings.seoDefaults;
+          if (newSettings.primaryDomain !== undefined) settingFields.primaryDomain = newSettings.primaryDomain;
+
+          const promises: Promise<any>[] = [];
+          if (Object.keys(brandFields).length > 0) {
+            promises.push(apiClient.patch('/storefront/brand', brandFields));
+          }
+          if (Object.keys(settingFields).length > 0) {
+            promises.push(apiClient.patch('/storefront/settings', settingFields));
+          }
+          if (promises.length > 0) {
+            await Promise.allSettled(promises);
+          }
+        } catch (e) {
+          console.warn('[OnlineStore] saveSettingsToBackend error:', e);
+        }
+      },
+
+      saveThemeToBackend: async (newTheme: Partial<ThemeData>) => {
+        try {
+          await apiClient.patch('/storefront/theme', {
+            presetName: newTheme.presetName || (newTheme as any).id || (newTheme as any).name || 'modern',
+            palette: newTheme.palette,
+            typography: newTheme.typography,
+            buttons: newTheme.buttons,
+            effects: newTheme.effects,
+          });
+        } catch (e) {
+          console.warn('[OnlineStore] saveThemeToBackend error:', e);
+        }
+      },
+
+      publishStoreToBackend: async (notes = 'Published from Store Editor') => {
+        const res = await apiClient.post('/storefront/publish', { notes });
+        set({ hasUnsavedChanges: false });
+        return res;
+      },
+
   updateSectionProps: (pageId, sectionId, newProps) => set((state) => {
     const pages = state.pages.map(page => {
       if (page.id !== pageId) return page;
@@ -511,6 +654,7 @@ export const useOnlineStore = create<OnlineStoreState>()(
       }
       return { theme: merged, hasUnsavedChanges: true };
     });
+    get().saveThemeToBackend(get().theme);
   },
 
   resetTheme: () => {
@@ -624,10 +768,13 @@ export const useOnlineStore = create<OnlineStoreState>()(
     }
   },
 
-  updateSettings: (newSettings) => set((state) => ({
-    settings: { ...state.settings, ...newSettings },
-    hasUnsavedChanges: true,
-  })),
+  updateSettings: (newSettings) => {
+    set((state) => ({
+      settings: { ...state.settings, ...newSettings },
+      hasUnsavedChanges: true,
+    }));
+    get().saveSettingsToBackend(newSettings);
+  },
 
   // --- Pages Editor Methods ---
   

@@ -1239,11 +1239,7 @@
 /* ---------------- Center Canvas ---------------- */
 .canvasArea {
   flex: 1;
-  background-color: #f1f5f9;
-  /* Very light slate gray */
-  background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
-  /* Soft dots */
-  background-size: 20px 20px;
+  background-color: #f8fafc;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;

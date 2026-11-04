@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect, Suspense, lazy } from 'react';
 import { useLandingEditorStore } from '../../store/landingEditorStore';
 import { useSiteStore } from '../../store/siteStore';
 import { PageRenderer } from './PageRenderer';
-import { AddSectionWidget } from './AddSectionWidget';
 import styles from '../../pages/editor/EditorLayout.module.css';
 
 const SettingsRenderer = lazy(() => import('./SettingsRenderer').then(m => ({ default: m.SettingsRenderer })));
@@ -11,6 +10,7 @@ const SeoGrowthRenderer = lazy(() => import('./SeoGrowthRenderer').then(m => ({ 
 
 import { AddComponentModal } from './engine/AddComponentModal';
 import { PresetModal } from './engine/PresetModal';
+import { WebsitePreview } from './WebsitePreview';
 
 import { useEditorContextStore } from '../../store/editorContextStore';
 import { scrollPreviewToHeaderSection, scrollPreviewToFooterSection, scrollPreviewToSection } from './utils/previewScroll';
@@ -304,10 +304,27 @@ export const EditorCanvas: React.FC = () => {
                   <SeoGrowthRenderer />
                </Suspense>
             );
+         case 'pages': {
+            const isGlobalHeader = selectedPageId === 'header-global';
+            const isGlobalFooter = selectedPageId === 'footer-global';
+
+            return (
+               <div style={{ width: '100%', height: '100%', overflowX: 'hidden', overflowY: 'auto' }}>
+                  <WebsitePreview
+                     highlightSection={isGlobalHeader ? 'header' : isGlobalFooter ? 'footer' : null}
+                  />
+               </div>
+            );
+         }
          case 'design':
          case 'design-experience':
-         case 'pages':
          default: {
+            return (
+               <div style={{ width: '100%', height: '100%', overflowX: 'hidden', overflowY: 'auto' }}>
+                  <WebsitePreview />
+               </div>
+            );
+            /* Legacy preview fallback */
             const isExpandedMode = isFullPageMode || (!isRightSidebarOpen && isLeftSidebarCollapsed);
             // When focus mode is enabled or sidebars are collapsed & hidden, use the full container width
             // Otherwise leave a subtle 24px gutter around the canvas
@@ -391,7 +408,7 @@ export const EditorCanvas: React.FC = () => {
          } as React.CSSProperties}
       >
          {renderCanvasContent()}
-         {selectedPageId !== 'header-global' && selectedPageId !== 'footer-global' && <AddSectionWidget />}
+         {/* Phase 1: Section authoring widget safely retired from active editor */}
          <AddComponentModal />
          <PresetModal />
       </div>

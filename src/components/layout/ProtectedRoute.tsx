@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { syncAuthFromUrlOrCookie } from '../../utils/crossDomainAuth';
@@ -11,6 +11,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
   const location = useLocation();
   const { isAuthenticated, isCheckingAuth, checkAuth, role, user } = useAuthStore();
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Run synchronous check in case we arrived via cross-subdomain handoff (?token=...)
   if (typeof window !== 'undefined' && !localStorage.getItem('billionbiz_token')) {
@@ -18,21 +19,31 @@ export default function ProtectedRoute({ requiredRole }: ProtectedRouteProps) {
   }
 
   useEffect(() => {
-    // Only check auth from server if user details are not yet hydrated
-    const storedToken = localStorage.getItem('billionbiz_token');
-    if (!user && storedToken && !isCheckingAuth) {
-      checkAuth();
-    }
-  }, [user, isCheckingAuth, checkAuth]);
+    let isMounted = true;
+    const verify = async () => {
+      const storedToken = typeof window !== 'undefined' ? localStorage.getItem('billionbiz_token') : null;
+      if (!user && storedToken) {
+        await checkAuth();
+      }
+      if (isMounted) {
+        setAuthChecked(true);
+      }
+    };
+    verify();
+    return () => {
+      isMounted = false;
+    };
+  }, [user, checkAuth]);
 
-  // If a token exists in storage but user profile is still hydrating, wait for checkAuth
   const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('billionbiz_token');
-  if (hasToken && !user) {
+
+  // If user is actively hydrating with an existing token and checkAuth hasn't finished, wait
+  if (isCheckingAuth || (!authChecked && hasToken && !user)) {
     return <AnimatedLoader message="Securing session..." />;
   }
 
-  // If definitely not authenticated and no token in storage
-  if (!isAuthenticated || !hasToken) {
+  // Once check completes, if not authenticated or user profile is absent, send to login
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

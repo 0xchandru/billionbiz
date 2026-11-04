@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 import fs from 'node:fs'
 
@@ -6,7 +7,7 @@ const packageJson = JSON.parse(fs.readFileSync(new URL('./package.json', import.
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
@@ -15,6 +16,17 @@ export default defineConfig({
     port: 5173,
     hmr: {
       clientPort: 5173,
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/realtime': {
+        target: 'ws://localhost:8080',
+        ws: true,
+      },
     },
   },
 })

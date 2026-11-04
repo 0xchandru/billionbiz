@@ -380,11 +380,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
       return true;
     } catch (err) {
-      // Token expired or invalid
-      localStorage.removeItem('billionbiz_token');
+      // Token expired or invalid - thoroughly purge storage and cookies
+      clearAuthSession();
       set({
         token: null,
         user: null,
+        role: null,
+        permissions: [],
+        organizationId: null,
+        organizationName: null,
+        storeId: null,
+        storeName: null,
+        storeSlug: null,
+        organizations: [],
         isAuthenticated: false,
         isCheckingAuth: false
       });
