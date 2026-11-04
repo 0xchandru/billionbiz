@@ -13,10 +13,11 @@ import { api } from '../api/services';
 
 export const AccountSettingsPage: React.FC = () => {
   const { user, role, organizationName, storeName, checkAuth } = useAuthStore();
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
 
   // Profile Form States
   const [fullName, setFullName] = useState(user?.fullName || 'Chandru');
-  const [email, setEmail] = useState(user?.email || 'chandru@chandraprakash.codes');
+  const [email, setEmail] = useState(user?.email || `admin@${rootDomain}`);
   const [phone, setPhone] = useState((user as any)?.phone || '+91 98765 43210');
   const [orgName, setOrgName] = useState(organizationName || 'BillionBiz Enterprise');
   const [saving, setSaving] = useState(false);

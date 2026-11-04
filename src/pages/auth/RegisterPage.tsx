@@ -46,7 +46,7 @@ const PLANS: PlanOption[] = [
     period: 'Free 14-day trial',
     description: 'Perfect for new entrepreneurs launching their first storefront.',
     features: [
-      'Subdomain on stores.chandraprakash.codes',
+      `Free subdomain (*.${import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes'})`,
       'Catalog up to 50 items',
       'POS register & cashier terminal',
       'Standard analytics & order tracking'

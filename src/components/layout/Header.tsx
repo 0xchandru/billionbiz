@@ -185,7 +185,7 @@ const Header: FC = () => {
             <div className={styles.profileMenu}>
               <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9' }}>
                 <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0f172a' }}>{displayName}</div>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email || 'admin@chandraprakash.codes'}</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email || `admin@${import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes'}`}</div>
                 <div style={{ display: 'inline-block', marginTop: '0.35rem', backgroundColor: '#e6fffa', color: '#083e47', fontSize: '0.68rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
                   ROLE: {roleDisplay}
                 </div>

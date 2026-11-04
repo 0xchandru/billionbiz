@@ -14,7 +14,7 @@
 
 import { getPortalUrl, isLocalOrPreview } from './subdomain';
 
-const COOKIE_DOMAIN = 'chandraprakash.codes';
+const COOKIE_DOMAIN = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').trim().toLowerCase();
 
 /**
  * Sets a cookie accessible across all subdomains of chandraprakash.codes

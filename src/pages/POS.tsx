@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api/services';
 import { useAuthStore } from '../store/authStore';
+import { getPortalUrl } from '../utils/subdomain';
 
 const formatCurrency = (minor: number) => {
   return '₹' + (minor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 });
@@ -192,7 +193,12 @@ const POSPage: React.FC = () => {
     }
   };
 
-  // Dedicated POS Cashier Login view when unauthenticated on pos.chandraprakash.codes (Section 3.E)
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
+  const adminLoginUrl = getPortalUrl('admin', '/login');
+  const adminHost = `admin.${rootDomain}`;
+  const posHost = `pos.${rootDomain}`;
+
+  // Dedicated POS Cashier Login view when unauthenticated
   if (!isAuthenticated) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
@@ -203,7 +209,7 @@ const POSPage: React.FC = () => {
             </div>
             <h1 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 6px' }}>POS Counter Terminal</h1>
             <p style={{ fontSize: '12.5px', color: '#94a3b8', margin: 0 }}>
-              pos.chandraprakash.codes
+              {posHost}
             </p>
           </div>
 
@@ -249,8 +255,8 @@ const POSPage: React.FC = () => {
 
           <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
             Merchant Administration:{' '}
-            <a href="https://admin.chandraprakash.codes/login" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600 }}>
-              admin.chandraprakash.codes
+            <a href={adminLoginUrl} style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600 }}>
+              {adminHost}
             </a>
           </div>
         </div>

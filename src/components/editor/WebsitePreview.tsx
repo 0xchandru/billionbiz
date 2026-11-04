@@ -3,6 +3,7 @@ import { useLandingEditorStore } from '../../store/landingEditorStore';
 import { useSiteStore } from '../../store/siteStore';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../api/client';
+import { getStoreUrl } from '../../utils/subdomain';
 import { StorefrontRenderer } from '../storefront/StorefrontRenderer';
 
 interface WebsitePreviewProps {
@@ -192,7 +193,7 @@ export const WebsitePreview: React.FC<WebsitePreviewProps> = ({
             id: serverData?.store?.id,
             name: effectiveBusinessName,
             slug: storeSlug,
-            primary_domain: `${storeSlug}.stores.chandraprakash.codes`
+            primary_domain: getStoreUrl(storeSlug).replace(/^https?:\/\//, '')
           }}
           brand={effectiveBrand}
           themeTokens={effectiveTheme}

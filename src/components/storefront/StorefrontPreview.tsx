@@ -13,6 +13,7 @@ import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { useSiteStore } from '../../store/siteStore';
 import { useLandingEditorStore } from '../../store/landingEditorStore';
+import { getStoreUrl } from '../../utils/subdomain';
 
 interface StorefrontPreviewProps {
   initialPath?: string;
@@ -159,7 +160,8 @@ export const StorefrontPreview: React.FC<StorefrontPreviewProps> = ({
     : serverData?.settings || {};
 
   const effectiveSlug = serverData?.store?.slug || storeSlug;
-  const liveStorefrontUrl = `/store/${effectiveSlug}${activePath === '/' ? '' : activePath}`;
+  const pathSuffix = activePath === '/' ? '' : activePath;
+  const liveStorefrontUrl = getStoreUrl(effectiveSlug, pathSuffix);
 
   return (
     <div className={`flex flex-col h-full bg-slate-100 dark:bg-slate-950 ${className}`}>

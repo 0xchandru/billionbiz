@@ -14,10 +14,15 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../api/services';
+import { getPortalUrl } from '../utils/subdomain';
 import logoLightBg from '../assets/logo-light-bg.png';
 
 export const CustomerPortalPage: React.FC = () => {
   const { user, isAuthenticated, loginUnified, logout } = useAuthStore();
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
+  const mainWebsiteUrl = getPortalUrl('root', '/');
+  const adminLoginUrl = getPortalUrl('admin', '/login');
+  const accountsHost = `accounts.${rootDomain}`;
   const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'security'>('orders');
 
   // Customer Auth State (when unauthenticated)
@@ -123,7 +128,7 @@ export const CustomerPortalPage: React.FC = () => {
             </span>
           </div>
           <a
-            href="https://www.chandraprakash.codes"
+            href={mainWebsiteUrl}
             style={{ fontSize: '13px', color: '#083e47', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
             Visit Main Website <ExternalLink size={14} />
@@ -244,7 +249,7 @@ export const CustomerPortalPage: React.FC = () => {
 
             <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #f1f5f9', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
               Are you a merchant or store owner?{' '}
-              <a href="https://admin.chandraprakash.codes/login" style={{ color: '#083e47', fontWeight: 700, textDecoration: 'none' }}>
+              <a href={adminLoginUrl} style={{ color: '#083e47', fontWeight: 700, textDecoration: 'none' }}>
                 Merchant Admin Login
               </a>
             </div>
@@ -337,7 +342,7 @@ export const CustomerPortalPage: React.FC = () => {
                     When you purchase products from any merchant storefront, your receipts and tracking will appear here.
                   </p>
                   <a
-                    href="https://www.chandraprakash.codes"
+                    href={mainWebsiteUrl}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px', backgroundColor: '#083e47', color: '#ffffff', borderRadius: '8px', fontSize: '12.5px', fontWeight: 600, textDecoration: 'none' }}
                   >
                     Browse Stores <ArrowRight size={14} />
@@ -459,7 +464,7 @@ export const CustomerPortalPage: React.FC = () => {
                   <span>Isolated Customer Authentication Context</span>
                 </div>
                 <p style={{ fontSize: '12.5px', color: '#64748b', margin: '6px 0 0 26px', lineHeight: 1.5 }}>
-                  This session is securely isolated to `accounts.chandraprakash.codes`. It holds customer privileges only and cannot access administrative merchant controls.
+                  This session is securely isolated to `{accountsHost}`. It holds customer privileges only and cannot access administrative merchant controls.
                 </p>
               </div>
 

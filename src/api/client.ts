@@ -26,9 +26,10 @@ export function getApiBaseUrl(): string {
     url = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim();
   }
 
-  // 3. Fallback to authoritative Cloudflare API URL
+  // 3. Fallback to authoritative API URL derived from environment root domain
   if (!url) {
-    url = 'https://api.chandraprakash.codes/api/v1';
+    const root = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').trim();
+    url = `https://api.${root}/api/v1`;
   }
 
   url = url.replace(/\/+$/, '');

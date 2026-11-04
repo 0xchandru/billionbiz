@@ -24,6 +24,7 @@ import { PageSelectorDropdown } from './topbar/PageSelectorDropdown';
 import { MoreOptionsMenu } from './topbar/MoreOptionsMenu';
 import { useEditorContextStore } from '../../store/editorContextStore';
 import { useAuthStore } from '../../store/authStore';
+import { getStoreUrl } from '../../utils/subdomain';
 import { AuditButton } from './topbar/AuditButton';
 import { VersionCompareModal } from './engine/VersionCompareModal';
 import styles from './topbar/topbar.module.css';
@@ -356,19 +357,8 @@ export const EditorTopBar: React.FC = () => {
   const handlePreview = () => {
     const previewPath = activePage?.path || '/';
     const slug = storeSlug || localStorage.getItem('billionbiz_store_slug') || 'my-store';
-
-    // In local dev or ngrok tunnel: navigate to /store/:slug
-    // On production domain: navigate to https://<slug>.stores.chandraprakash.codes
-    const isLocal = typeof window !== 'undefined' && (
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname.includes('ngrok')
-    );
-
     const pathSuffix = previewPath === '/' ? '' : previewPath;
-    const previewUrl = isLocal
-      ? `/store/${slug}${pathSuffix}`
-      : `https://${slug}.stores.chandraprakash.codes${pathSuffix}`;
+    const previewUrl = getStoreUrl(slug, pathSuffix);
 
     window.open(previewUrl, '_blank');
     showToast(`Opening storefront preview (${slug})...`);
@@ -393,7 +383,7 @@ export const EditorTopBar: React.FC = () => {
   const authStoreName = useAuthStore((s) => s.storeName);
   const businessName = settings.storeName || settings.siteName || authStoreName || (typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_name') : null) || 'BillionBiz Store';
   const cleanStoreName = businessName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'store';
-  const storeUrl = settings.storeUrl || settings.storeDomain || `${cleanStoreName}.stores.chandraprakash.codes`;
+  const storeUrl = settings.storeUrl || settings.storeDomain || getStoreUrl(cleanStoreName);
 
   const undoDisabled = isTheme
     ? !canUndo

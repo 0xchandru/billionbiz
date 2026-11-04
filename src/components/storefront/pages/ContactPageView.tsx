@@ -20,6 +20,7 @@ export const ContactPageView: React.FC<ContactPageViewProps> = ({
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSent, setIsSent] = useState(false);
+  const fallbackEmail = `support@${(import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').trim()}`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +51,8 @@ export const ContactPageView: React.FC<ContactPageViewProps> = ({
                 </div>
                 <div>
                   <p className="font-semibold text-slate-900 dark:text-white">Email Address</p>
-                  <a href={`mailto:${storeInfo?.email || 'support@stores.chandraprakash.codes'}`} className="hover:underline text-indigo-600 dark:text-indigo-400">
-                    {storeInfo?.email || 'support@stores.chandraprakash.codes'}
+                  <a href={`mailto:${storeInfo?.email || fallbackEmail}`} className="hover:underline text-indigo-600 dark:text-indigo-400">
+                    {storeInfo?.email || fallbackEmail}
                   </a>
                 </div>
               </div>

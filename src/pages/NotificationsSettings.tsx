@@ -18,16 +18,18 @@ export const NotificationsSettingsPage: React.FC = () => {
   const [bookingConfirmations, setBookingConfirmations] = useState(true);
   const [bookingReminders, setBookingReminders] = useState(true);
 
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
+
   // Merchant Alerts
   const [merchantNewOrderAlert, setMerchantNewOrderAlert] = useState(true);
   const [merchantLowStockAlert, setMerchantLowStockAlert] = useState(true);
   const [merchantDailyDigest, setMerchantDailyDigest] = useState(true);
-  const [alertEmail, setAlertEmail] = useState('chandru@chandraprakash.codes');
+  const [alertEmail, setAlertEmail] = useState(`chandru@${rootDomain}`);
 
   // Sender Domain
   const [senderName, setSenderName] = useState('BillionBiz Store');
-  const [senderEmail, setSenderEmail] = useState('noreply@chandraprakash.codes');
-  const [replyToEmail, setReplyToEmail] = useState('support@chandraprakash.codes');
+  const [senderEmail, setSenderEmail] = useState(`noreply@${rootDomain}`);
+  const [replyToEmail, setReplyToEmail] = useState(`support@${rootDomain}`);
 
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
@@ -336,7 +338,7 @@ export const NotificationsSettingsPage: React.FC = () => {
           <div style={{ padding: '16px', borderRadius: '8px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <CheckCircle2 size={18} color="#15803d" />
             <div style={{ fontSize: '13px', color: '#166534' }}>
-              <strong>chandraprakash.codes</strong> is verified with valid DKIM, SPF, and DMARC DNS records for instantaneous inbox delivery.
+              <strong>{rootDomain}</strong> is verified with valid DKIM, SPF, and DMARC DNS records for instantaneous inbox delivery.
             </div>
           </div>
         </div>

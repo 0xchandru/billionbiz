@@ -13,7 +13,7 @@ import StorefrontPage from '../../pages/StorefrontPage';
  * - pos.chandraprakash.codes          -> /pos (if authenticated) or /login (if unauthenticated)
  * - staff.chandraprakash.codes        -> /appointments (if authenticated) or /login (if unauthenticated)
  * - ops.chandraprakash.codes          -> /dashboard (if authenticated) or /login (if unauthenticated)
- * - {slug}.stores.chandraprakash.codes-> Customer Storefront
+ * - {slug}.chandraprakash.codes -> Customer Storefront
  * - chandraprakash.codes / www        -> Public Marketing Homepage
  */
 export const SubdomainHomeResolver: React.FC = () => {

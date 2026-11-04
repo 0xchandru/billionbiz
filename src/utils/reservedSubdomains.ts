@@ -5,7 +5,7 @@
  * and platform reserved subdomains before dispatching to the API.
  */
 
-export const PLATFORM_MAIN_DOMAIN = 'chandraprakash.codes';
+export const PLATFORM_MAIN_DOMAIN = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').trim().toLowerCase();
 
 export const RESERVED_SUBDOMAINS: readonly string[] = Object.freeze([
   // 1. Existing platform subdomains

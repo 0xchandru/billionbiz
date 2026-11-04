@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api/services';
 import { useAuthStore } from '../store/authStore';
+import { getPortalUrl } from '../utils/subdomain';
 
 export const StaffPortalPage: React.FC = () => {
   const { user, storeName, isAuthenticated, loginUnified, logout } = useAuthStore();
@@ -72,7 +73,11 @@ export const StaffPortalPage: React.FC = () => {
     return status === 'PENDING' || status === 'CONFIRMED';
   });
 
-  // Dedicated Staff Login view when unauthenticated on staff.chandraprakash.codes (Section 3.D)
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
+  const adminLoginUrl = getPortalUrl('admin', '/login');
+  const staffHost = `staff.${rootDomain}`;
+
+  // Dedicated Staff Login view when unauthenticated
   if (!isAuthenticated) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#F6F4EE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -83,7 +88,7 @@ export const StaffPortalPage: React.FC = () => {
             </div>
             <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#064652', margin: '0 0 6px' }}>Staff Portal Login</h1>
             <p style={{ fontSize: '12.5px', color: '#64748b', margin: 0 }}>
-              staff.chandraprakash.codes
+              {staffHost}
             </p>
           </div>
 
@@ -129,7 +134,7 @@ export const StaffPortalPage: React.FC = () => {
 
           <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
             Store Owner or Admin?{' '}
-            <a href="https://admin.chandraprakash.codes/login" style={{ color: '#064652', fontWeight: 700, textDecoration: 'none' }}>
+            <a href={adminLoginUrl} style={{ color: '#064652', fontWeight: 700, textDecoration: 'none' }}>
               Merchant Admin Login
             </a>
           </div>

@@ -19,6 +19,12 @@ export default function LandingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
+  const adminHost = `admin.${rootDomain}`;
+  const posHost = `pos.${rootDomain}`;
+  const staffHost = `staff.${rootDomain}`;
+  const storePattern = `*.${rootDomain}`;
+
   const loginUrl = getPortalUrl('admin', '/login');
   const registerUrl = getPortalUrl('root', '/register');
   const forgotPasswordUrl = getPortalUrl('admin', '/forgot-password');
@@ -163,7 +169,7 @@ export default function LandingPage() {
             }}
           >
             <Sparkles size={16} color="#447515" />
-            <span>The Unified Business Engine at chandraprakash.codes</span>
+            <span>The Unified Business Engine at {rootDomain}</span>
           </div>
 
           <h1
@@ -240,7 +246,7 @@ export default function LandingPage() {
               <CheckCircle2 size={16} color="#447515" /> Real-time sync & offline POS
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <CheckCircle2 size={16} color="#447515" /> Free subdomain (*.chandraprakash.codes)
+              <CheckCircle2 size={16} color="#447515" /> Free subdomain ({storePattern})
             </span>
           </div>
         </div>
@@ -253,7 +259,7 @@ export default function LandingPage() {
             <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b' }}></div>
             <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10b981' }}></div>
             <span style={{ marginLeft: '1rem', fontSize: '0.8rem', color: '#64748b', fontFamily: 'monospace' }}>
-              admin.chandraprakash.codes/dashboard
+              {adminHost}/dashboard
             </span>
           </div>
 
@@ -308,7 +314,7 @@ export default function LandingPage() {
             </div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#064652', marginBottom: '0.65rem' }}>Merchant Admin Shell</h3>
             <p style={{ color: '#64748b', lineHeight: 1.6, fontSize: '0.95rem' }}>
-              Manage your entire catalog, orders, promotions, customer relations, staff roles, and analytics from <code>admin.chandraprakash.codes</code>. Honest zeros on launch with zero mock data.
+              Manage your entire catalog, orders, promotions, customer relations, staff roles, and analytics from <code>{adminHost}</code>. Honest zeros on launch with zero mock data.
             </p>
           </div>
 
@@ -319,7 +325,7 @@ export default function LandingPage() {
             </div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#064652', marginBottom: '0.65rem' }}>Dedicated Cashier POS</h3>
             <p style={{ color: '#64748b', lineHeight: 1.6, fontSize: '0.95rem' }}>
-              Fast in-person checkout at <code>pos.chandraprakash.codes</code>. Individual cashier PIN authentication, register drawer sessions, opening floats, X/Z reports, and offline reconciliation.
+              Fast in-person checkout at <code>{posHost}</code>. Individual cashier PIN authentication, register drawer sessions, opening floats, X/Z reports, and offline reconciliation.
             </p>
           </div>
 
@@ -330,7 +336,7 @@ export default function LandingPage() {
             </div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#064652', marginBottom: '0.65rem' }}>Staff & Appointments Portal</h3>
             <p style={{ color: '#64748b', lineHeight: 1.6, fontSize: '0.95rem' }}>
-              At <code>staff.chandraprakash.codes</code>, service providers see only their assigned calendar, client intake notes, and shifts. Atomic locking prevents double-booking.
+              At <code>{staffHost}</code>, service providers see only their assigned calendar, client intake notes, and shifts. Atomic locking prevents double-booking.
             </p>
           </div>
 
@@ -341,7 +347,7 @@ export default function LandingPage() {
             </div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#064652', marginBottom: '0.65rem' }}>Native Storefront & Editor</h3>
             <p style={{ color: '#64748b', lineHeight: 1.6, fontSize: '0.95rem' }}>
-              Completely free of SiteStore. Features custom page trees, section builders, immutable release snapshots, and atomic whole-store publishing to <code>*.chandraprakash.codes</code>.
+              Completely free of SiteStore. Features custom page trees, section builders, immutable release snapshots, and atomic whole-store publishing to <code>{storePattern}</code>.
             </p>
           </div>
         </div>
@@ -412,7 +418,7 @@ export default function LandingPage() {
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1 }}>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.95rem', color: '#334155' }}>
-                  <CheckCircle2 size={18} color="#447515" /> 1 Online Store on *.chandraprakash.codes
+                  <CheckCircle2 size={18} color="#447515" /> 1 Online Store on {storePattern}
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.95rem', color: '#334155' }}>
                   <CheckCircle2 size={18} color="#447515" /> Up to 50 Products or 5 Service Offerings
@@ -589,15 +595,15 @@ export default function LandingPage() {
             },
             {
               q: 'How does the offline POS work when internet drops?',
-              a: 'The POS cashier portal at pos.chandraprakash.codes caches your products and register session locally in IndexedDB. Cash sales and transactions queue up with unique idempotency keys and automatically reconcile with the backend as soon as connectivity resumes.'
+              a: `The POS cashier portal at ${posHost} caches your products and register session locally in IndexedDB. Cash sales and transactions queue up with unique idempotency keys and automatically reconcile with the backend as soon as connectivity resumes.`
             },
             {
               q: 'Can I connect my own custom domain?',
-              a: 'Yes. In addition to your free *.chandraprakash.codes subdomain, you can bind custom root domains and subdomains (e.g. store.yourbrand.com) with automated Let’s Encrypt SSL provisioning.'
+              a: `Yes. In addition to your free ${storePattern} subdomain, you can bind custom root domains and subdomains (e.g. store.yourbrand.com) with automated Let’s Encrypt SSL provisioning.`
             },
             {
               q: 'How are cashiers and staff separated from store settings?',
-              a: 'BillionBiz enforces role-aware portal routing. Cashiers log into pos.chandraprakash.codes and only see their assigned register drawer. Staff log into staff.chandraprakash.codes to manage their bookings. Full configuration and financial reports remain protected in admin.chandraprakash.codes.'
+              a: `BillionBiz enforces role-aware portal routing. Cashiers log into ${posHost} and only see their assigned register drawer. Staff log into ${staffHost} to manage their bookings. Full configuration and financial reports remain protected in ${adminHost}.`
             }
           ].map((item, idx) => (
             <div
@@ -640,7 +646,7 @@ export default function LandingPage() {
             Ready to Build Your BillionBiz Store?
           </h2>
           <p style={{ fontSize: '1.15rem', color: '#99f6e4', marginBottom: '2.25rem', lineHeight: 1.6 }}>
-            Join thousands of ambitious business owners operating on the official platform at chandraprakash.codes. Setup takes under 60 seconds.
+            Join thousands of ambitious business owners operating on the official platform at {rootDomain}. Setup takes under 60 seconds.
           </p>
           <ActionLink
             to={registerUrl}
@@ -678,7 +684,7 @@ export default function LandingPage() {
               The unified commerce, appointments, and POS platform for ambitious retail and service brands.
             </p>
             <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block', marginTop: '0.75rem' }}>
-              Domain: chandraprakash.codes
+              Domain: {rootDomain}
             </span>
           </div>
 
@@ -713,7 +719,7 @@ export default function LandingPage() {
         </div>
 
         <div style={{ maxWidth: '1200px', margin: '0 auto', borderTop: '1px solid #134e5a', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', fontSize: '0.8rem' }}>
-          <div>© {new Date().getFullYear()} BillionBiz Platform. All rights reserved. Hosted on chandraprakash.codes.</div>
+          <div>© {new Date().getFullYear()} BillionBiz Platform. All rights reserved. Hosted on {rootDomain}.</div>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
             <span style={{ color: '#64748b' }}>Privacy Policy</span>
             <span style={{ color: '#64748b' }}>Terms of Service</span>

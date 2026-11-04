@@ -10,7 +10,7 @@ import AnimatedLoader from '../common/AnimatedLoader';
 // 404 Not Found Page
 import NotFoundPage from '../../pages/NotFoundPage';
 
-// Marketing App (chandraprakash.codes / www)
+// Marketing App (Root Domain / www)
 import LandingPage from '../../pages/LandingPage';
 
 // Auth Pages
@@ -185,6 +185,9 @@ export const HostDispatcher: React.FC = () => {
   const subInfo = parseSubdomain();
   const { isAuthenticated } = useAuthStore();
   const isLocal = isLocalOrPreview() && subInfo.type === 'local';
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
+  const adminPortalHost = `admin.${rootDomain}`;
+  const mainPortalHost = `www.${rootDomain}`;
 
   // 1. LOCAL / PREVIEW / SINGLE-ORIGIN RUNTIME (Unified root dev mode)
   if (isLocal) {
@@ -225,7 +228,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 2. PUBLIC MARKETING WEBSITE (chandraprakash.codes / www)
+  // 2. PUBLIC MARKETING WEBSITE (Root Domain / www)
   if (subInfo.type === 'root') {
     return (
       <Routes>
@@ -241,99 +244,99 @@ export const HostDispatcher: React.FC = () => {
         />
         <Route
           path="/orders/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/orders"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/products/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/products"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/appointments/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/appointments"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/people/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/people"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/team/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/team"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/pos-counters/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/pos-counters"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/online-store/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/pages/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/pages"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/theme"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/plugins/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/plugins"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/extensions/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/extensions"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/settings/*"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/settings"
-          element={<NotFoundPage message="Merchant Admin is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Merchant Admin is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/editor/*"
-          element={<NotFoundPage message="Store Editor is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Store Editor is only available on ${adminPortalHost}`} />}
         />
         <Route
           path="/editor"
-          element={<NotFoundPage message="Store Editor is only available on admin.chandraprakash.codes" />}
+          element={<NotFoundPage message={`Store Editor is only available on ${adminPortalHost}`} />}
         />
 
         <Route path="*" element={<NotFoundPage message="The page you are looking for does not exist on this site." />} />
@@ -341,12 +344,12 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 0. APEX DOMAIN REDIRECT (chandraprakash.codes -> https://www.chandraprakash.codes)
+  // 0. APEX DOMAIN REDIRECT
   if (subInfo.type === 'redirect') {
-    return <AnimatedLoader message="Redirecting to www.chandraprakash.codes..." />;
+    return <AnimatedLoader message={`Redirecting to ${mainPortalHost}...`} />;
   }
 
-  // 3. DEDICATED CUSTOMER ACCOUNTS PORTAL (accounts.chandraprakash.codes)
+  // 3. DEDICATED CUSTOMER ACCOUNTS PORTAL
   if (subInfo.type === 'accounts') {
     return (
       <Routes>
@@ -355,7 +358,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 4. DEDICATED CASHIER POS PORTAL (pos.chandraprakash.codes)
+  // 4. DEDICATED CASHIER POS PORTAL
   if (subInfo.type === 'pos') {
     return (
       <Routes>
@@ -364,7 +367,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 5. DEDICATED STAFF WORK PORTAL (staff.chandraprakash.codes)
+  // 5. DEDICATED STAFF WORK PORTAL
   if (subInfo.type === 'staff') {
     return (
       <Routes>
@@ -373,7 +376,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 6. RESTRICTED INTERNAL PLATFORM OPERATIONS (ops.chandraprakash.codes)
+  // 6. RESTRICTED INTERNAL PLATFORM OPERATIONS
   if (subInfo.type === 'ops') {
     return (
       <Routes>
@@ -386,7 +389,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 7. BACKEND API HOST (api.chandraprakash.codes)
+  // 7. BACKEND API HOST
   if (subInfo.type === 'api') {
     return (
       <Routes>
@@ -394,7 +397,7 @@ export const HostDispatcher: React.FC = () => {
           path="*"
           element={
             <NotFoundPage
-              message="api.chandraprakash.codes is the backend REST API and serves JSON endpoints exclusively. Please visit https://www.chandraprakash.codes for web applications."
+              message={`api.${rootDomain} is the backend REST API and serves JSON endpoints exclusively. Please visit https://${mainPortalHost} for web applications.`}
             />
           }
         />
@@ -402,7 +405,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 8. RESERVED PLATFORM SUBDOMAIN (e.g. billing.chandraprakash.codes, cdn.chandraprakash.codes)
+  // 8. RESERVED PLATFORM SUBDOMAIN
   if (subInfo.type === 'reserved') {
     return (
       <Routes>
@@ -430,21 +433,21 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 7. NATIVE MERCHANT STOREFRONT RUNTIME (*.stores.chandraprakash.codes)
+  // 7. NATIVE MERCHANT STOREFRONT RUNTIME
   if (subInfo.type === 'store') {
     return (
       <Routes>
         <Route
           path="/login"
-          element={<NotFoundPage message="Admin login is not available on customer storefronts. Please visit admin.chandraprakash.codes." />}
+          element={<NotFoundPage message={`Admin login is not available on customer storefronts. Please visit ${adminPortalHost}.`} />}
         />
         <Route
           path="/register"
-          element={<NotFoundPage message="Store registration is only available on the main website (chandraprakash.codes/register)." />}
+          element={<NotFoundPage message={`Store registration is only available on the main website (${rootDomain}/register).`} />}
         />
         <Route
           path="/dashboard"
-          element={<NotFoundPage message="Merchant dashboard is only available on admin.chandraprakash.codes." />}
+          element={<NotFoundPage message={`Merchant dashboard is only available on ${adminPortalHost}.`} />}
         />
         {/* Admin workspace routes are strictly NOT accessible on storefronts -> 404 */}
         <Route path="/orders/*" element={<NotFoundPage message="Page not available on customer storefront." />} />
@@ -459,8 +462,8 @@ export const HostDispatcher: React.FC = () => {
         <Route path="/team" element={<NotFoundPage message="Page not available on customer storefront." />} />
         <Route path="/settings/*" element={<NotFoundPage message="Page not available on customer storefront." />} />
         <Route path="/settings" element={<NotFoundPage message="Page not available on customer storefront." />} />
-        <Route path="/editor/*" element={<NotFoundPage message="Store Editor is only available on admin.chandraprakash.codes." />} />
-        <Route path="/editor" element={<NotFoundPage message="Store Editor is only available on admin.chandraprakash.codes." />} />
+        <Route path="/editor/*" element={<NotFoundPage message={`Store Editor is only available on ${adminPortalHost}.`} />} />
+        <Route path="/editor" element={<NotFoundPage message={`Store Editor is only available on ${adminPortalHost}.`} />} />
         <Route path="/plugins/*" element={<NotFoundPage message="Page not available on customer storefront." />} />
         <Route path="/plugins" element={<NotFoundPage message="Page not available on customer storefront." />} />
         <Route path="/pos-counters/*" element={<NotFoundPage message="Page not available on customer storefront." />} />
@@ -471,7 +474,7 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 8. MERCHANT ADMIN WORKSPACE (admin.chandraprakash.codes)
+  // 8. MERCHANT ADMIN WORKSPACE
   return (
     <Routes>
       <Route
@@ -481,7 +484,7 @@ export const HostDispatcher: React.FC = () => {
       {/* Registration is strictly NOT available on the Admin subdomain -> 404 */}
       <Route
         path="/register"
-        element={<NotFoundPage message="Store registration is only available on the main website. Please visit https://chandraprakash.codes/register." />}
+        element={<NotFoundPage message={`Store registration is only available on the main website. Please visit https://${rootDomain}/register.`} />}
       />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

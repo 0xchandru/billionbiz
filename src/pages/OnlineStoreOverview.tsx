@@ -17,12 +17,14 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useAuthStore } from '../store/authStore';
+import { getStoreUrl } from '../utils/subdomain';
 import styles from './OnlineStoreOverview.module.css';
 
 export const OnlineStoreOverview: React.FC = () => {
   const navigate = useNavigate();
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
   const storeSlug = useAuthStore((s) => s.storeSlug) || (typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_slug') : null) || 'chandru';
-  const platformDomain = `${storeSlug}.chandraprakash.codes`;
+  const platformDomain = `${storeSlug}.${rootDomain}`;
 
   const [loading, setLoading] = useState(true);
   const [storeData, setStoreData] = useState<any>(null);
@@ -78,7 +80,7 @@ export const OnlineStoreOverview: React.FC = () => {
     loadData();
   }, [storeSlug]);
 
-  const localPreviewUrl = `/store/${storeSlug}`;
+  const localPreviewUrl = getStoreUrl(storeSlug);
 
   return (
     <div className={styles.overviewContainer}>

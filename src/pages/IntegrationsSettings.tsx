@@ -13,6 +13,7 @@ import {
   CreditCard,
   Truck
 } from 'lucide-react';
+import { getStoreUrl } from '../utils/subdomain';
 
 export const IntegrationsSettingsPage: React.FC = () => {
   const [customDomain, setCustomDomain] = useState('');
@@ -24,8 +25,9 @@ export const IntegrationsSettingsPage: React.FC = () => {
   const [webhookUrl, setWebhookUrl] = useState('');
   const [webhooksList, setWebhooksList] = useState<any[]>([]);
 
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
   const storeSlug = localStorage.getItem('billionbiz_store_slug') || 'chandru-store';
-  const liveStoreUrl = `https://${storeSlug}.chandraprakash.codes`;
+  const liveStoreUrl = getStoreUrl(storeSlug);
 
   const handleConnectDomain = (e: FormEvent) => {
     e.preventDefault();
@@ -136,7 +138,7 @@ export const IntegrationsSettingsPage: React.FC = () => {
               Connect Your Own Domain (e.g. store.yourbrand.com)
             </h4>
             <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 16px 0' }}>
-              Point a <strong>CNAME</strong> record in your DNS provider (Cloudflare, GoDaddy, Namecheap) to <code>stores.chandraprakash.codes</code>.
+              Point a <strong>CNAME</strong> record in your DNS provider (Cloudflare, GoDaddy, Namecheap) to <code>{rootDomain}</code>.
             </p>
 
             <form onSubmit={handleConnectDomain} style={{ display: 'flex', gap: '10px', maxWidth: '560px', flexWrap: 'wrap' }}>
@@ -166,7 +168,7 @@ export const IntegrationsSettingsPage: React.FC = () => {
 
             {domainConnected && (
               <div style={{ marginTop: '16px', padding: '12px 16px', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', fontSize: '13px', color: '#475569' }}>
-                Target Domain: <strong>{customDomain}</strong> • CNAME: <code>stores.chandraprakash.codes</code> • SSL: <strong>Active (Let's Encrypt TLS)</strong>
+                Target Domain: <strong>{customDomain}</strong> • CNAME: <code>{rootDomain}</code> • SSL: <strong>Active (Let's Encrypt TLS)</strong>
               </div>
             )}
           </div>

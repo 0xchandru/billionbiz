@@ -103,25 +103,14 @@ export function parseSubdomain(): SubdomainInfo {
     return { type: 'local', subdomain: null, isSubdomain: false, isLocal: true };
   }
 
-  // 3. Apex Domain Redirect: chandraprakash.codes -> https://www.chandraprakash.codes (Section 1)
+  // 3. Apex Domain Redirect: rootDomain -> https://www.<rootDomain>
   if (hostname === rootDomain) {
     window.location.replace(`https://www.${rootDomain}${window.location.pathname}${window.location.search}`);
     return { type: 'redirect', subdomain: 'www', isSubdomain: false, isLocal: false };
   }
 
-  // 4. Legacy multi-part merchant storefront: {slug}.stores.chandraprakash.codes
+  // 4. One-level subdomains on root domain: {sub}.<rootDomain>
   const parts = hostname.split('.');
-  if (parts.length >= 4 && parts[1] === 'stores' && hostname.endsWith(rootDomain)) {
-    return {
-      type: 'store',
-      subdomain: parts[0],
-      storeSlug: parts[0],
-      isSubdomain: true,
-      isLocal: false
-    };
-  }
-
-  // 5. One-level subdomains on root domain: {sub}.chandraprakash.codes (Section 1 & 3)
   if (parts.length === 3 && hostname.endsWith(rootDomain)) {
     const sub = parts[0];
     switch (sub) {

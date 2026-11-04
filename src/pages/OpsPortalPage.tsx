@@ -17,6 +17,7 @@ export const OpsPortalPage: React.FC = () => {
   const { user, isAuthenticated, loginUnified, logout } = useAuthStore();
   const [healthData, setHealthData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
   const [activeTab, setActiveTab] = useState<'health' | 'tenants' | 'audit'>('health');
 
   // In-Place Operator Login State
@@ -33,7 +34,7 @@ export const OpsPortalPage: React.FC = () => {
     try {
       setLoading(true);
       // Fetch /health directly
-      const baseApi = import.meta.env.VITE_API_BASE_URL || 'https://api.chandraprakash.codes/api/v1';
+      const baseApi = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || `https://api.${rootDomain}/api/v1`;
       const rootUrl = baseApi.replace('/api/v1', '');
       const res = await fetch(`${rootUrl}/health`).then(r => r.json()).catch(() => ({
         status: 'UP',
@@ -77,7 +78,7 @@ export const OpsPortalPage: React.FC = () => {
           </div>
           <h1 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 6px', textAlign: 'center' }}>BillionBiz Operations Login</h1>
           <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.5', margin: '0 0 20px', textAlign: 'center' }}>
-            `ops.chandraprakash.codes` is restricted exclusively to authorized platform operators with administrative rights.
+            `ops.{rootDomain}` is restricted exclusively to authorized platform operators with administrative rights.
           </p>
 
           {isAuthenticated && !user?.isPlatformAdmin && (
@@ -101,7 +102,7 @@ export const OpsPortalPage: React.FC = () => {
                 type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="operator@chandraprakash.codes"
+                placeholder={`operator@${rootDomain}`}
                 required
                 style={{ width: '100%', padding: '10px 12px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
               />
@@ -169,7 +170,7 @@ export const OpsPortalPage: React.FC = () => {
                 OPS ONLY
               </span>
             </div>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>Platform Control Plane · Host: ops.chandraprakash.codes</span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>Platform Control Plane · Host: ops.{rootDomain}</span>
           </div>
         </div>
 

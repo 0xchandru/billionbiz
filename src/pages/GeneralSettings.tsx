@@ -10,8 +10,10 @@ import {
 } from 'lucide-react';
 import { api } from '../api/services';
 import { TableSkeleton } from '../components/common/SkeletonLoader';
+import { getStoreUrl } from '../utils/subdomain';
 
 export const GeneralSettingsPage: React.FC = () => {
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
   const [store, setStore] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,7 @@ export const GeneralSettingsPage: React.FC = () => {
         setRestaurantPos(res.store.restaurant_pos_enabled ?? true);
         setStoreName(res.store.name || 'Chandru Store');
         setLegalName(res.store.legal_name || res.store.name || 'Chandru Commerce Private Limited');
-        setSupportEmail(res.store.support_email || 'support@chandraprakash.codes');
+        setSupportEmail(res.store.support_email || `support@${rootDomain}`);
         setSupportPhone(res.store.support_phone || '+91 98765 43210');
         setCurrency(res.store.currency || 'INR');
         setBusinessAddress(res.store.address || 'Bengaluru, Karnataka, India');
@@ -97,7 +99,7 @@ export const GeneralSettingsPage: React.FC = () => {
   };
 
   const storeSlug = store?.slug || 'chandru-store';
-  const liveStoreUrl = `https://${storeSlug}.chandraprakash.codes`;
+  const liveStoreUrl = getStoreUrl(storeSlug);
 
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1100px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
@@ -213,7 +215,7 @@ export const GeneralSettingsPage: React.FC = () => {
                   value={supportEmail}
                   onChange={(e) => setSupportEmail(e.target.value)}
                   style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13.5px' }}
-                  placeholder="support@chandraprakash.codes"
+                  placeholder={`support@${rootDomain}`}
                 />
               </div>
 
