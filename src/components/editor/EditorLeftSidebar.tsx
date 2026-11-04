@@ -9,7 +9,7 @@ import {
   HelpCircle, Layout, PanelLeftClose, PanelLeftOpen,
   Building2, Lock, Layers,
   LayoutGrid, Tag, Gift, CheckCircle2, List, ChevronRight, User,
-  Mail,
+  Mail, Plus, Eye, EyeOff, Trash2, GripVertical,
 } from 'lucide-react';
 import { BrandPanel } from './panels/BrandPanel';
 import { DesignPanel } from './panels/DesignPanel';
@@ -20,7 +20,7 @@ import { useEditorContextStore } from '../../store/editorContextStore';
 import { scrollPreviewToHeaderSection } from './utils/previewScroll';
 
 import { useLandingEditorStore } from '../../store/landingEditorStore';
-import { useSiteStore } from '../../store/siteStore';
+import { useSiteStore, isHomepageBodySection } from '../../store/siteStore';
 import { getPageConfig } from './pageConfigs';
 import styles from '../../pages/editor/EditorLayout.module.css';
 import type { EditorPanelType } from '../../store/landingEditorStore';
@@ -348,7 +348,7 @@ export const EditorLeftSidebar: React.FC = () => {
     const allFilteredPages = pages.filter(filterFn);
 
     // 1. COMMERCE & STOREFRONT: Home, Shop, Collections, Product Details, Cart, Checkout
-    const commercePages = allFilteredPages.filter(p =>
+    const commercePagesRaw = allFilteredPages.filter(p =>
       p.path === '/' ||
       p.path === '/shop' ||
       p.path.startsWith('/collections') ||
@@ -358,6 +358,37 @@ export const EditorLeftSidebar: React.FC = () => {
       ['landing', 'landing-page', 'shop', 'shop-page', 'product-details', 'product-details-page', 'cart', 'cart-page', 'checkout', 'checkout-page', 'collections', 'collections-page', 'wishlist-page'].includes(p.id) ||
       ['landing', 'shop', 'product_detail', 'cart', 'checkout', 'collection'].includes(p.type)
     );
+
+    const commercePriorityMap: Record<string, number> = {
+      'landing-page': 1,
+      'landing': 1,
+      '/': 1,
+      'shop-page': 2,
+      'shop': 2,
+      '/shop': 2,
+      'product-details-page': 3,
+      'product-details': 3,
+      '/products': 3,
+      'collections-page': 4,
+      'collections': 4,
+      '/collections': 4,
+      'collection-details-page': 5,
+      'cart-page': 6,
+      'cart': 6,
+      '/cart': 6,
+      'checkout-page': 7,
+      'checkout': 7,
+      '/checkout': 7,
+      'wishlist-page': 8,
+      'wishlist': 8,
+      '/wishlist': 8,
+    };
+
+    const commercePages = [...commercePagesRaw].sort((a, b) => {
+      const pA = commercePriorityMap[a.id] || commercePriorityMap[a.path] || 99;
+      const pB = commercePriorityMap[b.id] || commercePriorityMap[b.path] || 99;
+      return pA - pB;
+    });
 
     // 2. CUSTOMER & SERVICES: Account, Book Appointment, Order History
     const servicesPages = allFilteredPages.filter(p =>
@@ -681,116 +712,123 @@ export const EditorLeftSidebar: React.FC = () => {
     );
   };
 
-  // ─── PAGE DETAIL VIEW (Phase 1: Page-level configuration & SEO, no section authoring) ───
+  // ─── PAGE DETAIL VIEW: Sections, Blocks & Templates (Strictly section authoring, No SEO forms) ───
   const renderPageDetailView = () => {
     if (!activePage) return null;
 
-    const isSystemLocked = (activePage as any).is_system || (activePage as any).is_locked || ['/', '/shop', '/products', '/collections', '/cart', '/checkout', '/account', '/book', '/contact', '/policies/privacy', '/policies/terms', '/policies/refund', '/404', '/password'].includes(activePage.path);
-
-    const isCommercePage = ['/', '/shop', '/products', '/collections', '/cart', '/checkout'].some(p => (activePage.path || '').startsWith(p));
-    const isServicePage = ['/book', '/booking'].includes(activePage.path);
+    const sections = (activePage.sections || []).filter(isHomepageBodySection);
 
     return (
       <div className={styles.contextPanelInner} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', width: '100%' }}>
-        {renderEditorDetailHeader(activePage.name, activePage.path)}
+        {renderEditorDetailHeader(activePage.name, 'Sections & Blocks')}
 
-        <div className={styles.contextPanelScroll} style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Phase 1 Page Configuration Banner */}
-          <div style={{ padding: '12px 14px', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>
-                Page Identity &amp; Type
-              </span>
-              {isSystemLocked ? (
-                <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#f1f5f9', color: '#475569', fontWeight: 600, border: '1px solid #cbd5e1' }}>
-                  Locked System Page
-                </span>
-              ) : (
-                <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', backgroundColor: '#dcfce7', color: '#15803d', fontWeight: 600 }}>
-                  Custom Page
-                </span>
-              )}
+        <div className={styles.contextPanelScroll} style={{ flex: 1, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
+          {sections.length === 0 ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', textAlign: 'center' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', marginBottom: 12 }}>
+                <Layers size={22} />
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>No sections added yet</div>
+              <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 4, maxWidth: 220, lineHeight: 1.45 }}>
+                Click "+ Add Section" below to add a Hero, Featured Collection, or custom content block.
+              </p>
             </div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
-              {activePage.name}
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8', padding: '4px 2px' }}>
+                Template Sections ({sections.length})
+              </div>
+              {sections.map((sec, idx) => {
+                const isSelected = _selectedSectionId === sec.id;
+                return (
+                  <div
+                    key={sec.id || idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: isSelected ? '1px solid #3b82f6' : '1px solid #e2e8f0',
+                      backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 0.12s ease'
+                    }}
+                    onClick={() => {
+                      setSelectedSectionId(sec.id);
+                      setRightSidebarOpen(true);
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                      <GripVertical size={14} style={{ color: '#94a3b8', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <span style={{ fontSize: '12.5px', fontWeight: 600, color: isSelected ? '#1d4ed8' : '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {sec.name || sec.type}
+                        </span>
+                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>{sec.type}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = (activePage.sections || []).map(s => s.id === sec.id ? { ...s, isHidden: !s.isHidden } : s);
+                          updatePageProps(activePage.id, { sections: updated });
+                        }}
+                        style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', cursor: 'pointer', color: sec.isHidden ? '#94a3b8' : '#334155' }}
+                        title={sec.isHidden ? 'Show section' : 'Hide section'}
+                      >
+                        {sec.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSectionToDelete(sec.id)}
+                        style={{ padding: '4px', borderRadius: '4px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }}
+                        title="Delete section"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>
-              Route: {activePage.path}
-            </div>
-          </div>
+          )}
+        </div>
 
-          {/* Page Name Field */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>Page Title</label>
-            <input
-              type="text"
-              value={activePage.name || ''}
-              onChange={(e) => updatePageProps(activePage.id, { name: e.target.value })}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#0f172a', backgroundColor: '#ffffff', outline: 'none' }}
-              placeholder="e.g. Home Page"
-            />
-          </div>
-
-          {/* Canonical Path */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>URL Path</label>
-            <input
-              type="text"
-              value={activePage.path || ''}
-              readOnly={isSystemLocked}
-              onChange={(e) => !isSystemLocked && updatePageProps(activePage.id, { path: e.target.value })}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: isSystemLocked ? '#64748b' : '#0f172a', backgroundColor: isSystemLocked ? '#f1f5f9' : '#ffffff', outline: 'none' }}
-            />
-            {isSystemLocked && (
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Core system routes are immutable to protect store links.</span>
-            )}
-          </div>
-
-          {/* SEO Meta Title */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>SEO Meta Title</label>
-            <input
-              type="text"
-              value={activePage.pageProps?.seoTitle || activePage.name || ''}
-              onChange={(e) => updatePageProps(activePage.id, { pageProps: { ...activePage.pageProps, seoTitle: e.target.value } })}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#0f172a', backgroundColor: '#ffffff', outline: 'none' }}
-              placeholder="Meta title for Google and social previews"
-            />
-          </div>
-
-          {/* SEO Meta Description */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>Meta Description</label>
-            <textarea
-              rows={3}
-              value={activePage.pageProps?.seoDescription || ''}
-              onChange={(e) => updatePageProps(activePage.id, { pageProps: { ...activePage.pageProps, seoDescription: e.target.value } })}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', color: '#0f172a', backgroundColor: '#ffffff', outline: 'none', resize: 'vertical' }}
-              placeholder="Brief description for search engines..."
-            />
-          </div>
-
-          {/* Authoritative Data Ownership Guidance */}
-          <div style={{ padding: '12px 14px', borderRadius: '10px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <CheckCircle2 size={15} style={{ color: '#16a34a' }} />
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#15803d' }}>
-                Authoritative Data Owner
-              </span>
-            </div>
-            <p style={{ fontSize: '11.5px', color: '#166534', margin: 0, lineHeight: 1.45 }}>
-              {isCommercePage
-                ? 'Products, variants, prices, and stock are canonically owned and managed in Admin → Catalogue. This storefront preview reads live inventory records directly.'
-                : isServicePage
-                ? 'Services, staff, and appointment slots are canonically managed in Admin → Appointments.'
-                : 'Page layout, typography, and styling inherit globally from the active theme tokens in the Design tab.'}
-            </p>
-          </div>
+        {/* Add Section Button at Bottom of Left Sidebar */}
+        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color, #e2e8f0)', backgroundColor: '#ffffff' }}>
+          <button
+            type="button"
+            onClick={() => useLandingEditorStore.getState().setAddSectionWidgetOpen(true)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '9px 16px',
+              borderRadius: '8px',
+              backgroundColor: '#0f172a',
+              color: '#ffffff',
+              fontSize: '13px',
+              fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              transition: 'background-color 0.15s ease'
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1e293b')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0f172a')}
+          >
+            <Plus size={15} />
+            <span>Add Section</span>
+          </button>
         </div>
       </div>
     );
   };
-
 
   // ─── TAB 2, 3, 4: DESIGN, STORE & BRAND, SETTINGS PANELS ───
   // ─── Panels for Design, Store & Brand, and Settings tabs ───

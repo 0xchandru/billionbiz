@@ -390,9 +390,10 @@ export const EditorTopBar: React.FC = () => {
     }
   };
 
-  const storeName = settings.storeName || settings.siteName || 'Shoum';
-  const cleanStoreName = storeName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'shoum';
-  const storeUrl = settings.storeUrl || settings.storeDomain || `${cleanStoreName}.billionbiz.store`;
+  const authStoreName = useAuthStore((s) => s.storeName);
+  const businessName = settings.storeName || settings.siteName || authStoreName || (typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_name') : null) || 'BillionBiz Store';
+  const cleanStoreName = businessName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'store';
+  const storeUrl = settings.storeUrl || settings.storeDomain || `${cleanStoreName}.stores.chandraprakash.codes`;
 
   const undoDisabled = isTheme
     ? !canUndo
@@ -452,14 +453,12 @@ export const EditorTopBar: React.FC = () => {
               {isPageEditor && <span>All Pages</span>}
             </button>
 
-            {isPagesList && (
-              <div className={styles.domainBadge}>
-                <span className={styles.domainLiveDot} />
-                <span className={styles.domainNameText} title={storeUrl}>
-                  {storeUrl}
-                </span>
-              </div>
-            )}
+            <div className={styles.domainBadge} title={`Business: ${businessName} (${storeUrl})`}>
+              <span className={styles.domainLiveDot} />
+              <span className={styles.domainNameText} title={businessName}>
+                {businessName}
+              </span>
+            </div>
 
             {isPages && <PageSelectorDropdown />}
 

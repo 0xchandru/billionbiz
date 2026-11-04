@@ -138,16 +138,9 @@ export const isHomepageBodySection = (s: SectionData | { type: string; id?: stri
   return !isHeaderComponent(s) && !isFooterComponent(s);
 };
 
-// Helper to generate default sections for a page config
-const generateDefaultSections = (pageId: string, configType: string): SectionData[] => {
-  const config = getAllPageConfigs().find(c => c.type === configType);
-  if (!config) return [];
-  return config.defaultSections.map((def, i) => 
-    createSection(`${pageId}-${def.type.toLowerCase()}-${i}`, def.type, {
-      name: def.name,
-      props: { ...defaultPropsMap[def.type], ...def.defaultProps },
-    })
-  );
+// Helper to generate default sections for a page config (clean empty initial canvas per merchant specification)
+const generateDefaultSections = (_pageId: string, _configType: string): SectionData[] => {
+  return [];
 };
 
 // Build the initial pages from page configs
@@ -161,17 +154,17 @@ const buildPredefinedPages = (): PageData[] => {
       path: config.path,
       type: config.type,
       category: config.category,
-      status: 'draft' as const,
+      status: 'published' as const,
       seoTitle: `${config.name} - BillionBiz`,
       seoDescription: config.description || '',
-      sections: generateDefaultSections(pageId, config.type),
+      sections: [],
       pageProps: { ...config.defaultProps },
       visibility: { desktop: true, tablet: true, mobile: true },
     };
   });
 };
 
-// Initial mock data — Landing page + predefined pages
+// Initial mock data — Landing page + predefined pages (clean empty canvas & published by default)
 export const getInitialPages = (): PageData[] => [
   {
     id: 'landing-page',
@@ -179,19 +172,10 @@ export const getInitialPages = (): PageData[] => [
     path: '/',
     type: 'landing',
     category: 'storefront',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'BillionBiz | Build, Launch & Grow Your Business',
     seoDescription: 'The best platform to launch your store.',
-    sections: [
-      createSection('announcement-bar', 'AnnouncementBar'),
-      createSection('header-main', 'Header'),
-      createSection('hero-main', 'HeroBanner'),
-      createSection('featured-products', 'FeaturedCollection'),
-      createSection('newsletter-landing', 'Newsletter'),
-      createSection('footer-menu', 'FooterMenu'),
-      createSection('footer-text', 'FooterText'),
-      createSection('footer-main', 'Footer'),
-    ],
+    sections: [],
     pageProps: {},
     visibility: { desktop: true, tablet: true, mobile: true },
   },
@@ -201,7 +185,7 @@ export const getInitialPages = (): PageData[] => [
     path: '/maintenance',
     type: 'maintenance',
     category: 'system',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'Under Maintenance - BillionBiz',
     seoDescription: 'We are currently performing scheduled maintenance.',
     sections: [],
@@ -214,7 +198,7 @@ export const getInitialPages = (): PageData[] => [
     path: '/booking',
     type: 'booking',
     category: 'commerce',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'Book an Appointment - BillionBiz',
     seoDescription: 'Schedule a session or reserve a service with us.',
     sections: [],
@@ -227,7 +211,7 @@ export const getInitialPages = (): PageData[] => [
     path: '/order-confirmation',
     type: 'order-confirmation',
     category: 'commerce',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'Order Confirmed - BillionBiz',
     seoDescription: 'Your order details and invoice receipt.',
     sections: [],
@@ -240,7 +224,7 @@ export const getInitialPages = (): PageData[] => [
     path: '/thank-you',
     type: 'thank-you',
     category: 'commerce',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'Thank You for Your Order - BillionBiz',
     seoDescription: 'We appreciate your business.',
     sections: [],
@@ -253,7 +237,7 @@ export const getInitialPages = (): PageData[] => [
     path: '/order-tracking',
     type: 'order-tracking',
     category: 'commerce',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'Track Your Package - BillionBiz',
     seoDescription: 'Live carrier parcel tracking and delivery status.',
     sections: [],
@@ -266,7 +250,7 @@ export const getInitialPages = (): PageData[] => [
     path: '/forgot-password',
     type: 'forgot-password',
     category: 'customer',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'Forgot Password - BillionBiz',
     seoDescription: 'Reset your customer account password.',
     sections: [],
@@ -279,7 +263,7 @@ export const getInitialPages = (): PageData[] => [
     path: '/account/verify-email',
     type: 'email-verification',
     category: 'customer',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'Email Verification - BillionBiz',
     seoDescription: 'Verify your customer account email address.',
     sections: [],
@@ -292,7 +276,7 @@ export const getInitialPages = (): PageData[] => [
     path: '/reset-password',
     type: 'reset-password',
     category: 'customer',
-    status: 'draft',
+    status: 'published',
     seoTitle: 'Create New Password - BillionBiz',
     seoDescription: 'Enter your new secure account password.',
     sections: [],
@@ -302,12 +286,14 @@ export const getInitialPages = (): PageData[] => [
   ...buildPredefinedPages(),
 ];
 
-export const getInitialSettings = (): Record<string, any> => ({
-  storeName: 'Shoum',
-  siteName: 'Shoum',
-  tagline: 'Build, Launch & Grow Your Business',
-  description: 'Build stunning websites, launch your store, and grow your business with Shoum.',
-  language: 'English',
+export const getInitialSettings = (): Record<string, any> => {
+  const dynamicStoreName = (typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_name') : null) || 'BillionBiz Store';
+  return {
+    storeName: dynamicStoreName,
+    siteName: dynamicStoreName,
+    tagline: 'Handcrafted Quality & Direct Commerce',
+    description: `Official online store for ${dynamicStoreName}.`,
+    language: 'English',
   announcement: 'Free shipping on orders above $99',
   copyright: '© 2025 Shoum. All rights reserved.',
   showBottomNav: true,
@@ -317,7 +303,7 @@ export const getInitialSettings = (): Record<string, any> => ({
     { id: 'cart', icon: 'ShoppingCart', text: 'Cart', link: '/cart' },
     { id: 'profile', icon: 'User', text: 'Profile', link: '/profile' }
   ]
-});
+}};
 
 export const useOnlineStore = create<OnlineStoreState>()(
   persist<OnlineStoreState>(

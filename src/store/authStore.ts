@@ -67,7 +67,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   organizationId: initialSession?.orgId || null,
   organizationName: null,
   storeId: initialSession?.storeId || null,
-  storeName: null,
+  storeName: typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_name') : null,
   storeSlug: initialSession?.storeSlug || null,
   organizations: [],
   onboardingChecklist: [],
@@ -367,11 +367,23 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isCheckingAuth: true });
     try {
       const res = await api.getMe();
+      const currentStoreName = res.storeName || localStorage.getItem('billionbiz_store_name');
+      const currentStoreSlug = res.storeSlug || localStorage.getItem('billionbiz_store_slug');
+      if (res.storeName) {
+        localStorage.setItem('billionbiz_store_name', res.storeName);
+      }
+      if (res.storeSlug) {
+        localStorage.setItem('billionbiz_store_slug', res.storeSlug);
+      }
+
       set({
         user: res.user,
         role: res.role,
         storeId: res.storeId || localStorage.getItem('billionbiz_store_id'),
+        storeName: currentStoreName,
+        storeSlug: currentStoreSlug,
         organizationId: res.organizationId || localStorage.getItem('billionbiz_org_id'),
+        organizationName: res.organizationName,
         onboardingChecklist: res.onboardingChecklist || [],
         portalDestination: res.portalDestination || null,
         permissions: res.permissions || [],

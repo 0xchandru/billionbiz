@@ -71,6 +71,7 @@ export interface AuthSessionData {
   orgId?: string;
   storeId?: string;
   storeSlug?: string;
+  storeName?: string;
 }
 
 /**
@@ -98,6 +99,11 @@ export function persistAuthSession(session: AuthSessionData): void {
     localStorage.setItem('billionbiz_store_slug', session.storeSlug);
     setCrossDomainCookie('billionbiz_store_slug', session.storeSlug);
   }
+
+  if (session.storeName) {
+    localStorage.setItem('billionbiz_store_name', session.storeName);
+    setCrossDomainCookie('billionbiz_store_name', session.storeName);
+  }
 }
 
 /**
@@ -110,11 +116,13 @@ export function clearAuthSession(): void {
   localStorage.removeItem('billionbiz_org_id');
   localStorage.removeItem('billionbiz_store_id');
   localStorage.removeItem('billionbiz_store_slug');
+  localStorage.removeItem('billionbiz_store_name');
 
   removeCrossDomainCookie('billionbiz_token');
   removeCrossDomainCookie('billionbiz_org_id');
   removeCrossDomainCookie('billionbiz_store_id');
   removeCrossDomainCookie('billionbiz_store_slug');
+  removeCrossDomainCookie('billionbiz_store_name');
 }
 
 /**

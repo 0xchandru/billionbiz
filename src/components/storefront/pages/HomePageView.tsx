@@ -12,6 +12,7 @@ interface HomePageViewProps {
   offerings?: any[];
   mode?: string;
   onNavigate?: (path: string) => void;
+  sections?: any[];
 }
 
 export const HomePageView: React.FC<HomePageViewProps> = ({
@@ -23,13 +24,33 @@ export const HomePageView: React.FC<HomePageViewProps> = ({
   categories = [],
   offerings = [],
   mode = 'COMMERCE',
-  onNavigate
+  onNavigate,
+  sections = []
 }) => {
   const { addItem } = useStorefrontCartStore();
   const storeName = brandName || brand?.name || store?.name || 'Our Boutique';
   const tagline = propTagline || brand?.tagline || 'Handcrafted Quality & Direct Commerce';
   const hasServices = mode === 'SERVICES' || mode === 'BOTH' || offerings.length > 0;
   const hasProducts = mode === 'COMMERCE' || mode === 'BOTH' || products.length > 0;
+
+  // Truthful empty canvas when no sections have been added by the merchant
+  if (!sections || sections.length === 0) {
+    return (
+      <div className="min-h-[460px] flex items-center justify-center p-8">
+        <div className="max-w-md w-full text-center py-16 px-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-900/50 space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mx-auto shadow-xs border border-slate-200 dark:border-slate-700">
+            <Sparkles size={22} className="text-amber-500" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Empty Landing Page Canvas</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+              No sections added yet. Click <strong>+ Add Section</strong> in the left sidebar to add a Hero, Featured Collection, or custom content block.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-16 pb-16">

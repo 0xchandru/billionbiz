@@ -196,7 +196,10 @@ export const api = {
       user: UserProfile;
       role: string;
       storeId?: string;
+      storeName?: string;
+      storeSlug?: string;
       organizationId?: string;
+      organizationName?: string;
       onboardingChecklist?: any[];
       portalDestination?: { portal: string; url: string; path: string };
       permissions?: string[];

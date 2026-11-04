@@ -196,8 +196,8 @@ export const WebsitePreview: React.FC<WebsitePreviewProps> = ({
           }}
           brand={effectiveBrand}
           themeTokens={effectiveTheme}
-          settings={serverData?.settings}
-          pages={serverData?.pages || pages}
+          settings={serverData?.settings || settings}
+          pages={pages && pages.length > 0 ? pages : (serverData?.pages || [])}
           currentPath={currentPath}
           products={effectiveProducts}
           categories={effectiveCategories}

@@ -123,6 +123,7 @@ export const StorefrontRenderer: React.FC<StorefrontRendererProps> = ({
 
     // 1. Home
     if (cleanPath === '/' || cleanPath === '') {
+      const homePage = pages.find((p: any) => p.path === '/' || p.id === 'landing-page');
       return (
         <HomePageView
           brandName={brandDisplayName}
@@ -131,6 +132,7 @@ export const StorefrontRenderer: React.FC<StorefrontRendererProps> = ({
           categories={categories}
           offerings={offerings}
           onNavigate={handleNavigate}
+          sections={homePage?.sections || []}
         />
       );
     }

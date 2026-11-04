@@ -200,6 +200,7 @@ export const Sidebar: FC = () => {
     if (item.path === '/plugins' && currentPath !== '/plugins') return false;
     if (item.path === '/settings' && currentPath !== '/settings') return false;
     if (item.path === '/pos-counters' && currentPath !== '/pos-counters') return false;
+    if (item.path === '/online-store' && currentPath !== '/online-store') return false;
     return currentPath === item.path || currentPath.startsWith(`${item.path}/`);
   };
 
