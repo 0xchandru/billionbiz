@@ -5,16 +5,32 @@
  * Supports smooth, instant navigation on local/preview environments
  * while enforcing strict subdomain security on production:
  *
- * - chandraprakash.codes / www.chandraprakash.codes -> Root Marketing Website
- * - admin.chandraprakash.codes                      -> Merchant Admin Workspace & Admin Login
- * - accounts.chandraprakash.codes                   -> Redirects to admin.chandraprakash.codes/login
- * - pos.chandraprakash.codes                        -> Dedicated Cashier & Counter POS
- * - staff.chandraprakash.codes                      -> Staff Appointments & Shifts
- * - ops.chandraprakash.codes                        -> Platform Administration
- * - {slug}.stores.chandraprakash.codes              -> Customer Storefront
+ * - chandraprakash.codes        -> Permanently redirects to https://www.chandraprakash.codes
+ * - www.chandraprakash.codes    -> Public Marketing Website & Store Registration
+ * - admin.chandraprakash.codes  -> Merchant Admin Workspace & Platform Admin Login
+ * - accounts.chandraprakash.codes-> Customer Accounts, Customer Auth, Orders & Profile
+ * - pos.chandraprakash.codes    -> Dedicated Cashier & Counter POS Application
+ * - staff.chandraprakash.codes  -> Dedicated Staff Portal & Staff Login
+ * - ops.chandraprakash.codes    -> Internal Platform Operations & Telemetry Portal
+ * - api.chandraprakash.codes    -> Authoritative Backend REST API
+ * - {slug}.chandraprakash.codes -> Individual Dynamic Customer Storefront
  */
 
-export type SubdomainType = 'root' | 'admin' | 'accounts' | 'staff' | 'pos' | 'ops' | 'store' | 'local';
+import { isReservedSubdomain } from './reservedSubdomains';
+
+export type SubdomainType =
+  | 'root'
+  | 'admin'
+  | 'accounts'
+  | 'staff'
+  | 'pos'
+  | 'ops'
+  | 'store'
+  | 'local'
+  | 'redirect'
+  | 'reserved'
+  | 'api'
+  | 'unknown';
 
 export interface SubdomainInfo {
   type: SubdomainType;
@@ -48,8 +64,9 @@ export function parseSubdomain(): SubdomainInfo {
   const hostname = window.location.hostname.toLowerCase();
   const pathname = window.location.pathname.toLowerCase();
   const isLocal = isLocalOrPreview();
+  const rootDomain = (import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes').toLowerCase();
 
-  // 1. Explicit query parameter override (e.g. ?subdomain=admin)
+  // 1. Explicit query parameter override (e.g. ?subdomain=admin) for local dev testing
   const params = new URLSearchParams(window.location.search);
   const override = params.get('subdomain')?.toLowerCase();
   if (override) {
@@ -58,40 +75,62 @@ export function parseSubdomain(): SubdomainInfo {
     if (override === 'pos') return { type: 'pos', subdomain: 'pos', isSubdomain: true, isLocal };
     if (override === 'staff') return { type: 'staff', subdomain: 'staff', isSubdomain: true, isLocal };
     if (override === 'ops') return { type: 'ops', subdomain: 'ops', isSubdomain: true, isLocal };
+    if (override === 'www') return { type: 'root', subdomain: 'www', isSubdomain: false, isLocal };
     if (override.startsWith('store:')) {
       const slug = override.replace('store:', '');
-      return { type: 'store', subdomain: `${slug}.stores`, storeSlug: slug, isSubdomain: true, isLocal };
+      return { type: 'store', subdomain: slug, storeSlug: slug, isSubdomain: true, isLocal };
     }
   }
 
-  // 2. Local / Single-Origin / Preview environment: route seamlessly in one unified router with ZERO page unmounts!
+  // 2. Local / Single-Origin / Preview environment: route seamlessly in unified router
   if (isLocal) {
     if (pathname.startsWith('/store/')) {
       const slug = pathname.split('/')[2];
-      return { type: 'store', subdomain: slug ? `${slug}.stores` : 'store', storeSlug: slug, isSubdomain: false, isLocal: true };
+      return { type: 'store', subdomain: slug || 'store', storeSlug: slug, isSubdomain: false, isLocal: true };
+    }
+    if (pathname.startsWith('/accounts')) {
+      return { type: 'accounts', subdomain: 'accounts', isSubdomain: false, isLocal: true };
+    }
+    if (pathname.startsWith('/staff-app')) {
+      return { type: 'staff', subdomain: 'staff', isSubdomain: false, isLocal: true };
+    }
+    if (pathname.startsWith('/pos-app')) {
+      return { type: 'pos', subdomain: 'pos', isSubdomain: false, isLocal: true };
+    }
+    if (pathname.startsWith('/ops')) {
+      return { type: 'ops', subdomain: 'ops', isSubdomain: false, isLocal: true };
     }
     return { type: 'local', subdomain: null, isSubdomain: false, isLocal: true };
   }
 
-  // 3. Dynamic merchant storefront: {slug}.stores.chandraprakash.codes
+  // 3. Apex Domain Redirect: chandraprakash.codes -> https://www.chandraprakash.codes (Section 1)
+  if (hostname === rootDomain) {
+    window.location.replace(`https://www.${rootDomain}${window.location.pathname}${window.location.search}`);
+    return { type: 'redirect', subdomain: 'www', isSubdomain: false, isLocal: false };
+  }
+
+  // 4. Legacy multi-part merchant storefront: {slug}.stores.chandraprakash.codes
   const parts = hostname.split('.');
-  if (parts.length >= 4 && parts[1] === 'stores') {
+  if (parts.length >= 4 && parts[1] === 'stores' && hostname.endsWith(rootDomain)) {
     return {
       type: 'store',
-      subdomain: `${parts[0]}.stores`,
+      subdomain: parts[0],
       storeSlug: parts[0],
       isSubdomain: true,
       isLocal: false
     };
   }
 
-  // 4. Primary production subdomains on chandraprakash.codes
-  if (parts.length >= 3) {
+  // 5. One-level subdomains on root domain: {sub}.chandraprakash.codes (Section 1 & 3)
+  if (parts.length === 3 && hostname.endsWith(rootDomain)) {
     const sub = parts[0];
     switch (sub) {
+      case 'www':
+        return { type: 'root', subdomain: 'www', isSubdomain: false, isLocal: false };
       case 'admin':
         return { type: 'admin', subdomain: 'admin', isSubdomain: true, isLocal: false };
       case 'accounts':
+      case 'account':
         return { type: 'accounts', subdomain: 'accounts', isSubdomain: true, isLocal: false };
       case 'pos':
         return { type: 'pos', subdomain: 'pos', isSubdomain: true, isLocal: false };
@@ -99,37 +138,75 @@ export function parseSubdomain(): SubdomainInfo {
         return { type: 'staff', subdomain: 'staff', isSubdomain: true, isLocal: false };
       case 'ops':
         return { type: 'ops', subdomain: 'ops', isSubdomain: true, isLocal: false };
-      case 'www':
-        return { type: 'root', subdomain: null, isSubdomain: false, isLocal: false };
+      case 'api':
+        return { type: 'api', subdomain: 'api', isSubdomain: true, isLocal: false };
+      default:
+        // Check if reserved platform keyword
+        if (isReservedSubdomain(sub)) {
+          return { type: 'reserved', subdomain: sub, isSubdomain: true, isLocal: false };
+        }
+        // Valid dynamic merchant storefront
+        return {
+          type: 'store',
+          subdomain: sub,
+          storeSlug: sub,
+          isSubdomain: true,
+          isLocal: false
+        };
     }
   }
 
-  // Default to root marketing website
-  return { type: 'root', subdomain: null, isSubdomain: false, isLocal: false };
+  // 6. Unknown hostname (Unconfigured external domain or invalid nested domain)
+  return { type: 'unknown', subdomain: null, isSubdomain: false, isLocal: false };
 }
 
 /**
- * Returns canonical destination URL for a given portal
+ * Returns canonical destination URL for a given portal based on environment configuration
  */
-export function getPortalUrl(type: 'root' | 'admin' | 'accounts' | 'pos' | 'staff' | 'ops', path = ''): string {
+export function getPortalUrl(type: 'root' | 'admin' | 'accounts' | 'pos' | 'staff' | 'ops' | 'api', path = ''): string {
   if (typeof window === 'undefined') return path;
 
-  const baseDomain = import.meta.env.VITE_PUBLIC_DOMAIN || 'chandraprakash.codes';
-  const protocol = window.location.protocol;
   const isLocal = isLocalOrPreview();
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
   if (isLocal) {
-    // In local development or single-origin preview, keep routing clean without hard domain hops
-    if (type === 'pos' && !cleanPath.startsWith('/pos')) return `/pos${cleanPath === '/' ? '' : cleanPath}`;
-    if (type === 'staff' && !cleanPath.startsWith('/staff')) return `/staff${cleanPath === '/' ? '' : cleanPath}`;
+    if (type === 'pos' && !cleanPath.startsWith('/pos')) return `/pos-app${cleanPath === '/' ? '' : cleanPath}`;
+    if (type === 'staff' && !cleanPath.startsWith('/staff')) return `/staff-app${cleanPath === '/' ? '' : cleanPath}`;
     if (type === 'ops' && !cleanPath.startsWith('/ops')) return `/ops${cleanPath === '/' ? '' : cleanPath}`;
+    if (type === 'accounts' && !cleanPath.startsWith('/accounts')) return `/accounts${cleanPath === '/' ? '' : cleanPath}`;
+    if (type === 'admin') {
+      if (cleanPath.startsWith('/login')) return `/login`;
+      if (cleanPath.startsWith('/dashboard')) return `/dashboard`;
+      return `/dashboard`;
+    }
     return cleanPath;
   }
 
-  if (type === 'root') {
-    return `${protocol}//${baseDomain}${cleanPath}`;
-  }
+  const rootDomain = import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes';
 
-  return `${protocol}//${type}.${baseDomain}${cleanPath}`;
+  const envMap: Record<string, string | undefined> = {
+    root: import.meta.env.VITE_MAIN_WEBSITE_URL || `https://www.${rootDomain}`,
+    admin: import.meta.env.VITE_ADMIN_URL || `https://admin.${rootDomain}`,
+    accounts: import.meta.env.VITE_ACCOUNTS_URL || `https://accounts.${rootDomain}`,
+    staff: import.meta.env.VITE_STAFF_URL || `https://staff.${rootDomain}`,
+    pos: import.meta.env.VITE_POS_URL || `https://pos.${rootDomain}`,
+    ops: import.meta.env.VITE_OPS_URL || `https://ops.${rootDomain}`,
+    api: import.meta.env.VITE_API_URL || `https://api.${rootDomain}/api/v1`
+  };
+
+  const baseUrl = (envMap[type] || `https://${type}.${rootDomain}`).replace(/\/+$/, '');
+  return `${baseUrl}${cleanPath}`;
+}
+
+/**
+ * Returns canonical destination URL for a merchant storefront
+ */
+export function getStoreUrl(slug: string, path = ''): string {
+  const isLocal = isLocalOrPreview();
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (isLocal) {
+    return `/store/${slug}${cleanPath === '/' ? '' : cleanPath}`;
+  }
+  const rootDomain = import.meta.env.VITE_ROOT_DOMAIN || 'chandraprakash.codes';
+  return `https://${slug}.${rootDomain}${cleanPath}`;
 }

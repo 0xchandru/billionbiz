@@ -97,7 +97,7 @@ export const GeneralSettingsPage: React.FC = () => {
   };
 
   const storeSlug = store?.slug || 'chandru-store';
-  const liveStoreUrl = `https://${storeSlug}.stores.chandraprakash.codes`;
+  const liveStoreUrl = `https://${storeSlug}.chandraprakash.codes`;
 
   return (
     <div style={{ padding: '24px 32px', maxWidth: '1100px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>

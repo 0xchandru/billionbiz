@@ -72,6 +72,7 @@ import StaffPortalPage from '../../pages/StaffPortalPage';
 import OpsPortalPage from '../../pages/OpsPortalPage';
 import POSPage from '../../pages/POS';
 import StorefrontPage from '../../pages/StorefrontPage';
+import { CustomerPortalPage } from '../../pages/CustomerPortalPage';
 
 /**
  * Animated redirect component for cross-origin domain hops
@@ -209,14 +210,10 @@ export const HostDispatcher: React.FC = () => {
         {renderAdminRoutes()}
 
         {/* Standalone Local Portals */}
-        <Route
-          path="/pos-app"
-          element={isAuthenticated ? <POSPage /> : <Navigate to="/login?returnUrl=/pos-app" replace />}
-        />
-        <Route
-          path="/staff-app"
-          element={isAuthenticated ? <StaffPortalPage /> : <Navigate to="/login?returnUrl=/staff-app" replace />}
-        />
+        <Route path="/pos-app" element={<POSPage />} />
+        <Route path="/staff-app" element={<StaffPortalPage />} />
+        <Route path="/accounts" element={<CustomerPortalPage />} />
+        <Route path="/customer" element={<CustomerPortalPage />} />
         <Route path="/ops" element={<OpsPortalPage />} />
 
         {/* Store preview route */}
@@ -344,11 +341,16 @@ export const HostDispatcher: React.FC = () => {
     );
   }
 
-  // 3. CENTRAL ACCOUNTS / IDENTITY -> Redirects cleanly to official Admin login
+  // 0. APEX DOMAIN REDIRECT (chandraprakash.codes -> https://www.chandraprakash.codes)
+  if (subInfo.type === 'redirect') {
+    return <AnimatedLoader message="Redirecting to www.chandraprakash.codes..." />;
+  }
+
+  // 3. DEDICATED CUSTOMER ACCOUNTS PORTAL (accounts.chandraprakash.codes)
   if (subInfo.type === 'accounts') {
     return (
       <Routes>
-        <Route path="*" element={<ExternalRedirect to={getPortalUrl('admin', '/login')} />} />
+        <Route path="*" element={<CustomerPortalPage />} />
       </Routes>
     );
   }
@@ -357,18 +359,7 @@ export const HostDispatcher: React.FC = () => {
   if (subInfo.type === 'pos') {
     return (
       <Routes>
-        <Route
-          path="*"
-          element={
-            isAuthenticated ? (
-              <POSPage />
-            ) : (
-              <ExternalRedirect
-                to={getPortalUrl('admin', `/login?returnUrl=${encodeURIComponent(window.location.href)}`)}
-              />
-            )
-          }
-        />
+        <Route path="*" element={<POSPage />} />
       </Routes>
     );
   }
@@ -377,18 +368,7 @@ export const HostDispatcher: React.FC = () => {
   if (subInfo.type === 'staff') {
     return (
       <Routes>
-        <Route
-          path="*"
-          element={
-            isAuthenticated ? (
-              <StaffPortalPage />
-            ) : (
-              <ExternalRedirect
-                to={getPortalUrl('admin', `/login?returnUrl=${encodeURIComponent(window.location.href)}`)}
-              />
-            )
-          }
-        />
+        <Route path="*" element={<StaffPortalPage />} />
       </Routes>
     );
   }
@@ -402,6 +382,50 @@ export const HostDispatcher: React.FC = () => {
           element={<NotFoundPage message="Merchant dashboard is not available on the internal Ops portal." />}
         />
         <Route path="*" element={<OpsPortalPage />} />
+      </Routes>
+    );
+  }
+
+  // 7. BACKEND API HOST (api.chandraprakash.codes)
+  if (subInfo.type === 'api') {
+    return (
+      <Routes>
+        <Route
+          path="*"
+          element={
+            <NotFoundPage
+              message="api.chandraprakash.codes is the backend REST API and serves JSON endpoints exclusively. Please visit https://www.chandraprakash.codes for web applications."
+            />
+          }
+        />
+      </Routes>
+    );
+  }
+
+  // 8. RESERVED PLATFORM SUBDOMAIN (e.g. billing.chandraprakash.codes, cdn.chandraprakash.codes)
+  if (subInfo.type === 'reserved') {
+    return (
+      <Routes>
+        <Route
+          path="*"
+          element={
+            <NotFoundPage
+              message={`The subdomain "${subInfo.subdomain}" is reserved by the BillionBiz platform and cannot host a storefront.`}
+            />
+          }
+        />
+      </Routes>
+    );
+  }
+
+  // 9. UNKNOWN / UNCONFIGURED HOSTNAME
+  if (subInfo.type === 'unknown') {
+    return (
+      <Routes>
+        <Route
+          path="*"
+          element={<NotFoundPage message="The requested domain is not configured on BillionBiz." />}
+        />
       </Routes>
     );
   }

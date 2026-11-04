@@ -287,23 +287,24 @@ export const getInitialPages = (): PageData[] => [
 ];
 
 export const getInitialSettings = (): Record<string, any> => {
-  const dynamicStoreName = (typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_name') : null) || 'BillionBiz Store';
+  const dynamicStoreName = (typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_name') : null) || 'Chandru Store';
   return {
     storeName: dynamicStoreName,
     siteName: dynamicStoreName,
     tagline: 'Handcrafted Quality & Direct Commerce',
     description: `Official online store for ${dynamicStoreName}.`,
     language: 'English',
-  announcement: 'Free shipping on orders above $99',
-  copyright: '© 2025 Shoum. All rights reserved.',
-  showBottomNav: true,
-  bottomNavLinks: [
-    { id: 'home', icon: 'Home', text: 'Home', link: '/' },
-    { id: 'shop', icon: 'Grid', text: 'Shop', link: '/collections/all' },
-    { id: 'cart', icon: 'ShoppingCart', text: 'Cart', link: '/cart' },
-    { id: 'profile', icon: 'User', text: 'Profile', link: '/profile' }
-  ]
-}};
+    announcement: 'Free shipping on orders above $99',
+    copyright: `© ${new Date().getFullYear()} ${dynamicStoreName}. All rights reserved.`,
+    showBottomNav: true,
+    bottomNavLinks: [
+      { id: 'home', icon: 'Home', text: 'Home', link: '/' },
+      { id: 'shop', icon: 'Grid', text: 'Shop', link: '/collections/all' },
+      { id: 'cart', icon: 'ShoppingCart', text: 'Cart', link: '/cart' },
+      { id: 'profile', icon: 'User', text: 'Profile', link: '/profile' }
+    ]
+  };
+};
 
 export const useOnlineStore = create<OnlineStoreState>()(
   persist<OnlineStoreState>(
@@ -1026,11 +1027,15 @@ export const useOnlineStore = create<OnlineStoreState>()(
           }
         }
 
+        const dynamicStoreName = (typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_name') : null) || 'Chandru Store';
+        const rawStoreName = persistedState?.settings?.storeName;
+        const resolvedStoreName = (!rawStoreName || rawStoreName === 'BillionBiz' || rawStoreName === 'Shoum') ? dynamicStoreName : rawStoreName;
+
         const storedSettings = {
           ...currentState.settings,
           ...persistedState?.settings,
-          storeName: (!persistedState?.settings?.storeName || persistedState?.settings?.storeName === 'BillionBiz') ? 'Shoum' : persistedState.settings.storeName,
-          siteName: (!persistedState?.settings?.siteName || persistedState?.settings?.siteName === 'BillionBiz') ? 'Shoum' : persistedState.settings.siteName,
+          storeName: resolvedStoreName,
+          siteName: resolvedStoreName,
         };
 
         return {

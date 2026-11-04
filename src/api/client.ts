@@ -12,7 +12,12 @@ export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
     const override = localStorage.getItem('billionbiz_api_override');
     if (override && override.trim().length > 0) {
-      url = override.trim();
+      if (override.includes('ngrok') || override.includes('pseudoapprehensive')) {
+        // Automatically purge stale/dead ngrok tunnel overrides
+        localStorage.removeItem('billionbiz_api_override');
+      } else {
+        url = override.trim();
+      }
     }
   }
 

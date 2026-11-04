@@ -9,12 +9,14 @@ import {
   X
 } from 'lucide-react';
 import { api } from '../api/services';
+import { useAuthStore } from '../store/authStore';
 
 const formatCurrency = (minor: number) => {
   return '₹' + (minor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 };
 
 const POSPage: React.FC = () => {
+  const { isAuthenticated, loginUnified } = useAuthStore();
   const [counters, setCounters] = useState<any[]>([]);
   const [selectedCounter, setSelectedCounter] = useState<string>('cnt-shoum-01');
   const [activeSession, setActiveSession] = useState<any | null>(null);
@@ -23,6 +25,12 @@ const POSPage: React.FC = () => {
   const [isOpeningModal, setIsOpeningModal] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
   const [zReport, setZReport] = useState<any | null>(null);
+
+  // POS Cashier Login State (when unauthenticated on pos.chandraprakash.codes)
+  const [posIdentifier, setPosIdentifier] = useState('');
+  const [posPin, setPosPin] = useState('');
+  const [posLoading, setPosLoading] = useState(false);
+  const [posError, setPosError] = useState<string | null>(null);
 
   // Cart & Catalog
   const [products, setProducts] = useState<any[]>([]);
@@ -36,6 +44,26 @@ const POSPage: React.FC = () => {
   const [cashTendered, setCashTendered] = useState<string>('');
   const [receipt, setReceipt] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const handlePOSLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!posIdentifier.trim() || !posPin) return;
+    setPosLoading(true);
+    setPosError(null);
+    try {
+      const res = await loginUnified(posIdentifier.trim(), { password: posPin });
+      if (!res.success) {
+        setPosError(res.error || 'Invalid cashier credentials or PIN.');
+      } else {
+        await loadCounterAndRegister();
+        await loadProductsAndAppointments();
+      }
+    } catch (err: any) {
+      setPosError(err.message || 'POS cashier authentication failed.');
+    } finally {
+      setPosLoading(false);
+    }
+  };
 
   const loadCounterAndRegister = async () => {
     try {
@@ -163,6 +191,72 @@ const POSPage: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  // Dedicated POS Cashier Login view when unauthenticated on pos.chandraprakash.codes (Section 3.E)
+  if (!isAuthenticated) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+        <div style={{ maxWidth: '420px', width: '100%', backgroundColor: '#1e293b', borderRadius: '16px', border: '1px solid #334155', padding: '36px 32px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)', color: '#ffffff' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <ShoppingCart size={24} color="#ffffff" />
+            </div>
+            <h1 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 6px' }}>POS Counter Terminal</h1>
+            <p style={{ fontSize: '12.5px', color: '#94a3b8', margin: 0 }}>
+              pos.chandraprakash.codes
+            </p>
+          </div>
+
+          {posError && (
+            <div style={{ padding: '10px 14px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', borderRadius: '8px', color: '#f87171', fontSize: '13px', marginBottom: '18px' }}>
+              {posError}
+            </div>
+          )}
+
+          <form onSubmit={handlePOSLogin}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>Cashier Identifier</label>
+              <input
+                type="text"
+                value={posIdentifier}
+                onChange={(e) => setPosIdentifier(e.target.value)}
+                placeholder="Cashier email or phone"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: '14px', outline: 'none' }}
+                required
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>Register PIN or Password</label>
+              <input
+                type="password"
+                value={posPin}
+                onChange={(e) => setPosPin(e.target.value)}
+                placeholder="Enter 4-digit PIN or password"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#fff', fontSize: '14px', outline: 'none' }}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={posLoading}
+              style={{ width: '100%', padding: '11px', backgroundColor: '#10b981', color: '#ffffff', borderRadius: '8px', border: 'none', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}
+            >
+              {posLoading ? 'Connecting...' : 'Open POS Register'}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
+            Merchant Administration:{' '}
+            <a href="https://admin.chandraprakash.codes/login" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600 }}>
+              admin.chandraprakash.codes
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: 'calc(100vh - 70px)', display: 'flex', flexDirection: 'column', background: '#f4f5f7' }}>

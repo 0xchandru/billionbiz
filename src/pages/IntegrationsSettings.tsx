@@ -25,7 +25,7 @@ export const IntegrationsSettingsPage: React.FC = () => {
   const [webhooksList, setWebhooksList] = useState<any[]>([]);
 
   const storeSlug = localStorage.getItem('billionbiz_store_slug') || 'chandru-store';
-  const liveStoreUrl = `https://${storeSlug}.stores.chandraprakash.codes`;
+  const liveStoreUrl = `https://${storeSlug}.chandraprakash.codes`;
 
   const handleConnectDomain = (e: FormEvent) => {
     e.preventDefault();

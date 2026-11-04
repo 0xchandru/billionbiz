@@ -22,7 +22,7 @@ import styles from './OnlineStoreOverview.module.css';
 export const OnlineStoreOverview: React.FC = () => {
   const navigate = useNavigate();
   const storeSlug = useAuthStore((s) => s.storeSlug) || (typeof window !== 'undefined' ? localStorage.getItem('billionbiz_store_slug') : null) || 'chandru';
-  const platformDomain = `${storeSlug}.stores.chandraprakash.codes`;
+  const platformDomain = `${storeSlug}.chandraprakash.codes`;
 
   const [loading, setLoading] = useState(true);
   const [storeData, setStoreData] = useState<any>(null);

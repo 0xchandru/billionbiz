@@ -8,6 +8,7 @@ import type { Country } from '../../components/auth/CountryPhoneInput';
 import { validateContactInput, validateOtpCode } from '../../utils/validators';
 import { initiateGoogleSignIn, decodeGoogleCredential } from '../../utils/googleAuth';
 import { redirectToAdminDashboard } from '../../utils/crossDomainAuth';
+import { validateSubdomainSlug, PLATFORM_MAIN_DOMAIN } from '../../utils/reservedSubdomains';
 import logoLightBg from '../../assets/logo-light-bg.png';
 import {
   Store,
@@ -152,23 +153,32 @@ export default function RegisterPage() {
 
   // Real-time debounced domain check
   const checkDomainAvailability = useCallback(async (slugToCheck: string) => {
-    const clean = slugToCheck.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
-    if (!clean || clean.length < 2) {
+    const trimmed = (slugToCheck || '').trim().toLowerCase();
+    if (!trimmed) {
       setIsCheckingDomain(false);
       setDomainAvailable(null);
-      setDomainMessage(clean ? 'Domain must be at least 2 characters' : '');
+      setDomainMessage('');
+      return;
+    }
+
+    // 1. Instant client-side validation
+    const localValidation = validateSubdomainSlug(trimmed);
+    if (!localValidation.isValid) {
+      setIsCheckingDomain(false);
+      setDomainAvailable(false);
+      setDomainMessage(localValidation.error || 'Invalid subdomain format');
       return;
     }
 
     setIsCheckingDomain(true);
     setDomainAvailable(null);
     try {
-      const res = await api.checkDomain(clean);
+      const res = await api.checkDomain(localValidation.normalizedSlug);
       setDomainAvailable(res.available);
       setDomainMessage(res.message);
-    } catch {
-      setDomainAvailable(null);
-      setDomainMessage('');
+    } catch (err: any) {
+      setDomainAvailable(false);
+      setDomainMessage(err.message || 'This store subdomain is already taken. Please try another one.');
     } finally {
       setIsCheckingDomain(false);
     }
@@ -176,7 +186,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (phase !== 'details') return;
-    if (!slug || slug.trim().length < 2) {
+    if (!slug || slug.trim().length === 0) {
       setDomainAvailable(null);
       setDomainMessage('');
       return;
@@ -184,7 +194,7 @@ export default function RegisterPage() {
 
     const timer = setTimeout(() => {
       checkDomainAvailability(slug);
-    }, 350);
+    }, 250);
 
     return () => clearTimeout(timer);
   }, [slug, phase, checkDomainAvailability]);
@@ -332,14 +342,14 @@ export default function RegisterPage() {
       return;
     }
 
-    const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
-    if (!cleanSlug || cleanSlug.length < 2) {
-      setUiError('Please enter a valid domain prefix (at least 2 characters).');
+    const localValidation = validateSubdomainSlug(slug);
+    if (!localValidation.isValid) {
+      setUiError(localValidation.error || 'Invalid subdomain format.');
       return;
     }
 
-    if (domainAvailable === false) {
-      setUiError('The chosen domain is already taken. Please choose another.');
+    if (domainAvailable !== true) {
+      setUiError(domainMessage || 'Please choose an available store subdomain.');
       return;
     }
 
@@ -714,7 +724,7 @@ export default function RegisterPage() {
                       value={slug}
                       onChange={(e) => {
                         setIsSlugManuallyEdited(true);
-                        setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+                        setSlug(e.target.value.toLowerCase().trim());
                       }}
                       placeholder="aurastudio"
                       className="auth-input"
@@ -733,12 +743,12 @@ export default function RegisterPage() {
                     fontWeight: 600,
                     whiteSpace: 'nowrap'
                   }}>
-                    .stores.chandraprakash.codes
+                    .{PLATFORM_MAIN_DOMAIN}
                   </div>
                 </div>
 
                 {/* Domain status banner */}
-                {slug.length >= 2 && (
+                {slug.trim().length > 0 && (
                   <div style={{ marginTop: '0.4rem', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {isCheckingDomain ? (
                       <>
@@ -749,7 +759,7 @@ export default function RegisterPage() {
                       <>
                         <CheckCircle2 size={13} style={{ color: '#16a34a' }} />
                         <span style={{ color: '#16a34a', fontWeight: 600 }}>
-                          {slug}.stores.chandraprakash.codes is available!
+                          {slug.trim().toLowerCase()}.{PLATFORM_MAIN_DOMAIN} is available!
                         </span>
                       </>
                     ) : domainAvailable === false ? (
@@ -817,7 +827,7 @@ export default function RegisterPage() {
                   !fullName.trim() ||
                   !storeName.trim() ||
                   !slug.trim() ||
-                  domainAvailable === false ||
+                  domainAvailable !== true ||
                   isCheckingDomain ||
                   (!isGoogleVerified && (!password || password.length < 6))
                 }
@@ -851,7 +861,7 @@ export default function RegisterPage() {
             <div className="auth-card-header" style={{ marginTop: '0.5rem' }}>
               <h1 className="auth-card-title">Choose Your Plan</h1>
               <p className="auth-card-desc">
-                Select an activation tier for <strong style={{ color: '#083e47' }}>{slug}.stores.chandraprakash.codes</strong>
+                Select an activation tier for <strong style={{ color: '#083e47' }}>{slug.trim().toLowerCase()}.{PLATFORM_MAIN_DOMAIN}</strong>
               </p>
             </div>
 

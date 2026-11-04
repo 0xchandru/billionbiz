@@ -14,16 +14,41 @@ import { api } from '../api/services';
 import { useAuthStore } from '../store/authStore';
 
 export const StaffPortalPage: React.FC = () => {
-  const { user, storeName, logout } = useAuthStore();
+  const { user, storeName, isAuthenticated, loginUnified, logout } = useAuthStore();
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOnDuty, setIsOnDuty] = useState(true);
   const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'completed'>('today');
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
 
+  // Staff Login State (when unauthenticated on staff.chandraprakash.codes)
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   useEffect(() => {
-    loadStaffSchedule();
-  }, []);
+    if (isAuthenticated) {
+      loadStaffSchedule();
+    }
+  }, [isAuthenticated]);
+
+  const handleStaffLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginIdentifier.trim() || !loginPassword) return;
+    setLoginLoading(true);
+    setLoginError(null);
+    try {
+      const res = await loginUnified(loginIdentifier.trim(), { password: loginPassword });
+      if (!res.success) {
+        setLoginError(res.error || 'Invalid staff credentials.');
+      }
+    } catch (err: any) {
+      setLoginError(err.message || 'Staff authentication failed.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   const loadStaffSchedule = async () => {
     try {
@@ -46,6 +71,72 @@ export const StaffPortalPage: React.FC = () => {
     if (activeTab === 'today') return status === 'CONFIRMED' || status === 'IN_PROGRESS';
     return status === 'PENDING' || status === 'CONFIRMED';
   });
+
+  // Dedicated Staff Login view when unauthenticated on staff.chandraprakash.codes (Section 3.D)
+  if (!isAuthenticated) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#F6F4EE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        <div style={{ maxWidth: '420px', width: '100%', backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '36px 32px', boxShadow: '0 10px 25px -5px rgba(6,70,82,0.08)' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#064652', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontWeight: 'bold', fontSize: '24px' }}>
+              B
+            </div>
+            <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#064652', margin: '0 0 6px' }}>Staff Portal Login</h1>
+            <p style={{ fontSize: '12.5px', color: '#64748b', margin: 0 }}>
+              staff.chandraprakash.codes
+            </p>
+          </div>
+
+          {loginError && (
+            <div style={{ padding: '10px 14px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#dc2626', fontSize: '13px', marginBottom: '18px' }}>
+              {loginError}
+            </div>
+          )}
+
+          <form onSubmit={handleStaffLogin}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Staff Email / Phone</label>
+              <input
+                type="text"
+                value={loginIdentifier}
+                onChange={(e) => setLoginIdentifier(e.target.value)}
+                placeholder="staff@example.com or phone"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
+                required
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Password or Staff PIN</label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Enter password or PIN"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loginLoading}
+              style={{ width: '100%', padding: '11px', backgroundColor: '#064652', color: '#ffffff', borderRadius: '8px', border: 'none', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}
+            >
+              {loginLoading ? 'Signing in...' : 'Sign In to Staff Portal'}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
+            Store Owner or Admin?{' '}
+            <a href="https://admin.chandraprakash.codes/login" style={{ color: '#064652', fontWeight: 700, textDecoration: 'none' }}>
+              Merchant Admin Login
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F6F4EE', color: '#1a1f36', fontFamily: 'system-ui, -apple-system, sans-serif' }}>

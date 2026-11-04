@@ -240,7 +240,7 @@ export default function LandingPage() {
               <CheckCircle2 size={16} color="#447515" /> Real-time sync & offline POS
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <CheckCircle2 size={16} color="#447515" /> Free subdomain (*.stores.chandraprakash.codes)
+              <CheckCircle2 size={16} color="#447515" /> Free subdomain (*.chandraprakash.codes)
             </span>
           </div>
         </div>
@@ -341,7 +341,7 @@ export default function LandingPage() {
             </div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#064652', marginBottom: '0.65rem' }}>Native Storefront & Editor</h3>
             <p style={{ color: '#64748b', lineHeight: 1.6, fontSize: '0.95rem' }}>
-              Completely free of SiteStore. Features custom page trees, section builders, immutable release snapshots, and atomic whole-store publishing to <code>*.stores.chandraprakash.codes</code>.
+              Completely free of SiteStore. Features custom page trees, section builders, immutable release snapshots, and atomic whole-store publishing to <code>*.chandraprakash.codes</code>.
             </p>
           </div>
         </div>
@@ -412,7 +412,7 @@ export default function LandingPage() {
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', display: 'flex', flexDirection: 'column', gap: '0.85rem', flex: 1 }}>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.95rem', color: '#334155' }}>
-                  <CheckCircle2 size={18} color="#447515" /> 1 Online Store on *.stores.chandraprakash.codes
+                  <CheckCircle2 size={18} color="#447515" /> 1 Online Store on *.chandraprakash.codes
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.95rem', color: '#334155' }}>
                   <CheckCircle2 size={18} color="#447515" /> Up to 50 Products or 5 Service Offerings
@@ -593,7 +593,7 @@ export default function LandingPage() {
             },
             {
               q: 'Can I connect my own custom domain?',
-              a: 'Yes. In addition to your free *.stores.chandraprakash.codes subdomain, you can bind custom root domains and subdomains (e.g. store.yourbrand.com) with automated Let’s Encrypt SSL provisioning.'
+              a: 'Yes. In addition to your free *.chandraprakash.codes subdomain, you can bind custom root domains and subdomains (e.g. store.yourbrand.com) with automated Let’s Encrypt SSL provisioning.'
             },
             {
               q: 'How are cashiers and staff separated from store settings?',

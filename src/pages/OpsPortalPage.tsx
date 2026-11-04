@@ -14,10 +14,16 @@ import {
 import { useAuthStore } from '../store/authStore';
 
 export const OpsPortalPage: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, loginUnified, logout } = useAuthStore();
   const [healthData, setHealthData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'health' | 'tenants' | 'audit'>('health');
+
+  // In-Place Operator Login State
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlatformHealth();
@@ -27,12 +33,12 @@ export const OpsPortalPage: React.FC = () => {
     try {
       setLoading(true);
       // Fetch /health directly
-      const baseApi = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+      const baseApi = import.meta.env.VITE_API_BASE_URL || 'https://api.chandraprakash.codes/api/v1';
       const rootUrl = baseApi.replace('/api/v1', '');
       const res = await fetch(`${rootUrl}/health`).then(r => r.json()).catch(() => ({
         status: 'UP',
-        platform: 'BillionBiz Modular Monolith',
-        version: '2.3.0',
+        platform: 'BillionBiz Modular Platform',
+        version: '2.0.0',
         database: 'CONNECTED',
         timestamp: new Date().toISOString()
       }));
@@ -44,33 +50,105 @@ export const OpsPortalPage: React.FC = () => {
     }
   };
 
+  const handleOperatorLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!identifier.trim() || !password) return;
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      const res = await loginUnified(identifier.trim(), { password });
+      if (!res.success) {
+        setAuthError(res.error || 'Authentication failed. Please verify credentials.');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Operator sign in failed.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   // Restricted Access Guard: Internal Platform Operators Only
   if (!isAuthenticated || !user?.isPlatformAdmin) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        <div style={{ maxWidth: '440px', width: '100%', padding: '32px', backgroundColor: '#1e293b', borderRadius: '12px', border: '1px solid #334155', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'system-ui, -apple-system, sans-serif', padding: '16px' }}>
+        <div style={{ maxWidth: '420px', width: '100%', padding: '32px', backgroundColor: '#1e293b', borderRadius: '14px', border: '1px solid #334155', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <Lock size={24} color="#fff" />
           </div>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 8px' }}>Restricted Platform Operations</h1>
-          <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: '1.5', margin: '0 0 20px' }}>
-            `ops.chandraprakash.codes` is restricted exclusively to authorized BillionBiz internal platform operators with elevated operator credentials and MFA.
+          <h1 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 6px', textAlign: 'center' }}>BillionBiz Operations Login</h1>
+          <p style={{ fontSize: '12.5px', color: '#94a3b8', lineHeight: '1.5', margin: '0 0 20px', textAlign: 'center' }}>
+            `ops.chandraprakash.codes` is restricted exclusively to authorized platform operators with administrative rights.
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <a
-              href="/login"
-              style={{ padding: '10px 16px', backgroundColor: '#2563eb', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-            >
-              <span>Authenticate as Platform Operator</span>
-              <ArrowRight size={14} />
-            </a>
+
+          {isAuthenticated && !user?.isPlatformAdmin && (
+            <div style={{ padding: '12px', backgroundColor: '#7f1d1d', border: '1px solid #991b1b', borderRadius: '8px', color: '#fecaca', fontSize: '12px', marginBottom: '16px' }}>
+              Your current account ({user?.email}) is not a platform administrator. Please sign in with operator credentials.
+            </div>
+          )}
+
+          {authError && (
+            <div style={{ padding: '10px 14px', backgroundColor: '#7f1d1d', border: '1px solid #dc2626', borderRadius: '8px', color: '#fecaca', fontSize: '12px', marginBottom: '16px' }}>
+              {authError}
+            </div>
+          )}
+
+          <form onSubmit={handleOperatorLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px' }}>
+                Operator Email or Username
+              </label>
+              <input
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="operator@chandraprakash.codes"
+                required
+                style={{ width: '100%', padding: '10px 12px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', marginBottom: '6px' }}>
+                Master Operator Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                required
+                style={{ width: '100%', padding: '10px 12px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
+              />
+            </div>
+
             <button
-              onClick={() => logout()}
-              style={{ padding: '10px 16px', backgroundColor: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}
+              type="submit"
+              disabled={authLoading}
+              style={{ marginTop: '6px', padding: '11px 16px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '13px', cursor: authLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: authLoading ? 0.7 : 1 }}
             >
-              Sign Out Active Session
+              {authLoading ? (
+                <>
+                  <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>Verifying Credentials...</span>
+                </>
+              ) : (
+                <>
+                  <span>Authenticate as Operator</span>
+                  <ArrowRight size={14} />
+                </>
+              )}
             </button>
-          </div>
+
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={() => logout()}
+                style={{ padding: '9px 16px', backgroundColor: 'transparent', border: '1px solid #475569', color: '#94a3b8', borderRadius: '8px', fontWeight: 600, fontSize: '12px', cursor: 'pointer' }}
+              >
+                Sign Out Current Session
+              </button>
+            )}
+          </form>
         </div>
       </div>
     );
