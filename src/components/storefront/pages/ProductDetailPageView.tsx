@@ -20,20 +20,28 @@ export const ProductDetailPageView: React.FC<ProductDetailPageViewProps> = ({
   const { addItem } = useStorefrontCartStore();
   const [quantity, setQuantity] = useState(1);
 
-  // Find product by direct prop, handle or ID, or fallback
+  // If no products exist in the store catalog, render truthful empty state
+  if (!directProduct && (!products || products.length === 0)) {
+    return (
+      <div className="max-w-2xl mx-auto py-24 px-4 text-center space-y-3">
+        <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
+          <ShoppingBag size={24} />
+        </div>
+        <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
+          No Products in Catalogue
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+          Add and publish products in your Admin Portal Catalogue to view and preview product detail pages.
+        </p>
+      </div>
+    );
+  }
+
+  // Find product by direct prop, handle or ID, or first item
   const product =
     directProduct ||
     products.find((p) => p.handle === productHandle || p.id === productHandle) ||
-    products[0] || {
-      id: 'demo-item',
-      name: 'Sample Handcrafted Product',
-      handle: 'sample-item',
-      description: 'Full product details with materials, care instructions, and dimensions.',
-      price_minor: 199900,
-      compare_at_minor: 249900,
-      media: [{ url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&fit=crop' }],
-      sku: 'DEMO-SKU-001'
-    };
+    products[0];
 
   const price = product.price_minor ? product.price_minor / 100 : 999;
   const comparePrice = product.compare_at_minor ? product.compare_at_minor / 100 : null;

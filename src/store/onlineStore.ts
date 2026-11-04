@@ -985,26 +985,13 @@ export const useOnlineStore = create<OnlineStoreState>()(
                   const footerIdx = sections.findIndex((s: any) => s && s.type === 'Footer');
                   sections.splice(footerIdx !== -1 ? footerIdx : sections.length, 0, createSection('footer-text', 'FooterText'));
                 }
-                // Clean up any legacy newsletter IDs that had 'newsletter-footer'
-                sections = sections.map((s: any) => {
-                  if (s && s.type === 'Newsletter' && s.id === 'newsletter-footer') {
-                    return { ...s, id: 'newsletter-landing' };
+                // Filter out legacy mock body sections so the landing page body starts completely clean and empty as requested
+                sections = sections.filter((s: any) => {
+                  if (s && (s.id === 'hero-main' || s.id === 'newsletter-landing' || s.id === 'featured-products' || s.id === 'trust-badges')) {
+                    return false;
                   }
-                  return s;
+                  return true;
                 });
-                // Ensure landing page has a Newsletter section in body
-                if (!sections.some((s: any) => s && s.type === 'Newsletter')) {
-                  const footerIdx = sections.findIndex((s: any) => s && isFooterComponent(s));
-                  sections.splice(footerIdx !== -1 ? footerIdx : sections.length, 0, createSection('newsletter-landing', 'Newsletter'));
-                }
-                // Ensure at least one body section exists
-                const bodySecs = sections.filter((s: any) => 
-                  s && !isHeaderComponent(s) && !isFooterComponent(s)
-                );
-                if (bodySecs.length === 0) {
-                  const headerIdx = sections.findIndex((s: any) => s && s.type === 'Header');
-                  sections.splice(headerIdx !== -1 ? headerIdx + 1 : 1, 0, createSection('hero-main', 'HeroBanner'));
-                }
               }
               const nameMap: Record<string, string> = {
                 'product-details-page': 'Product Detail',

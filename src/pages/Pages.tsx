@@ -191,20 +191,88 @@ export const Pages = () => {
     }
   };
 
+  const PAGE_PRIORITY_MAP: Record<string, number> = {
+    '/': 1,
+    'landing-page': 1,
+    'landing': 1,
+    '/shop': 2,
+    'shop': 2,
+    'shop-page': 2,
+    '/products': 3,
+    'product-details': 3,
+    'product-details-page': 3,
+    '/collections': 4,
+    'collections': 4,
+    'collections-page': 4,
+    '/cart': 5,
+    'cart': 5,
+    'cart-page': 5,
+    '/checkout': 6,
+    'checkout': 6,
+    'checkout-page': 6,
+    '/wishlist': 7,
+    'wishlist': 7,
+    'wishlist-page': 7,
+    '/booking': 8,
+    '/book': 8,
+    'booking': 8,
+    'booking-page': 8,
+    '/account': 9,
+    'account': 9,
+    'account-page': 9,
+    '/order-history': 10,
+    'order-history': 10,
+    'order-history-page': 10,
+    '/order-tracking': 11,
+    'order-tracking': 11,
+    'order-tracking-page': 11,
+    '/policies/privacy': 12,
+    '/privacy': 12,
+    'privacy-policy': 12,
+    'privacy-policy-page': 12,
+    '/policies/terms': 13,
+    '/terms': 13,
+    'terms-conditions': 13,
+    'terms-conditions-page': 13,
+    '/policies/refund': 14,
+    '/refund': 14,
+    'refund-policy': 14,
+    'refund-policy-page': 14,
+    '/policies/shipping': 15,
+    '/shipping': 15,
+    'shipping-policy': 15,
+    'shipping-policy-page': 15,
+    '/contact': 16,
+    'contact': 16,
+    'contact-page': 16,
+    '/maintenance': 17,
+    'maintenance': 17,
+    'maintenance-page': 17,
+    '/404': 18,
+    'not-found-page': 18
+  };
+
   const systemPages = livePages.filter(p => p.is_system);
   const customPages = livePages.filter(p => !p.is_system);
 
   const displayList = (filterTab === 'system' ? systemPages : filterTab === 'custom' ? customPages : livePages);
 
-  const filteredPages = displayList.filter(p => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return true;
-    return (
-      p.name?.toLowerCase().includes(q) ||
-      p.path?.toLowerCase().includes(q) ||
-      p.category?.toLowerCase().includes(q)
-    );
-  });
+  const filteredPages = displayList
+    .filter(p => {
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        p.name?.toLowerCase().includes(q) ||
+        p.path?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      const priorityA = PAGE_PRIORITY_MAP[a.path] || PAGE_PRIORITY_MAP[a.id] || 99;
+      const priorityB = PAGE_PRIORITY_MAP[b.path] || PAGE_PRIORITY_MAP[b.id] || 99;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      return (a.name || '').localeCompare(b.name || '');
+    });
 
   return (
     <div className={styles.pagesContainer}>
