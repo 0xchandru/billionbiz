@@ -107,7 +107,10 @@ export interface CreateOrderPayload {
 }
 
 export interface AuthResponse {
-  token: string;
+  token?: string;
+  mfaRequired?: boolean;
+  challengeToken?: string;
+  expiresInSeconds?: number;
   user: UserProfile;
   organization?: { id: string; name: string };
   store?: { id: string; name: string; slug: string; status: string };
@@ -179,6 +182,12 @@ export const api = {
       body: JSON.stringify(credentials)
     }),
 
+  completeMfaChallenge: (data: { challengeToken: string; code?: string; recoveryCode?: string }) =>
+    apiClient<AuthResponse>('/auth/mfa/challenge/verify', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
   loginGoogle: (payload: {
     credential?: string;
     idToken?: string;
@@ -238,14 +247,20 @@ export const api = {
     }),
 
   enrollMfa: () =>
-    apiClient<{ secret: string; otpauthUrl: string }>('/auth/mfa/enroll', {
+    apiClient<{ secret: string; otpauthUrl: string; recoveryCodes: string[]; message: string }>('/auth/mfa/enroll', {
       method: 'POST'
     }),
 
-  verifyMfa: (token: string) =>
-    apiClient<{ message: string; mfaEnabled: boolean }>('/auth/mfa/verify', {
+  verifyMfa: (code: string) =>
+    apiClient<{ message: string; mfaEnabled: boolean; recoveryCodeConsumed?: boolean; token?: string }>('/auth/mfa/verify', {
       method: 'POST',
-      body: JSON.stringify({ token })
+      body: JSON.stringify({ code })
+    }),
+
+  verifyMfaRecoveryCode: (recoveryCode: string) =>
+    apiClient<{ message: string; mfaEnabled: boolean; recoveryCodeConsumed: boolean; token?: string }>('/auth/mfa/verify', {
+      method: 'POST',
+      body: JSON.stringify({ recoveryCode })
     }),
 
   getOnboardingChecklist: () =>
