@@ -10,6 +10,9 @@ export interface AuthActionResult {
   orgId?: string;
   storeId?: string;
   storeSlug?: string;
+  requiresMfa?: boolean;
+  challengeToken?: string;
+  expiresInSeconds?: number;
 }
 
 export interface AuthState {
@@ -34,6 +37,7 @@ export interface AuthState {
   login: (email: string, password: string) => Promise<AuthActionResult>;
   loginUnified: (identifier: string, authFactor: { password?: string; otp?: string }) => Promise<AuthActionResult>;
   loginGoogle: (payload: { credential?: string; idToken?: string; code?: string; redirectUri?: string }) => Promise<AuthActionResult>;
+  completeMfaChallenge: (challengeToken: string, credential: { code?: string; recoveryCode?: string }) => Promise<AuthActionResult>;
   register: (payload: {
     fullName: string;
     email: string;
@@ -81,7 +85,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const res: AuthResponse = await api.login({ email, password });
+      if (res.mfaRequired) {
+        if (!res.challengeToken) throw new Error('The server requested MFA but did not return a valid challenge. Start sign-in again.');
+        set({ isLoading: false, isAuthenticated: false, error: null });
+        return {
+          success: false,
+          requiresMfa: true,
+          challengeToken: res.challengeToken,
+          expiresInSeconds: res.expiresInSeconds || 300
+        };
+      }
+
       const { token, user, organizations, portalDestination } = res;
+      if (typeof token !== 'string' || !token.trim()) throw new Error('Authentication did not return a valid session token.');
 
       // Extract first org & store
       const primaryOrg = organizations && organizations.length > 0 ? organizations[0] : null;
@@ -137,7 +153,19 @@ export const useAuthStore = create<AuthState>((set) => ({
         password: authFactor.password,
         otp: authFactor.otp
       });
+      if (res.mfaRequired) {
+        if (!res.challengeToken) throw new Error('The server requested MFA but did not return a valid challenge. Start sign-in again.');
+        set({ isLoading: false, isAuthenticated: false, error: null });
+        return {
+          success: false,
+          requiresMfa: true,
+          challengeToken: res.challengeToken,
+          expiresInSeconds: res.expiresInSeconds || 300
+        };
+      }
+
       const { token, user, organizations, portalDestination } = res;
+      if (typeof token !== 'string' || !token.trim()) throw new Error('Authentication did not return a valid session token.');
 
       const primaryOrg = organizations && organizations.length > 0 ? organizations[0] : null;
       const orgId = primaryOrg?.organization_id || 'org-billionbiz-default';
@@ -184,11 +212,68 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
+  completeMfaChallenge: async (challengeToken, credential) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res: AuthResponse = await api.completeMfaChallenge({
+        challengeToken,
+        ...(credential.code ? { code: credential.code } : {}),
+        ...(credential.recoveryCode ? { recoveryCode: credential.recoveryCode } : {})
+      });
+      const { token, user, organizations, portalDestination } = res;
+      if (typeof token !== 'string' || !token.trim()) {
+        throw new Error('MFA verification did not return a valid session token. Please start sign-in again.');
+      }
+
+      const primaryOrg = organizations && organizations.length > 0 ? organizations[0] : null;
+      const orgId = primaryOrg?.organization_id || 'org-billionbiz-default';
+      const storeId = primaryOrg?.store_id || 'store-shoum-default';
+      const storeName = primaryOrg?.store_name || 'My Store';
+      const storeSlug = primaryOrg?.store_slug || 'my-store';
+      const role = primaryOrg?.role || 'OWNER';
+
+      persistAuthSession({ token, orgId, storeId, storeSlug });
+      set({
+        token,
+        user,
+        role,
+        organizationId: orgId,
+        organizationName: primaryOrg?.organization_name || 'Default Organization',
+        storeId,
+        storeName,
+        storeSlug,
+        organizations: organizations || [],
+        portalDestination: portalDestination || null,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      });
+
+      return { success: true, destination: portalDestination?.path || '/dashboard', token, orgId, storeId, storeSlug };
+    } catch (err: any) {
+      const message = err.message || 'MFA verification failed. Check your code and try again.';
+      set({ isLoading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
   loginGoogle: async (payload) => {
     set({ isLoading: true, error: null });
     try {
       const res: AuthResponse = await api.loginGoogle(payload);
+      if (res.mfaRequired) {
+        if (!res.challengeToken) throw new Error('Google sign-in requires MFA but did not return a valid challenge. Start Google sign-in again.');
+        set({ isLoading: false, isAuthenticated: false, error: null });
+        return {
+          success: false,
+          requiresMfa: true,
+          challengeToken: res.challengeToken,
+          expiresInSeconds: res.expiresInSeconds || 300
+        };
+      }
+
       const { token, user, organizations, portalDestination } = res;
+      if (typeof token !== 'string' || !token.trim()) throw new Error('Authentication did not return a valid session token.');
 
       const primaryOrg = organizations && organizations.length > 0 ? organizations[0] : null;
       const orgId = primaryOrg?.organization_id || 'org-billionbiz-default';
@@ -240,6 +325,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res: AuthResponse = await api.registerStreamlined(payload);
       const { token, user, organization, store, portalDestination } = res;
+      if (typeof token !== 'string' || !token.trim()) throw new Error('Registration did not return a valid session token. Please try again.');
 
       const orgId = organization?.id || 'org-billionbiz-default';
       const storeId = store?.id || 'store-shoum-default';
@@ -289,6 +375,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res: AuthResponse = await api.register(payload);
       const { token, user, organization, store, onboardingChecklist, portalDestination } = res;
+      if (typeof token !== 'string' || !token.trim()) throw new Error('Registration did not return a valid session token. Please try again.');
 
       const orgId = organization?.id || 'org-billionbiz-default';
       const storeId = store?.id || 'store-shoum-default';
