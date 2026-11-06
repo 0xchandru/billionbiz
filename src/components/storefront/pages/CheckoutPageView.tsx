@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { CheckCircle2, ArrowRight, Lock, CreditCard, Banknote, ArrowLeft } from 'lucide-react';
 import { useStorefrontCartStore } from '../../../store/storefrontCartStore';
 import { apiClient } from '../../../api/client';
@@ -7,9 +7,54 @@ interface CheckoutPageViewProps {
   onNavigate?: (path: string) => void;
   brandName?: string;
   storeSlug?: string;
+  onlinePaymentsAvailable?: boolean;
 }
 
-export const CheckoutPageView: React.FC<CheckoutPageViewProps> = ({ onNavigate, brandName = 'Store', storeSlug = '' }) => {
+type PendingOnlineOrder = { orderId: string; orderNumber: string };
+type PendingVerification = {
+  paymentIntentId: string;
+  orderId: string;
+  orderNumber: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+  environment: 'TEST' | 'LIVE';
+};
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, any>) => {
+      open: () => void;
+      on: (event: string, handler: (response: any) => void) => void;
+    };
+  }
+}
+
+async function loadRazorpayCheckout(): Promise<boolean> {
+  if (window.Razorpay) return true;
+  const source = 'https://checkout.razorpay.com/v1/checkout.js';
+  const existing = document.querySelector<HTMLScriptElement>(`script[src="${source}"]`);
+  if (existing) {
+    if (existing.dataset.loaded === 'true') return Boolean(window.Razorpay);
+    return new Promise((resolve) => {
+      existing.addEventListener('load', () => resolve(Boolean(window.Razorpay)), { once: true });
+      existing.addEventListener('error', () => resolve(false), { once: true });
+    });
+  }
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = source;
+    script.async = true;
+    script.onload = () => {
+      script.dataset.loaded = 'true';
+      resolve(Boolean(window.Razorpay));
+    };
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+}
+
+export const CheckoutPageView: React.FC<CheckoutPageViewProps> = ({ onNavigate, brandName = 'Store', storeSlug = '', onlinePaymentsAvailable = false }) => {
   const { items, getSubtotal, clearCart } = useStorefrontCartStore();
   const subtotal = getSubtotal();
   const shipping = 0;
@@ -24,37 +69,161 @@ export const CheckoutPageView: React.FC<CheckoutPageViewProps> = ({ onNavigate, 
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [pendingOnlineOrder, setPendingOnlineOrder] = useState<PendingOnlineOrder | null>(null);
+  const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const orderRequestKey = useRef<{ storeSlug: string; body: string; key: string } | null>(null);
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!items.length || !storeSlug || busy) return;
+  const verifyOnlinePayment = async (verification: PendingVerification) => {
     setBusy(true);
     setError('');
     try {
-      const [firstName, ...lastNameParts] = fullName.trim().split(/\s+/);
+      const result = await apiClient<{ status: string }>('/storefront/by-slug/' + encodeURIComponent(storeSlug) + '/payments/verify', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': `capture-${verification.paymentIntentId}-${verification.razorpayPaymentId}` },
+        body: JSON.stringify(verification)
+      });
+      if (result.status !== 'CAPTURED') throw new Error('Razorpay has not confirmed this payment yet.');
+      setOrderNumber(verification.orderNumber);
+      setOrderPlaced(true);
+      setPendingOnlineOrder(null);
+      setPendingVerification(null);
+      clearCart();
+    } catch (reason) {
+      setPendingVerification(verification);
+      setError(reason instanceof Error ? 'Payment was submitted, but the final confirmation is still pending. Retry the status check before paying again.' : 'Payment confirmation is still pending. Retry the status check before paying again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const launchOnlinePayment = async (order: PendingOnlineOrder, customerEmail: string, customerName: string) => {
+    setBusy(true);
+    setError('');
+    try {
       const accountToken = localStorage.getItem(`billionbiz_customer:${storeSlug}`);
-      const result = await apiClient<{ orderNumber: string }>('/storefront/by-slug/' + encodeURIComponent(storeSlug) + '/orders', {
+      const paymentOrder = await apiClient<{
+        paymentIntentId: string;
+        razorpayOrderId: string;
+        amountMinor: number;
+        currency: string;
+        keyId: string;
+        environment: 'TEST' | 'LIVE';
+      }>(`/storefront/by-slug/${encodeURIComponent(storeSlug)}/orders/${encodeURIComponent(order.orderId)}/payment-intent`, {
         method: 'POST',
         headers: {
-          'Idempotency-Key': `storefront-${storeSlug}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+          'Idempotency-Key': `online-${order.orderId}`,
           ...(accountToken ? { Authorization: `Bearer ${accountToken}` } : {})
         },
-        body: JSON.stringify({
-          paymentMethod,
-          customerDetails: { email, fullName, firstName, lastName: lastNameParts.join(' ') },
-          shippingAddress: { line1: address, city, state: stateName, postalCode, country: 'India' },
-          items: items.map((item) => ({ variantId: item.variantId, quantity: item.quantity }))
-        })
+        body: JSON.stringify({ email: customerEmail, orderNumber: order.orderNumber })
+      });
+      if (!await loadRazorpayCheckout() || !window.Razorpay) throw new Error('The secure payment window could not be loaded. Retry online payment.');
+
+      const checkout = new window.Razorpay({
+        key: paymentOrder.keyId,
+        amount: paymentOrder.amountMinor,
+        currency: paymentOrder.currency,
+        name: brandName,
+        description: `Order ${order.orderNumber}`,
+        order_id: paymentOrder.razorpayOrderId,
+        prefill: { name: customerName, email: customerEmail },
+        notes: { order_number: order.orderNumber },
+        theme: { color: '#4f46e5' },
+        modal: {
+          ondismiss: () => {
+            setBusy(false);
+            setError('The payment window was closed. Your order is saved; retry online payment when ready.');
+          }
+        },
+        handler: async (response: any) => {
+          const verification: PendingVerification = {
+            paymentIntentId: paymentOrder.paymentIntentId,
+            orderId: order.orderId,
+            orderNumber: order.orderNumber,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+            environment: paymentOrder.environment
+          };
+          setPendingOnlineOrder(order);
+          setPendingVerification(verification);
+          await verifyOnlinePayment(verification);
+        }
+      });
+      checkout.on('payment.failed', () => {
+        setBusy(false);
+        setError('Razorpay did not complete the payment. Your order remains unpaid; you can retry online payment.');
+      });
+      checkout.open();
+    } catch (reason) {
+      setBusy(false);
+      throw reason;
+    }
+  };
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!items.length || !storeSlug || busy || pendingVerification) return;
+    if (paymentMethod === 'online' && !onlinePaymentsAvailable) {
+      setError('Online payments are not configured for this store. Choose Cash on Delivery.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    let keepBusy = false;
+    try {
+      const [firstName, ...lastNameParts] = fullName.trim().split(/\s+/);
+      const accountToken = localStorage.getItem(`billionbiz_customer:${storeSlug}`);
+      const orderBody = {
+        paymentMethod,
+        customerDetails: { email, fullName, firstName, lastName: lastNameParts.join(' ') },
+        shippingAddress: { line1: address, city, state: stateName, postalCode, country: 'India' },
+        items: items.map((item) => ({ variantId: item.variantId, quantity: item.quantity }))
+      };
+      const serializedOrderBody = JSON.stringify(orderBody);
+      if (orderRequestKey.current?.storeSlug !== storeSlug || orderRequestKey.current?.body !== serializedOrderBody) {
+        orderRequestKey.current = {
+          storeSlug,
+          body: serializedOrderBody,
+          key: `storefront-${storeSlug}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+        };
+      }
+      const result = await apiClient<{ orderId: string; orderNumber: string }>('/storefront/by-slug/' + encodeURIComponent(storeSlug) + '/orders', {
+        method: 'POST',
+        headers: {
+          'Idempotency-Key': orderRequestKey.current.key,
+          ...(accountToken ? { Authorization: `Bearer ${accountToken}` } : {})
+        },
+        body: serializedOrderBody
       });
       setOrderNumber(result.orderNumber);
-      setOrderPlaced(true);
-      clearCart();
+      if (paymentMethod === 'online') {
+        const order = { orderId: result.orderId, orderNumber: result.orderNumber };
+        setPendingOnlineOrder(order);
+        try {
+          await launchOnlinePayment(order, email, fullName.trim());
+          keepBusy = true;
+        } catch (reason) {
+          setError(reason instanceof Error ? `${reason.message} Order ${result.orderNumber} is saved; retry online payment below.` : `Order ${result.orderNumber} is saved; retry online payment below.`);
+        }
+      } else {
+        setOrderPlaced(true);
+        clearCart();
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'We could not place your order. Please try again.');
     } finally {
-      setBusy(false);
+      if (!keepBusy) setBusy(false);
+    }
+  };
+
+  const retryOnlinePayment = async () => {
+    if (!pendingOnlineOrder || busy) return;
+    try {
+      await launchOnlinePayment(pendingOnlineOrder, email, fullName.trim());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Online payment could not be started. Retry in a moment.');
     }
   };
 
@@ -70,7 +239,7 @@ export const CheckoutPageView: React.FC<CheckoutPageViewProps> = ({ onNavigate, 
             Thank you, {fullName}. Your order <strong>#{orderNumber}</strong> has been saved at {brandName}.
           </p>
           <p className="text-xs text-slate-400">
-            Payment is due on delivery. Keep your order number for reference.
+            {paymentMethod === 'online' ? 'Your payment has been confirmed. Keep your order number for reference.' : 'Payment is due on delivery. Keep your order number for reference.'}
           </p>
         </div>
 
@@ -212,13 +381,14 @@ export const CheckoutPageView: React.FC<CheckoutPageViewProps> = ({ onNavigate, 
                   type="radio"
                   name="payment"
                   checked={paymentMethod === 'online'}
-                  disabled
+                  disabled={!onlinePaymentsAvailable || busy || Boolean(pendingVerification)}
+                  onChange={() => setPaymentMethod('online')}
                   className="hidden"
                 />
                 <CreditCard size={20} className="text-indigo-600" />
                 <div>
                   <span className="text-sm font-bold text-slate-900 dark:text-white block">Online payments</span>
-                  <span className="text-xs text-slate-400 block">Not configured for this store</span>
+                  <span className="text-xs text-slate-400 block">{onlinePaymentsAvailable ? 'Secure payment with Razorpay' : 'Not configured for this store'}</span>
                 </div>
               </label>
 
@@ -233,6 +403,7 @@ export const CheckoutPageView: React.FC<CheckoutPageViewProps> = ({ onNavigate, 
                   type="radio"
                   name="payment"
                   checked={paymentMethod === 'cod'}
+                  disabled={busy || Boolean(pendingVerification)}
                   onChange={() => setPaymentMethod('cod')}
                   className="hidden"
                 />
@@ -291,9 +462,19 @@ export const CheckoutPageView: React.FC<CheckoutPageViewProps> = ({ onNavigate, 
             disabled={busy || !items.length || !storeSlug}
             className="w-full py-3.5 rounded-xl bg-[var(--theme-btn-primary-bg)] text-[var(--theme-btn-primary-text)] font-bold text-sm shadow-md hover:opacity-90 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <span>{busy ? 'Placing order…' : 'Place Cash on Delivery Order'}</span>
+            <span>{busy ? 'Processing…' : paymentMethod === 'online' ? 'Continue to secure payment' : 'Place Cash on Delivery Order'}</span>
             <ArrowRight size={15} />
           </button>
+          {pendingOnlineOrder && !pendingVerification && (
+            <button type="button" onClick={() => void retryOnlinePayment()} disabled={busy} className="w-full py-2 text-sm font-bold text-indigo-700 disabled:opacity-60">
+              Retry online payment for order {pendingOnlineOrder.orderNumber}
+            </button>
+          )}
+          {pendingVerification && (
+            <button type="button" onClick={() => void verifyOnlinePayment(pendingVerification)} disabled={busy} className="w-full py-2 text-sm font-bold text-indigo-700 disabled:opacity-60">
+              {busy ? 'Checking payment status…' : 'Retry payment confirmation'}
+            </button>
+          )}
         </div>
       </form>
     </div>

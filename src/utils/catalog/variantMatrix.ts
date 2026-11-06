@@ -18,14 +18,15 @@ const normalizeOptionValues = (values: string): string[] => {
   });
 };
 
+export function normalizeVariantOptions(options: VariantOptionInput[]): Array<{ name: string; values: string[] }> {
+  return options
+    .map((option) => ({ name: option.name.trim(), values: normalizeOptionValues(option.values) }))
+    .filter((option) => option.name && option.values.length > 0);
+}
+
 /** Builds a deterministic, bounded Cartesian product for purchasable variants. */
 export function buildVariantMatrix(options: VariantOptionInput[], maximumVariants = 250): VariantCombination[] {
-  const normalized = options
-    .map((option) => ({
-      name: option.name.trim(),
-      values: normalizeOptionValues(option.values),
-    }))
-    .filter((option) => option.name && option.values.length > 0);
+  const normalized = normalizeVariantOptions(options);
 
   if (normalized.length === 0) return [];
   const names = normalized.map((option) => option.name.toLowerCase());

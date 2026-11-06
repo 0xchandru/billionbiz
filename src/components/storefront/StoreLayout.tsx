@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   X, 
   ShoppingBag, 
@@ -34,6 +34,7 @@ interface StoreLayoutProps {
   useEditorChrome?: boolean;
   device?: 'desktop' | 'tablet' | 'mobile';
   settings?: Record<string, any>;
+  storeSlug?: string;
 }
 
 export const StoreLayout: React.FC<StoreLayoutProps> = ({
@@ -46,8 +47,10 @@ export const StoreLayout: React.FC<StoreLayoutProps> = ({
   device = 'desktop',
   settings = {},
   currentPath = '/',
+  storeSlug,
 }) => {
-  const { items, isOpen, setIsOpen, updateQuantity, removeItem, getSubtotal, getTotalCount } = useStorefrontCartStore();
+  const { items, storeSlug: activeCartStoreSlug, setStoreSlug, isOpen, setIsOpen, updateQuantity, removeItem, getSubtotal, getTotalCount } = useStorefrontCartStore();
+  const requestedCartStoreSlug = String(storeSlug || 'preview').trim().toLowerCase();
   const selectedPageId = useLandingEditorStore((state) => state.selectedPageId);
   const pagesNavLevel = useLandingEditorStore((state) => state.pagesNavLevel);
   const isRightSidebarOpen = useLandingEditorStore((state) => state.isRightSidebarOpen);
@@ -55,6 +58,14 @@ export const StoreLayout: React.FC<StoreLayoutProps> = ({
   const globalFooterEditable = useEditorChrome && selectedPageId === 'footer-global' && pagesNavLevel === 'page-detail' && isRightSidebarOpen;
   const subtotal = getSubtotal();
   const totalCount = getTotalCount();
+
+  useEffect(() => {
+    setStoreSlug(requestedCartStoreSlug);
+  }, [requestedCartStoreSlug, setStoreSlug]);
+
+  if (activeCartStoreSlug !== requestedCartStoreSlug) {
+    return <div role="status" className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading storefront cart…</div>;
+  }
 
   const handleLinkClick = (path: string) => {
     if (onNavigate) {
@@ -73,6 +84,8 @@ export const StoreLayout: React.FC<StoreLayoutProps> = ({
           device={device}
           isEditorInteractive={globalHeaderEditable}
           useEditorModel={useEditorChrome}
+          onCartClick={() => setIsOpen(true)}
+          cartItemCount={totalCount}
         />
       </header>
 

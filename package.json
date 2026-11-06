@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "vitest run",
+    "test": "vitest run src",
     "dev:storefront": "npm run dev --prefix storefront-runtime -- --host 0.0.0.0",
     "build:storefront": "npm run build --prefix storefront-runtime",
     "start:storefront": "npm run start --prefix storefront-runtime",
@@ -19,6 +19,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "jsbarcode": "^3.12.3",
     "lucide-react": "^1.34.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.4",
+    "@types/jsbarcode": "^3.11.4",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
@@ -43,5 +45,8 @@
     "typescript-eslint": "^8.70.1",
     "vite": "^8.2.2",
     "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "minimatch": "^11.0.5"
   }
 }

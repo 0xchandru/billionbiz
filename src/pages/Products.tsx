@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Plus, 
   Search, 
@@ -10,14 +10,16 @@ import { api } from '../api/services';
 import { TableSkeleton } from '../components/common/SkeletonLoader';
 import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
-import { buildVariantMatrix, buildVariantSku } from '../utils/catalog/variantMatrix';
+import { buildVariantMatrix, buildVariantSku, normalizeVariantOptions } from '../utils/catalog/variantMatrix';
+import { formatProductSpecifications, formatSizeChart, parseProductSpecifications, parseSizeChart } from '../utils/catalog/productMetadata';
+import { BarcodePreview } from '../components/catalog/BarcodePreview';
 
 const formatCurrency = (minor: number) => {
   return '₹' + (minor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 export const ProductsPage: React.FC = () => {
-  type VariantDraft = { id?: string; sku: string; optionValues: Record<string, string>; price: string; compareAt: string };
+  type VariantDraft = { id?: string; sku: string; barcode: string; cost: string; weightGrams: string; optionValues: Record<string, string>; price: string; compareAt: string; initialStock?: string };
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -33,10 +35,18 @@ export const ProductsPage: React.FC = () => {
 
   // New product form
   const [name, setName] = useState('');
+  const [brand, setBrand] = useState('');
   const [price, setPrice] = useState('');
   const [sku, setSku] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [costPerItem, setCostPerItem] = useState('');
+  const [weightGrams, setWeightGrams] = useState('');
+  const [requiresShipping, setRequiresShipping] = useState(true);
   const [initialStock, setInitialStock] = useState('0');
   const [description, setDescription] = useState('');
+  const [keyFeaturesText, setKeyFeaturesText] = useState('');
+  const [specificationsText, setSpecificationsText] = useState('');
+  const [sizeChartText, setSizeChartText] = useState('');
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [sellingUnit, setSellingUnit] = useState('pcs');
   const [minimumQuantity, setMinimumQuantity] = useState('1');
@@ -47,6 +57,31 @@ export const ProductsPage: React.FC = () => {
   const [visibility, setVisibility] = useState('ACTIVE');
   const [uploadingImages, setUploadingImages] = useState(false);
   const [variantDrafts, setVariantDrafts] = useState<VariantDraft[]>([]);
+  const [newVariantOverrides, setNewVariantOverrides] = useState<Record<string, Partial<VariantDraft>>>({});
+
+  const createVariantMatrix = useMemo(() => {
+    try { return buildVariantMatrix(variantOptions); }
+    catch { return []; }
+  }, [variantOptions]);
+  const variantKey = (optionValues: Record<string, string>) => Object.entries(optionValues)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}:${value}`)
+    .join('|') || '__default__';
+  const getNewVariantDraft = (combination: { optionValues: Record<string, string>; skuSuffix: string }, variantCount: number): VariantDraft => ({
+    sku: buildVariantSku(sku || name, combination, variantCount),
+    barcode: variantCount === 1 ? barcode : '',
+    cost: costPerItem,
+    weightGrams,
+    optionValues: combination.optionValues,
+    price,
+    compareAt: comparePrice,
+    initialStock,
+    ...newVariantOverrides[variantKey(combination.optionValues)],
+  });
+  const updateNewVariant = (optionValues: Record<string, string>, patch: Partial<VariantDraft>) => {
+    const key = variantKey(optionValues);
+    setNewVariantOverrides((current) => ({ ...current, [key]: { ...current[key], ...patch } }));
+  };
 
   const loadData = async () => {
     try {
@@ -68,16 +103,16 @@ export const ProductsPage: React.FC = () => {
   };
 
   const resetProductForm = () => {
-    setEditingProduct(null); setName(''); setPrice(''); setInitialStock('0'); setDescription(''); setSku(''); setCategoryIds([]);
+    setEditingProduct(null); setName(''); setBrand(''); setPrice(''); setInitialStock('0'); setDescription(''); setSku(''); setBarcode(''); setCostPerItem(''); setWeightGrams(''); setRequiresShipping(true); setKeyFeaturesText(''); setSpecificationsText(''); setSizeChartText(''); setCategoryIds([]);
     setSellingUnit('pcs'); setMinimumQuantity('1'); setQuantityStep('1'); setComparePrice('');
-    setImageUrls(''); setVariantOptions([{ name: 'Size', values: '' }]); setVisibility('ACTIVE'); setVariantDrafts([]);
+    setImageUrls(''); setVariantOptions([{ name: 'Size', values: '' }]); setVisibility('ACTIVE'); setVariantDrafts([]); setNewVariantOverrides({});
   };
 
   const openProduct = (product?: any) => {
     void loadProductOptions();
     resetProductForm();
     if (product) {
-      setEditingProduct(product); setName(product.name || ''); setDescription(product.description || '');
+      setEditingProduct(product); setName(product.name || ''); setBrand(product.brand || ''); setDescription(product.description || '');
       const productVariants = product.variants || [];
       const firstVariant = productVariants[0];
       setSku(firstVariant?.sku || ''); setPrice(String(((firstVariant?.price_minor ?? 0) / 100).toFixed(2)));
@@ -85,6 +120,9 @@ export const ProductsPage: React.FC = () => {
       setVariantDrafts(productVariants.map((variant: any) => ({
         id: variant.id,
         sku: variant.sku || '',
+        barcode: variant.barcode || '',
+        cost: variant.cost_minor == null ? '' : String((variant.cost_minor / 100).toFixed(2)),
+        weightGrams: String(variant.weight_grams ?? 0),
         optionValues: variant.option_values || {},
         price: String(((variant.price_minor ?? 0) / 100).toFixed(2)),
         compareAt: variant.compare_at_minor == null ? '' : String((variant.compare_at_minor / 100).toFixed(2)),
@@ -96,6 +134,12 @@ export const ProductsPage: React.FC = () => {
       setCategoryIds((product.categories || []).map((category: any) => category.id));
       setSellingUnit(product.selling_unit || 'pcs'); setMinimumQuantity(String(product.minimum_quantity || 1));
       setQuantityStep(String(product.quantity_step || 1)); setComparePrice(firstVariant?.compare_at_minor == null ? '' : String((firstVariant.compare_at_minor / 100).toFixed(2)));
+      setBarcode(firstVariant?.barcode || ''); setCostPerItem(firstVariant?.cost_minor == null ? '' : String((firstVariant.cost_minor / 100).toFixed(2)));
+      setWeightGrams(String(firstVariant?.weight_grams ?? product.shipping_profile?.weightGrams ?? 0));
+      setRequiresShipping(product.shipping_profile?.requiresShipping !== false);
+      setKeyFeaturesText(Array.isArray(product.key_features) ? product.key_features.join('\n') : '');
+      setSpecificationsText(formatProductSpecifications(product.specifications));
+      setSizeChartText(formatSizeChart(product.size_chart));
       setImageUrls((product.media || []).map((media: any) => typeof media === 'string' ? media : media.url).filter(Boolean).join('\n'));
       setVisibility(product.status || 'ACTIVE');
     }
@@ -113,27 +157,53 @@ export const ProductsPage: React.FC = () => {
       const priceMinor = Math.round(Number(price) * 100);
       if (!Number.isFinite(priceMinor) || priceMinor < 0) throw new Error('Enter a valid product price.');
       if (!Number.isFinite(Number(minimumQuantity)) || Number(minimumQuantity) <= 0 || !Number.isFinite(Number(quantityStep)) || Number(quantityStep) <= 0) throw new Error('Minimum quantity and quantity step must be greater than zero.');
-      const normalizedOptions = variantOptions
-        .map((option) => ({ name: option.name.trim(), values: [...new Set(option.values.split(',').map((value) => value.trim()).filter(Boolean))] }))
-        .filter((option) => option.name && option.values.length > 0);
+      const normalizedOptions = normalizeVariantOptions(variantOptions);
       const variantMatrix = buildVariantMatrix(variantOptions);
       const hasVariants = normalizedOptions.length > 0;
+      const normalizedSpecifications = parseProductSpecifications(specificationsText);
+      const normalizedSizeChart = parseSizeChart(sizeChartText);
+      const normalizedKeyFeatures = keyFeaturesText.split(/\r?\n/).map((feature) => feature.trim()).filter(Boolean);
+      const normalizedCostMinor = costPerItem.trim() ? Math.round(Number(costPerItem) * 100) : null;
+      const normalizedWeightGrams = Number(weightGrams) || 0;
+      if (normalizedCostMinor !== null && (!Number.isFinite(normalizedCostMinor) || normalizedCostMinor < 0)) throw new Error('Enter a valid cost per item.');
+      if (!Number.isFinite(normalizedWeightGrams) || normalizedWeightGrams < 0) throw new Error('Shipping weight must be zero or greater.');
       const createdVariants = editingProduct ? variantDrafts.map((variant) => ({
         id: variant.id,
         sku: variant.sku || undefined,
+        barcode: variant.barcode || null,
+        costMinor: variant.cost ? Math.round(Number(variant.cost) * 100) : null,
+        weightGrams: Number(variant.weightGrams) || 0,
         optionValues: variant.optionValues,
         priceMinor: Math.round(Number(variant.price) * 100),
         compareAtMinor: variant.compareAt ? Math.round(Number(variant.compareAt) * 100) : null,
-      })) : hasVariants ? variantMatrix.map((combination, index) => ({
-        sku: buildVariantSku(sku || name, combination, variantMatrix.length),
-        optionValues: combination.optionValues, priceMinor, compareAtMinor: comparePrice ? Math.round(Number(comparePrice) * 100) : null,
-        initialStock: Number(initialStock) || 0, barcode: undefined, position: index
-      })) : [{ sku: sku || undefined, priceMinor, compareAtMinor: comparePrice ? Math.round(Number(comparePrice) * 100) : null, initialStock: Number(initialStock) || 0 }];
+      })) : (hasVariants ? variantMatrix : [{ optionValues: {}, skuSuffix: '' }]).map((combination, index, combinations) => {
+        const draft = getNewVariantDraft(combination, combinations.length);
+        const variantPrice = draft.price.trim() ? Math.round(Number(draft.price) * 100) : priceMinor;
+        const variantCost = draft.cost.trim() ? Math.round(Number(draft.cost) * 100) : null;
+        const variantWeight = Number(draft.weightGrams) || 0;
+        if (!Number.isFinite(variantPrice) || variantPrice < 0) throw new Error(`Enter a valid price for ${Object.values(combination.optionValues).join(' / ') || 'the default variant'}.`);
+        if (variantCost !== null && (!Number.isFinite(variantCost) || variantCost < 0)) throw new Error(`Enter a valid cost for ${Object.values(combination.optionValues).join(' / ') || 'the default variant'}.`);
+        if (!Number.isFinite(variantWeight) || variantWeight < 0) throw new Error('Variant shipping weight must be zero or greater.');
+        return {
+          sku: draft.sku || buildVariantSku(sku || name, combination, combinations.length),
+          barcode: draft.barcode || undefined,
+          costMinor: variantCost,
+          weightGrams: variantWeight,
+          optionValues: combination.optionValues,
+          priceMinor: variantPrice,
+          compareAtMinor: draft.compareAt ? Math.round(Number(draft.compareAt) * 100) : null,
+          initialStock: Math.max(0, Number(draft.initialStock) || 0),
+          position: index,
+        };
+      });
       const payload = {
         name,
+        brand,
         description,
         priceMinor,
         initialStock: Number(initialStock) || 0, categoryIds, sellingUnit, minimumQuantity: Number(minimumQuantity), quantityStep: Number(quantityStep),
+        shippingProfile: { requiresShipping, weightGrams: normalizedWeightGrams }, specifications: normalizedSpecifications,
+        keyFeatures: normalizedKeyFeatures, sizeChart: normalizedSizeChart,
         media: imageUrls.split('\n').map((url) => url.trim()).filter(Boolean).map((url) => ({ url })), status: visibility,
         options: normalizedOptions,
         variants: createdVariants
@@ -160,6 +230,24 @@ export const ProductsPage: React.FC = () => {
     if (nextIndex < 0 || nextIndex >= items.length) return;
     [items[index], items[nextIndex]] = [items[nextIndex], items[index]];
     setImageUrls(items.join('\n'));
+  };
+
+  const generateUniqueSku = async () => {
+    const now = new Date();
+    const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    try {
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        const randomPart = new Uint32Array(1);
+        window.crypto.getRandomValues(randomPart);
+        const candidate = `SKU-${date}-${String(randomPart[0] % 1000).padStart(3, '0')}`;
+        const result = await api.getProducts({ search: candidate });
+        const exists = (result.products || []).some((product: any) => (product.variants || []).some((variant: any) => String(variant.sku || '').toLowerCase() === candidate.toLowerCase()));
+        if (!exists) { setSku(candidate); return; }
+      }
+      throw new Error('Could not find an unused SKU. Try again.');
+    } catch (error: any) {
+      alert(error.message || 'Could not generate an SKU right now.');
+    }
   };
 
   const handleAdjustInventory = async (e: React.FormEvent) => {
@@ -377,7 +465,7 @@ export const ProductsPage: React.FC = () => {
       {/* CREATE PRODUCT MODAL */}
       {isCreateOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <form role="dialog" aria-modal="true" aria-labelledby="product-form-title" onSubmit={handleCreate} style={{ background: '#ffffff', borderRadius: '16px', width: '100%', maxWidth: '820px', maxHeight: '92vh', overflowY: 'auto', padding: '24px clamp(16px, 3vw, 32px)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+          <form role="dialog" aria-modal="true" aria-labelledby="product-form-title" onSubmit={handleCreate} style={{ background: '#ffffff', borderRadius: '16px', width: '100%', maxWidth: '1180px', maxHeight: '92vh', overflowY: 'auto', padding: '24px clamp(16px, 3vw, 32px)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div><h3 id="product-form-title" style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>{editingProduct ? 'Edit Product' : 'Create New Product'}</h3><p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>Organize product details, pricing, variants, and media.</p></div>
               <button type="button" aria-label="Close product editor" onClick={() => setIsCreateOpen(false)} style={{ cursor: 'pointer', color: '#64748b', background: 'transparent', border: 0, padding: 6 }}><X size={20} /></button>
@@ -394,6 +482,10 @@ export const ProductsPage: React.FC = () => {
                 style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
               />
             </div>
+
+            <label style={{ display: 'block', marginBottom: 14, fontSize: 13, fontWeight: 600, color: '#334155' }}>Brand (optional)
+              <input value={brand} onChange={(event) => setBrand(event.target.value)} placeholder="Brand or maker" style={{ display: 'block', width: '100%', marginTop: 6, padding: '9px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }} />
+            </label>
 
             <div style={{ marginBottom: 14 }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#334155' }}>Categories (first selected is primary)</label>
@@ -419,6 +511,15 @@ export const ProductsPage: React.FC = () => {
               <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Quantity step ({sellingUnit})<input type="number" min="0.001" step="0.001" value={quantityStep} onChange={(event) => setQuantityStep(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, border: '1px solid #e2e8f0', borderRadius: 8 }} /></label>
             </div>}
 
+            <section aria-label="Shipping details" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
+              <strong style={{ fontSize: 14, color: '#0f172a' }}>Shipping</strong>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 13, color: '#334155' }}><input type="checkbox" checked={requiresShipping} onChange={(event) => setRequiresShipping(event.target.checked)} /> This is a physical product and requires shipping</label>
+              <label style={{ display: 'block', maxWidth: 260, marginTop: 10, fontSize: 12, fontWeight: 600, color: '#475569' }}>Default weight (grams)
+                <input disabled={!requiresShipping} type="number" min="0" step="1" value={weightGrams} onChange={(event) => setWeightGrams(event.target.value)} placeholder="0" style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 8, border: '1px solid #e2e8f0', borderRadius: 7 }} />
+              </label>
+              {requiresShipping && <p style={{ margin: '7px 0 0', fontSize: 11, color: '#64748b' }}>Use the variant details below to set a different weight for each variant.</p>}
+            </section>
+
             {!editingProduct && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>{sellingUnit === 'pcs' ? 'Price (INR)' : `Price per ${sellingUnit} (INR)`} *</label>
@@ -437,6 +538,10 @@ export const ProductsPage: React.FC = () => {
                 <input type="number" min="0" step="0.01" value={comparePrice} onChange={(event) => setComparePrice(event.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }} />
               </div>
               <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Cost per item (INR)</label>
+                <input type="number" min="0" step="0.01" value={costPerItem} onChange={(event) => setCostPerItem(event.target.value)} placeholder="Optional" style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }} />
+              </div>
+              <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Initial Stock Units</label>
                 <input
                   type="number"
@@ -449,27 +554,27 @@ export const ProductsPage: React.FC = () => {
               </div>
             </div>}
 
-            {editingProduct && variantDrafts.length > 0 && <section aria-label="Variant pricing and SKU" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14 }}>
-              <div style={{ marginBottom: 10 }}><strong style={{ fontSize: 14, color: '#0f172a' }}>Variant pricing and SKU</strong><p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 12 }}>Each variant keeps its own price and SKU. Update inventory in Catalogue → Inventory.</p></div>
+            {editingProduct && variantDrafts.length > 0 && <section aria-label="Variant details" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+              <div style={{ marginBottom: 10 }}><strong style={{ fontSize: 14, color: '#0f172a' }}>Variant details</strong><p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 12 }}>SKU, barcode, price, cost and shipping weight are stored per variant. Inventory is managed in Catalogue → Inventory.</p></div>
               <div style={{ display: 'grid', gap: 8 }}>
                 {variantDrafts.map((variant, index) => <div key={variant.id || index} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, alignItems: 'end', padding: 10, background: '#f8fafc', borderRadius: 8 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', paddingBottom: 8 }}>{Object.values(variant.optionValues).filter(Boolean).join(' / ') || `Variant ${index + 1}`}</div>
                   <label style={{ fontSize: 11, color: '#64748b' }}>SKU<input aria-label={`SKU for variant ${index + 1}`} value={variant.sku} onChange={(event) => setVariantDrafts((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, sku: event.target.value } : item))} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} /></label>
+                  <label style={{ fontSize: 11, color: '#64748b' }}>Barcode<input aria-label={`Barcode for variant ${index + 1}`} value={variant.barcode} onChange={(event) => setVariantDrafts((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, barcode: event.target.value } : item))} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} />{variant.barcode && <div style={{ marginTop: 5 }}><BarcodePreview value={variant.barcode} compact /></div>}</label>
                   <label style={{ fontSize: 11, color: '#64748b' }}>Price (₹)<input aria-label={`Price for variant ${index + 1}`} type="number" min="0" step="0.01" required value={variant.price} onChange={(event) => setVariantDrafts((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, price: event.target.value } : item))} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} /></label>
                   <label style={{ fontSize: 11, color: '#64748b' }}>Compare (₹)<input aria-label={`Compare price for variant ${index + 1}`} type="number" min="0" step="0.01" value={variant.compareAt} onChange={(event) => setVariantDrafts((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, compareAt: event.target.value } : item))} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} /></label>
+                  <label style={{ fontSize: 11, color: '#64748b' }}>Cost (₹)<input aria-label={`Cost for variant ${index + 1}`} type="number" min="0" step="0.01" value={variant.cost} onChange={(event) => setVariantDrafts((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, cost: event.target.value } : item))} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} /></label>
+                  <label style={{ fontSize: 11, color: '#64748b' }}>Weight (g)<input aria-label={`Weight in grams for variant ${index + 1}`} type="number" min="0" step="1" value={variant.weightGrams} onChange={(event) => setVariantDrafts((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, weightGrams: event.target.value } : item))} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} /></label>
                 </div>)}
               </div>
             </section>}
 
             {!editingProduct && <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Primary SKU Code</label>
-              <input
-                type="text"
-                placeholder="e.g. MUG-CER-01 (Auto-generated if blank)"
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
-              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}><label htmlFor="product-primary-sku" style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>SKU base</label><button type="button" onClick={() => void generateUniqueSku()} style={{ border: '1px solid #cbd5e1', background: '#fff', color: '#334155', borderRadius: 7, padding: '6px 9px', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Generate unique SKU</button></div>
+              <input id="product-primary-sku" type="text" placeholder="SKU-YYYYMMDD-000 (generated when blank)" value={sku} onChange={(e) => setSku(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }} />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginTop: 10 }}>Barcode (optional)
+                <input value={barcode} onChange={(event) => setBarcode(event.target.value)} placeholder="UPC, EAN or other barcode" style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 9, border: '1px solid #e2e8f0', borderRadius: 8 }} />
+              </label>
             </div>}
 
             <section aria-label="Product variants" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
@@ -484,6 +589,35 @@ export const ProductsPage: React.FC = () => {
                   {!editingProduct && variantOptions.length > 1 ? <button type="button" aria-label={`Remove variant option ${index + 1}`} onClick={() => setVariantOptions((items) => items.filter((_, itemIndex) => itemIndex !== index))} style={{ height: 34, border: '1px solid #fecaca', background: '#fff7f7', color: '#b91c1c', borderRadius: 7, padding: '0 9px', cursor: 'pointer' }}>Remove</button> : <span />}
                 </div>)}
               </div>
+
+              {!editingProduct && <div style={{ marginTop: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                  <div><strong style={{ fontSize: 13, color: '#0f172a' }}>Variant inventory and pricing</strong><div style={{ marginTop: 3, fontSize: 11, color: '#64748b' }}>Set unique SKU, barcode, price, cost, starting stock, and shipping weight for each combination.</div></div>
+                  <span style={{ whiteSpace: 'nowrap', borderRadius: 999, padding: '4px 8px', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 700 }}>{Math.max(1, createVariantMatrix.length)} variant{Math.max(1, createVariantMatrix.length) === 1 ? '' : 's'}</span>
+                </div>
+                <div style={{ overflowX: 'auto', border: '1px solid #dbe3ee', borderRadius: 9, background: '#fff' }}>
+                  <table style={{ width: '100%', minWidth: 1040, borderCollapse: 'separate', borderSpacing: 0, fontSize: 11 }}>
+                    <thead><tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left' }}>
+                      {['Variant', 'SKU', 'Barcode', 'Price (₹)', 'Compare (₹)', 'Cost (₹)', `Stock (${sellingUnit})`, 'Weight (g)'].map((heading) => <th key={heading} style={{ padding: '9px 8px', borderBottom: '1px solid #dbe3ee', whiteSpace: 'nowrap' }}>{heading}</th>)}
+                    </tr></thead>
+                    <tbody>{(createVariantMatrix.length ? createVariantMatrix : [{ optionValues: {}, skuSuffix: '' }]).map((combination, index, rows) => {
+                      const draft = getNewVariantDraft(combination, rows.length);
+                      const fieldStyle: React.CSSProperties = { width: '100%', minWidth: 90, boxSizing: 'border-box', padding: '7px 8px', border: '1px solid #dbe3ee', borderRadius: 6, fontSize: 11 };
+                      return <tr key={variantKey(combination.optionValues)} style={{ verticalAlign: 'top' }}>
+                        <td style={{ padding: 8, borderBottom: '1px solid #edf2f7', minWidth: 110, fontWeight: 700, color: '#334155' }}>{Object.values(combination.optionValues).filter(Boolean).join(' / ') || 'Default'}</td>
+                        <td style={{ padding: 8, borderBottom: '1px solid #edf2f7' }}><input aria-label={`SKU for new variant ${index + 1}`} value={draft.sku} onChange={(event) => updateNewVariant(combination.optionValues, { sku: event.target.value })} style={fieldStyle} /></td>
+                        <td style={{ padding: 8, borderBottom: '1px solid #edf2f7' }}><input aria-label={`Barcode for new variant ${index + 1}`} value={draft.barcode} onChange={(event) => updateNewVariant(combination.optionValues, { barcode: event.target.value })} placeholder="Optional" style={fieldStyle} />{draft.barcode && <div style={{ marginTop: 5 }}><BarcodePreview value={draft.barcode} compact /></div>}</td>
+                        <td style={{ padding: 8, borderBottom: '1px solid #edf2f7' }}><input aria-label={`Price for new variant ${index + 1}`} type="number" min="0" step="0.01" value={draft.price} onChange={(event) => updateNewVariant(combination.optionValues, { price: event.target.value })} style={fieldStyle} /></td>
+                        <td style={{ padding: 8, borderBottom: '1px solid #edf2f7' }}><input aria-label={`Compare price for new variant ${index + 1}`} type="number" min="0" step="0.01" value={draft.compareAt} onChange={(event) => updateNewVariant(combination.optionValues, { compareAt: event.target.value })} style={fieldStyle} /></td>
+                        <td style={{ padding: 8, borderBottom: '1px solid #edf2f7' }}><input aria-label={`Cost for new variant ${index + 1}`} type="number" min="0" step="0.01" value={draft.cost} onChange={(event) => updateNewVariant(combination.optionValues, { cost: event.target.value })} style={fieldStyle} /></td>
+                        <td style={{ padding: 8, borderBottom: '1px solid #edf2f7' }}><input aria-label={`Initial stock for new variant ${index + 1}`} type="number" min="0" step={sellingUnit === 'pcs' ? '1' : '0.001'} value={draft.initialStock} onChange={(event) => updateNewVariant(combination.optionValues, { initialStock: event.target.value })} style={fieldStyle} /></td>
+                        <td style={{ padding: 8, borderBottom: '1px solid #edf2f7' }}><input aria-label={`Weight in grams for new variant ${index + 1}`} type="number" min="0" step="1" disabled={!requiresShipping} value={draft.weightGrams} onChange={(event) => updateNewVariant(combination.optionValues, { weightGrams: event.target.value })} style={fieldStyle} /></td>
+                      </tr>;
+                    })}</tbody>
+                  </table>
+                </div>
+                {!createVariantMatrix.length && normalizeVariantOptions(variantOptions).length > 0 && <p style={{ margin: '6px 0 0', color: '#b45309', fontSize: 11 }}>The variant combination count is above the 250 variant limit. Reduce option values to continue.</p>}
+              </div>}
             </section>
 
             <div style={{ marginBottom: 14 }}>
@@ -504,6 +638,19 @@ export const ProductsPage: React.FC = () => {
                 style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
               />
             </div>
+
+            <section aria-label="Product information for customers" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 18, background: '#fbfdff' }}>
+              <strong style={{ display: 'block', marginBottom: 10, fontSize: 14, color: '#0f172a' }}>Product information</strong>
+              <label style={{ display: 'block', marginBottom: 12, fontSize: 12, fontWeight: 600, color: '#475569' }}>Key features (one per line)
+                <textarea rows={3} value={keyFeaturesText} onChange={(event) => setKeyFeaturesText(event.target.value)} placeholder={'Soft, breathable fabric\nMachine washable\nMade in India'} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 9, border: '1px solid #e2e8f0', borderRadius: 7, resize: 'vertical' }} />
+              </label>
+              <label style={{ display: 'block', marginBottom: 12, fontSize: 12, fontWeight: 600, color: '#475569' }}>Specifications (one “Name: value” per line)
+                <textarea rows={4} value={specificationsText} onChange={(event) => setSpecificationsText(event.target.value)} placeholder={'Material: 100% cotton\nFit: Regular\nCare: Machine wash'} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 9, border: '1px solid #e2e8f0', borderRadius: 7, resize: 'vertical' }} />
+              </label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569' }}>Size chart (columns and rows separated by |)
+                <textarea rows={4} value={sizeChartText} onChange={(event) => setSizeChartText(event.target.value)} placeholder={'Size | Chest | Length\nS | 86 cm | 60 cm\nM | 92 cm | 64 cm'} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 9, border: '1px solid #e2e8f0', borderRadius: 7, resize: 'vertical' }} />
+              </label>
+            </section>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button

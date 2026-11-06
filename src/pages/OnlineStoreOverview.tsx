@@ -18,6 +18,7 @@ import {
 import { apiClient } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import { getStoreUrl } from '../utils/subdomain';
+import { Skeleton } from '../components/common/SkeletonLoader';
 import styles from './OnlineStoreOverview.module.css';
 
 export const OnlineStoreOverview: React.FC = () => {
@@ -27,18 +28,18 @@ export const OnlineStoreOverview: React.FC = () => {
   const platformDomain = `${storeSlug}.${rootDomain}`;
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [storeData, setStoreData] = useState<any>(null);
-  const [pagesCount, setPagesCount] = useState({ total: 0, system: 0, custom: 0 });
+  const [storeDataLoaded, setStoreDataLoaded] = useState(false);
+  const [pagesCount, setPagesCount] = useState<{ total: number; system: number; custom: number } | null>(null);
   const [provisioning, setProvisioning] = useState<any>(null);
   const [retrying, setRetrying] = useState(false);
-  const [validation, setValidation] = useState<{ canPublish: boolean; issues: any[] }>({
-    canPublish: true,
-    issues: []
-  });
+  const [validation, setValidation] = useState<{ canPublish: boolean; issues: any[] } | null>(null);
 
   const loadData = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const [renderRes, pagesRes, valRes, provisioningRes] = await Promise.allSettled([
         apiClient<any>('/storefront/render'),
         apiClient<any>('/storefront/pages'),
@@ -56,23 +57,25 @@ export const OnlineStoreOverview: React.FC = () => {
           console.warn('Fallback by-slug failed:', e);
         }
       }
+      setStoreDataLoaded(true);
 
-      if (pagesRes.status === 'fulfilled' && pagesRes.value?.pages && pagesRes.value.pages.length > 0) {
+      if (pagesRes.status === 'fulfilled' && Array.isArray(pagesRes.value?.pages)) {
         const pages = pagesRes.value.pages;
-        setPagesCount({
-          total: pages.length,
-          system: pages.filter((p: any) => p.is_system).length,
-          custom: pages.filter((p: any) => !p.is_system).length
-        });
-      } else setPagesCount({ total: 0, system: 0, custom: 0 });
+        setPagesCount({ total: pages.length, system: pages.filter((p: any) => p.is_system).length, custom: pages.filter((p: any) => !p.is_system).length });
+      } else setPagesCount(null);
 
       if (provisioningRes.status === 'fulfilled') setProvisioning(provisioningRes.value);
+      else setProvisioning(null);
 
       if (valRes.status === 'fulfilled' && valRes.value) {
         setValidation(valRes.value);
       }
+      if ([renderRes, pagesRes, valRes, provisioningRes].every((result) => result.status === 'rejected')) {
+        setLoadError('Store status could not be loaded. Check your connection and retry.');
+      }
     } catch (err) {
       console.error('Failed to load online store overview data:', err);
+      setLoadError(err instanceof Error ? err.message : 'Store status could not be loaded.');
     } finally {
       setLoading(false);
     }
@@ -87,10 +90,18 @@ export const OnlineStoreOverview: React.FC = () => {
   const localHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   const localSharedPreviewUrl = localHost ? `/store/${encodeURIComponent(storeSlug)}` : null;
   const storefrontUrl = liveReady ? liveStoreUrl : provisioning?.previewUrl || localSharedPreviewUrl;
+  const previewAvailable = Boolean(provisioning?.previewUrl || localSharedPreviewUrl);
+  const policyWarnings = validation?.issues.some((issue) => issue.code === 'INCOMPLETE_POLICIES') ?? false;
+  const showStatusSkeleton = loading && !provisioning;
+  const showStoreSkeleton = loading && !storeDataLoaded;
+  const showPagesSkeleton = loading && !pagesCount;
   const retryProvisioning = async () => {
     setRetrying(true);
     try { await apiClient('/storefront/provisioning/retry', { method: 'POST', body: JSON.stringify({}) }); await loadData(); }
-    catch (error) { console.error('Store provisioning retry failed:', error); }
+    catch (error) {
+      console.error('Store provisioning retry failed:', error);
+      setLoadError(error instanceof Error ? error.message : 'Could not retry storefront checks.');
+    }
     finally { setRetrying(false); }
   };
 
@@ -103,7 +114,7 @@ export const OnlineStoreOverview: React.FC = () => {
             <h1 className={styles.pageTitle}>Online Store</h1>
             <span className={styles.liveBadge} style={!liveReady ? { background: '#fff7ed', color: '#9a3412', borderColor: '#fed7aa' } : undefined}>
               <span className={styles.liveDot} style={!liveReady ? { background: '#d97706' } : undefined} />
-              {liveReady ? 'Live · DNS & HTTPS verified' : provisioning?.status === 'LOCAL_READY' ? 'Preview ready · domain pending' : 'Store provisioning'}
+              {showStatusSkeleton ? 'Checking storefront status…' : liveReady ? 'Live · DNS & HTTPS verified' : provisioning?.status === 'LOCAL_READY' ? 'Preview ready · domain pending' : provisioning ? 'Store setup needs attention' : 'Store status unavailable'}
             </span>
           </div>
           <p className={styles.pageSubtitle}>
@@ -112,7 +123,7 @@ export const OnlineStoreOverview: React.FC = () => {
         </div>
 
         <div className={styles.headerActions}>
-          {!liveReady && <button type="button" onClick={() => void retryProvisioning()} disabled={retrying} className={styles.btnOutline}>
+          {!liveReady && provisioning && <button type="button" onClick={() => void retryProvisioning()} disabled={retrying} className={styles.btnOutline}>
             <RefreshCw size={15} className={retrying ? 'animate-spin' : ''} />
             <span>{retrying ? 'Checking…' : 'Retry domain check'}</span>
           </button>}
@@ -145,11 +156,11 @@ export const OnlineStoreOverview: React.FC = () => {
             {liveReady ? <ShieldCheck size={16} style={{ color: '#059669' }} /> : <AlertTriangle size={16} style={{ color: '#d97706' }} />}
           </div>
           <div className={styles.kpiValue} title={platformDomain}>
-            {platformDomain}
+            {showStatusSkeleton ? <Skeleton width="85%" height={24} /> : platformDomain}
           </div>
           <div className={styles.kpiSub}>
             {liveReady ? <CheckCircle2 size={13} style={{ color: '#059669' }} /> : <Clock size={13} style={{ color: '#d97706' }} />}
-            <span className={liveReady ? styles.kpiSuccess : ''}>{liveReady ? 'DNS & HTTPS verified' : provisioning?.error || 'Waiting for DNS and HTTPS verification'}</span>
+            <span className={liveReady ? styles.kpiSuccess : ''}>{showStatusSkeleton ? 'Checking DNS and HTTPS…' : provisioning?.error || (provisioning ? 'Waiting for DNS and HTTPS verification' : 'Store status unavailable')}</span>
           </div>
         </div>
 
@@ -160,10 +171,10 @@ export const OnlineStoreOverview: React.FC = () => {
             <Clock size={16} style={{ color: '#2563eb' }} />
           </div>
           <div className={styles.kpiValue}>
-            {storeData?.releaseNumber ? `Release #${storeData.releaseNumber}` : 'No live release'}
+            {showStoreSkeleton ? <Skeleton width={130} height={26} /> : storeData?.releaseNumber ? `Release #${storeData.releaseNumber}` : storeDataLoaded && storeData ? 'No live release' : 'Publication status unavailable'}
           </div>
           <div className={styles.kpiSub}>
-            <span>{storeData?.releaseNumber ? 'Saved release snapshot' : 'Publish your store to create a release'}</span>
+            <span>{showStoreSkeleton ? <Skeleton width={150} height={14} /> : storeData?.releaseNumber ? 'Saved release snapshot' : storeDataLoaded && storeData ? 'Publish your store to create a release' : 'Published store data could not be loaded'}</span>
           </div>
         </div>
 
@@ -174,7 +185,7 @@ export const OnlineStoreOverview: React.FC = () => {
             <Palette size={16} style={{ color: '#7c3aed' }} />
           </div>
           <div className={styles.kpiValue} style={{ textTransform: 'capitalize' }}>
-            {storeData?.theme?.preset_name || 'Modern'}
+            {showStoreSkeleton ? <Skeleton width={100} height={26} /> : storeData?.theme?.preset_name || (storeDataLoaded && storeData ? 'Custom styles' : 'Theme unavailable')}
           </div>
           <div className={styles.kpiSub}>
             <span>Customizable in Design tab</span>
@@ -188,13 +199,17 @@ export const OnlineStoreOverview: React.FC = () => {
             <Layers size={16} style={{ color: '#083e47' }} />
           </div>
           <div className={styles.kpiValue}>
-            {pagesCount.total} Pages
+            {showPagesSkeleton ? <Skeleton width={100} height={26} /> : pagesCount ? `${pagesCount.total} Pages` : 'Page catalog unavailable'}
           </div>
           <div className={styles.kpiSub}>
-            <span>{pagesCount.system} system locked · {pagesCount.custom} custom</span>
+            <span>{showPagesSkeleton ? <Skeleton width={130} height={14} /> : pagesCount ? `${pagesCount.system} system locked · ${pagesCount.custom} custom` : 'Page catalog could not be loaded'}</span>
           </div>
         </div>
       </div>
+
+      {loadError && <div role="alert" className={styles.sectionCard} style={{ borderColor: '#fed7aa', color: '#9a3412' }}>
+        <strong>Some store information is unavailable.</strong> {loadError} <button type="button" onClick={() => void loadData()} className={styles.btnOutline} style={{ marginLeft: 8 }}>Retry</button>
+      </div>}
 
       {/* Pre-Publish Checklist & Setup Warnings */}
       <div className={styles.sectionCard}>
@@ -214,38 +229,34 @@ export const OnlineStoreOverview: React.FC = () => {
 
         <div className={styles.checklistGrid}>
           <div className={styles.checklistItem}>
-            <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} />
+            {showStatusSkeleton ? <Skeleton width={18} height={18} borderRadius="50%" /> : liveReady ? <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} /> : <AlertTriangle size={18} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />}
             <div>
-              <p className={styles.checklistTitle}>Subdomain Provisioned</p>
-              <p className={styles.checklistDesc}>Unique tenant store address created and active.</p>
+              <p className={styles.checklistTitle}>Wildcard Store Address</p>
+              <p className={styles.checklistDesc}>{showStatusSkeleton ? <Skeleton width={220} height={13} /> : liveReady ? 'Hostname resolves to the shared runtime and HTTPS is ready.' : provisioning?.domain ? 'Hostname is assigned; DNS and HTTPS checks have not both passed yet.' : 'Store hostname status is unavailable.'}</p>
             </div>
           </div>
 
           <div className={styles.checklistItem}>
-            <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} />
+            {showPagesSkeleton ? <Skeleton width={18} height={18} borderRadius="50%" /> : pagesCount?.system ? <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} /> : <AlertTriangle size={18} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />}
             <div>
-              <p className={styles.checklistTitle}>System Page Catalog Ready</p>
-              <p className={styles.checklistDesc}>Commerce, checkout, policies, and account workflows initialized.</p>
+              <p className={styles.checklistTitle}>System Page Catalog</p>
+              <p className={styles.checklistDesc}>{showPagesSkeleton ? <Skeleton width={260} height={13} /> : pagesCount ? pagesCount.system ? `${pagesCount.system} system pages are available for commerce, checkout, policies, and account workflows.` : 'No system pages are configured.' : 'Page catalog could not be verified.'}</p>
             </div>
           </div>
 
           <div className={styles.checklistItem}>
-            {validation.issues.some((i) => i.code === 'INCOMPLETE_POLICIES') ? (
-              <AlertTriangle size={18} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />
-            ) : (
-              <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} />
-            )}
+            {!validation ? <Skeleton width={18} height={18} borderRadius="50%" /> : validation.canPublish && !policyWarnings ? <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} /> : <AlertTriangle size={18} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />}
             <div>
-              <p className={styles.checklistTitle}>Legal Policy Review</p>
-              <p className={styles.checklistDesc}>Review Privacy, Terms, and Refund policies in Pages manager.</p>
+              <p className={styles.checklistTitle}>Policy Content Check</p>
+              <p className={styles.checklistDesc}>{!validation ? <Skeleton width={230} height={13} /> : policyWarnings ? 'Complete the required Privacy, Terms, and Refund policy content in Pages manager.' : 'Automated publish checks passed. Review the policy text before launch.'}</p>
             </div>
           </div>
 
           <div className={styles.checklistItem}>
-            <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} />
+            {showStatusSkeleton ? <Skeleton width={18} height={18} borderRadius="50%" /> : previewAvailable ? <CheckCircle2 size={18} style={{ color: '#059669', flexShrink: 0, marginTop: '2px' }} /> : <AlertTriangle size={18} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />}
             <div>
-              <p className={styles.checklistTitle}>Unified Preview Runtime</p>
-              <p className={styles.checklistDesc}>Editor and live customer site share real tokens, header, and footer.</p>
+              <p className={styles.checklistTitle}>Storefront Preview Runtime</p>
+              <p className={styles.checklistDesc}>{showStatusSkeleton ? <Skeleton width={250} height={13} /> : previewAvailable ? 'A preview address is configured for this store.' : 'Preview runtime URL is unavailable in this environment.'}</p>
             </div>
           </div>
         </div>

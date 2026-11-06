@@ -378,9 +378,10 @@ export const api = {
       headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
       body: JSON.stringify({ reason })
     }),
-  refundReturn: (id: string, payload: any = {}) =>
+  refundReturn: (id: string, payload: Record<string, unknown> = {}, idempotencyKey?: string) =>
     apiClient<any>(`/orders/returns/${id}/process-refund`, {
       method: 'POST',
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
       body: JSON.stringify(payload)
     }),
 

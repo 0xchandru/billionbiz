@@ -53,6 +53,8 @@ interface HeaderNavbarSectionProps {
   isEditorInteractive?: boolean;
   useEditorModel?: boolean;
   isSideRail?: boolean;
+  onCartClick?: () => void;
+  cartItemCount?: number;
 }
 
 export const HeaderNavbarSection: React.FC<HeaderNavbarSectionProps> = ({
@@ -61,6 +63,8 @@ export const HeaderNavbarSection: React.FC<HeaderNavbarSectionProps> = ({
   isEditorInteractive = true,
   useEditorModel = false,
   isSideRail: propIsSideRail = false,
+  onCartClick,
+  cartItemCount,
 }) => {
   const navigate = useNavigate();
   const store = useEditorContextStore();
@@ -765,10 +769,10 @@ export const HeaderNavbarSection: React.FC<HeaderNavbarSectionProps> = ({
         ? '12px'
         : '14px';
 
-    const cartCount =
+    const cartCount = cartItemCount ?? (
       actionProps.cartItemCount !== undefined
         ? actionProps.cartItemCount
-        : (cartEl?.props?.itemCount ?? 2);
+        : (cartEl?.props?.itemCount ?? 2));
     const showCartBadge = actionProps.showCartBadge !== false;
     const cartBadgeBg = actionProps.cartBadgeBg || brandPrimary;
     const cartBadgeColor = actionProps.cartBadgeColor || '#ffffff';
@@ -809,7 +813,19 @@ export const HeaderNavbarSection: React.FC<HeaderNavbarSectionProps> = ({
               title={item.label}
               aria-label={item.label}
               onClick={(e) => {
-                if (actionsEl) handleElementClick(e, actionsEl);
+                e.stopPropagation();
+                if (isEditorInteractive) {
+                  if (actionsEl) handleElementClick(e, actionsEl);
+                  return;
+                }
+                if (isCart) {
+                  onCartClick?.();
+                  return;
+                }
+                if (item.isNavigation && item.path) {
+                  if (item.openInNewTab) window.open(item.path, '_blank', 'noopener,noreferrer');
+                  else navigate(item.path);
+                }
               }}
               style={{
                 position: 'relative',

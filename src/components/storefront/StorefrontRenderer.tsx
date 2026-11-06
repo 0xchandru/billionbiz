@@ -252,7 +252,7 @@ export const StorefrontRenderer: React.FC<StorefrontRendererProps> = ({
 
     // 6. Checkout
     if (cleanPath === '/checkout') {
-      return <CheckoutPageView onNavigate={handleNavigate} brandName={brandDisplayName} storeSlug={store?.slug} />;
+      return <CheckoutPageView onNavigate={handleNavigate} brandName={brandDisplayName} storeSlug={store?.slug} onlinePaymentsAvailable={Boolean((settings as any)?.onlinePaymentsAvailable)} />;
     }
 
     // 7. Account / Login
@@ -339,6 +339,7 @@ export const StorefrontRenderer: React.FC<StorefrontRendererProps> = ({
   return (
     <ThemeTokenProvider theme={themeTokens}>
       <StoreLayout
+        storeSlug={store?.slug}
         brand={{
           name: brandDisplayName,
           tagline: brand?.tagline,

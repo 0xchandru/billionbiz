@@ -16,6 +16,7 @@ export const ReturnsRefundsPage: FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [processingRefundId, setProcessingRefundId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -24,6 +25,10 @@ export const ReturnsRefundsPage: FC = () => {
   const [formOrderNumber, setFormOrderNumber] = useState('');
   const [formReason, setFormReason] = useState('DAMAGED_ITEM');
   const [formAmount, setFormAmount] = useState('');
+  const [matchedOrder, setMatchedOrder] = useState<any | null>(null);
+  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const [selectedReturnItems, setSelectedReturnItems] = useState<Record<string, string>>({});
+  const [formRestockDisposition, setFormRestockDisposition] = useState<'RESTOCK' | 'NOT_RESTOCK'>('NOT_RESTOCK');
 
   const fetchReturns = async () => {
     setLoading(true);
@@ -68,6 +73,58 @@ export const ReturnsRefundsPage: FC = () => {
     }
   };
 
+  const handleProcessRefund = async (item: any) => {
+    setProcessingRefundId(item.id);
+    setActionError(null);
+    setNotice(null);
+    try {
+      const attemptId = typeof window !== 'undefined' && window.crypto?.randomUUID
+        ? window.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const result = await api.refundReturn(item.id, {}, `refund-${attemptId}`);
+      if (result.status === 'PROCESSED') {
+        setNotice(`Razorpay confirmed the ₹${(Number(result.amountMinor || item.refund_amount_minor) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })} refund as processed.`);
+      } else if (result.status === 'FAILED') {
+        setNotice('Razorpay confirmed that the refund failed. No refund is recorded as settled; review the provider connection and payment before taking another action.');
+      } else {
+        setNotice('Razorpay accepted the refund request. Settlement is pending, so the order is not marked as refunded yet.');
+      }
+      await fetchReturns();
+    } catch (err: any) {
+      setActionError(err.message || 'The refund status could not be confirmed. No successful refund is recorded.');
+      await fetchReturns();
+    } finally {
+      setProcessingRefundId(null);
+    }
+  };
+
+  const handleFindReturnOrder = async () => {
+    const orderNumber = formOrderNumber.trim().toUpperCase();
+    if (!orderNumber) {
+      setActionError('Enter an order number.');
+      return;
+    }
+    setIsLoadingOrder(true);
+    setActionError(null);
+    setMatchedOrder(null);
+    setSelectedReturnItems({});
+    try {
+      const orderResult = await api.getOrders({ search: orderNumber });
+      const order = (orderResult.orders || []).find(
+        (item: any) => String(item.order_number || '').toUpperCase() === orderNumber
+      );
+      if (!order) throw new Error('Order number was not found in this store. Check the number and try again.');
+      const detail = await api.getOrderById(order.id);
+      setMatchedOrder({ ...detail.order, lines: detail.lines || [] });
+      setFormAmount((Number(detail.order?.total_minor || order.total_minor) / 100).toFixed(2));
+      setFormRestockDisposition('NOT_RESTOCK');
+    } catch (err: any) {
+      setActionError(err.message || 'Order details could not be loaded.');
+    } finally {
+      setIsLoadingOrder(false);
+    }
+  };
+
   const handleCreateReturn = async (e: FormEvent) => {
     e.preventDefault();
     const orderNumber = formOrderNumber.trim().toUpperCase();
@@ -87,34 +144,40 @@ export const ReturnsRefundsPage: FC = () => {
     setActionError(null);
     setNotice(null);
     try {
-      const orderResult = await api.getOrders({ search: orderNumber });
-      const order = (orderResult.orders || []).find(
-        (item: any) => String(item.order_number || '').toUpperCase() === orderNumber
-      );
-      if (!order) {
-        throw new Error('Order number was not found in this store. Check the number and try again.');
+      if (!matchedOrder || String(matchedOrder.order_number || '').toUpperCase() !== orderNumber) {
+        throw new Error('Find the order and review its line items before creating the return request.');
       }
-      if (amountMinor > Number(order.total_minor)) {
+      if (amountMinor > Number(matchedOrder.total_minor)) {
         throw new Error('Requested refund cannot exceed the order total.');
+      }
+      const items = Object.entries(selectedReturnItems)
+        .map(([orderLineId, rawQuantity]) => ({ orderLineId, quantity: Number(rawQuantity) }))
+        .filter((item) => Number.isFinite(item.quantity) && item.quantity > 0);
+      if (!items.length) throw new Error('Select at least one order line and enter the quantity being returned.');
+      if (formRestockDisposition === 'RESTOCK' && String(matchedOrder.fulfillment_status).toUpperCase() !== 'FULFILLED') {
+        throw new Error('Only fulfilled orders can be returned to inventory.');
       }
 
       const idempotencyKey = typeof window !== 'undefined' && window.crypto?.randomUUID
         ? window.crypto.randomUUID()
         : `return-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const result = await api.createReturn({
-        orderId: order.id,
+        orderId: matchedOrder.id,
         reason: formReason,
         refundAmountMinor: amountMinor,
-        items: [],
-        restockDisposition: 'RESTOCK'
+        items,
+        restockDisposition: formRestockDisposition
       }, idempotencyKey);
 
       setShowAddModal(false);
       setFormOrderNumber('');
       setFormAmount('');
       setFormReason('DAMAGED_ITEM');
+      setMatchedOrder(null);
+      setSelectedReturnItems({});
+      setFormRestockDisposition('NOT_RESTOCK');
       setActiveTab('pending');
-      setNotice(`Return request ${result.returnNumber} was saved for order ${order.order_number}. It is awaiting review; no refund has been processed.`);
+      setNotice(`Return request ${result.returnNumber} was saved for order ${matchedOrder.order_number}. It is awaiting review; no refund has been processed.`);
       await fetchReturns();
     } catch (err: any) {
       setActionError(err.message || 'The return request could not be saved.');
@@ -350,7 +413,7 @@ export const ReturnsRefundsPage: FC = () => {
                         fontSize: '12px',
                         fontWeight: 600,
                         background:
-                          ret.status === 'REFUNDED'
+                          isRefundSettled(ret)
                             ? '#dcfce7'
                             : ret.status === 'APPROVED'
                             ? '#e0f2fe'
@@ -358,7 +421,7 @@ export const ReturnsRefundsPage: FC = () => {
                             ? '#fee2e2'
                             : '#fef3c7',
                         color:
-                          ret.status === 'REFUNDED'
+                          isRefundSettled(ret)
                             ? '#15803d'
                             : ret.status === 'APPROVED'
                             ? '#0369a1'
@@ -407,13 +470,30 @@ export const ReturnsRefundsPage: FC = () => {
                         </>
                       )}
                       {ret.status === 'APPROVED' && (
-                        <span title="No refund API is connected to the payment provider" style={{ fontSize: '11px', color: '#92400e', fontWeight: 600 }}>Refund integration unavailable</span>
+                        <button
+                          type="button"
+                          disabled={processingRefundId === ret.id}
+                          onClick={() => void handleProcessRefund(ret)}
+                          style={{
+                            padding: '5px 12px',
+                            borderRadius: '6px',
+                            border: '1px solid #0d9488',
+                            background: processingRefundId === ret.id ? '#ccfbf1' : '#f0fdfa',
+                            color: '#0f766e',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: processingRefundId === ret.id ? 'wait' : 'pointer'
+                          }}
+                        >
+                          {processingRefundId === ret.id
+                            ? 'Checking…'
+                            : ret.provider_refund_id
+                              ? 'Check refund status'
+                              : 'Process refund'}
+                        </button>
                       )}
                       {isRefundSettled(ret) && (
                         <span style={{ fontSize: '12px', color: '#15803d', fontWeight: 600 }}>Provider confirmed</span>
-                      )}
-                      {ret.status === 'APPROVED' && (
-                        <span title="No refund API is connected to the payment provider" style={{ fontSize: '11px', color: '#92400e', fontWeight: 600 }}>Refund integration unavailable</span>
                       )}
                     </div>
                   </td>
@@ -444,12 +524,42 @@ export const ReturnsRefundsPage: FC = () => {
                 <h2 id="return-modal-title" style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Record return request</h2>
                 <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>The order is looked up from your store records.</p>
               </div>
-              <button type="button" disabled={isSubmitting} onClick={() => setShowAddModal(false)} aria-label="Close return dialog" style={{ width: '40px', height: '40px', border: '1px solid #e2e8f0', borderRadius: '9px', background: '#fff', color: '#64748b', cursor: 'pointer', fontSize: '18px' }}>×</button>
+              <button type="button" disabled={isSubmitting || isLoadingOrder} onClick={() => setShowAddModal(false)} aria-label="Close return dialog" style={{ width: '40px', height: '40px', border: '1px solid #e2e8f0', borderRadius: '9px', background: '#fff', color: '#64748b', cursor: 'pointer', fontSize: '18px' }}>×</button>
             </div>
 
             <form onSubmit={handleCreateReturn} style={{ padding: '22px' }}>
               <label htmlFor="return-order-number" style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#475569', marginBottom: '6px' }}>Order number *</label>
-              <input id="return-order-number" type="text" required maxLength={64} placeholder="e.g. BBZ-1001" value={formOrderNumber} onChange={(event) => setFormOrderNumber(event.target.value)} style={{ width: '100%', minHeight: '42px', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', marginBottom: '16px' }} />
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <input id="return-order-number" type="text" required maxLength={64} placeholder="e.g. BBZ-1001" value={formOrderNumber} onChange={(event) => { setFormOrderNumber(event.target.value); setMatchedOrder(null); setSelectedReturnItems({}); }} style={{ flex: 1, minWidth: 0, minHeight: '42px', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }} />
+                <button type="button" onClick={() => void handleFindReturnOrder()} disabled={isLoadingOrder || isSubmitting} style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid #0d9488', background: '#f0fdfa', color: '#0f766e', fontSize: '12px', fontWeight: 650, cursor: isLoadingOrder ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>{isLoadingOrder ? 'Loading…' : 'Find order'}</button>
+              </div>
+
+              {matchedOrder && (
+                <div style={{ marginBottom: '18px', border: '1px solid #cbd5e1', borderRadius: '9px', overflow: 'hidden' }}>
+                  <div style={{ padding: '10px 12px', background: '#f8fafc', color: '#334155', fontSize: '12px', fontWeight: 650 }}>
+                    {matchedOrder.order_number} · {String(matchedOrder.fulfillment_status || 'UNFULFILLED').toLowerCase()} · ₹{(Number(matchedOrder.total_minor || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div style={{ display: 'grid', gap: '8px', padding: '10px 12px' }}>
+                    {(matchedOrder.lines || []).map((line: any) => (
+                      <label key={line.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 100px', alignItems: 'center', gap: '10px', color: '#334155', fontSize: '12px' }}>
+                        <span>{line.title}{line.variant_title ? ` · ${line.variant_title}` : ''} <span style={{ color: '#64748b' }}>× {Number(line.quantity)}</span></span>
+                        <input
+                          aria-label={`Return quantity for ${line.title}`}
+                          type="number"
+                          min="0"
+                          max={Number(line.quantity)}
+                          step="0.001"
+                          value={selectedReturnItems[line.id] || ''}
+                          onChange={(event) => setSelectedReturnItems((current) => ({ ...current, [line.id]: event.target.value }))}
+                          placeholder="Qty"
+                          style={{ width: '100%', minHeight: '36px', padding: '6px 8px', borderRadius: '7px', border: '1px solid #cbd5e1', fontSize: '12px' }}
+                        />
+                      </label>
+                    ))}
+                    {(matchedOrder.lines || []).length === 0 && <span style={{ color: '#92400e', fontSize: '12px' }}>This order has no recorded product lines.</span>}
+                  </div>
+                </div>
+              )}
 
               <label htmlFor="return-reason" style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#475569', marginBottom: '6px' }}>Reason for return *</label>
               <select id="return-reason" required value={formReason} onChange={(event) => setFormReason(event.target.value)} style={{ width: '100%', minHeight: '42px', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#fff', marginBottom: '16px' }}>
@@ -462,15 +572,21 @@ export const ReturnsRefundsPage: FC = () => {
               <label htmlFor="return-amount" style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#475569', marginBottom: '6px' }}>Requested refund amount (₹) *</label>
               <input id="return-amount" type="number" min="0.01" step="0.01" required placeholder="e.g. 1500.00" value={formAmount} onChange={(event) => setFormAmount(event.target.value)} style={{ width: '100%', minHeight: '42px', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', marginBottom: '14px' }} />
 
+              <label htmlFor="return-restock-disposition" style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#475569', marginBottom: '6px' }}>Inventory disposition</label>
+              <select id="return-restock-disposition" value={formRestockDisposition} onChange={(event) => setFormRestockDisposition(event.target.value as 'RESTOCK' | 'NOT_RESTOCK')} style={{ width: '100%', minHeight: '42px', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#fff', marginBottom: '14px' }}>
+                <option value="NOT_RESTOCK">Do not restock</option>
+                <option value="RESTOCK" disabled={String(matchedOrder?.fulfillment_status).toUpperCase() !== 'FULFILLED'}>Restock returned items after refund confirmation</option>
+              </select>
+
               {actionError && <div role="alert" style={{ padding: '10px 12px', marginBottom: '14px', borderRadius: '8px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: '12px' }}>{actionError}</div>}
 
               <div style={{ padding: '11px 12px', marginBottom: '18px', borderRadius: '8px', background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', fontSize: '11px', lineHeight: 1.5 }}>
-                This records a request only. Approval does not transfer money. Your platform does not yet have a verified refund-provider API, so the original payment must be refunded through the provider.
+                This records a return request only. Approval does not transfer money. An approved return with a confirmed online payment can be refunded through that payment’s verified Razorpay connection; the order is marked refunded only after Razorpay confirms the refund status.
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
-                <button type="button" disabled={isSubmitting} onClick={() => setShowAddModal(false)} style={{ minHeight: '42px', padding: '0 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" disabled={isSubmitting} style={{ minHeight: '42px', padding: '0 18px', borderRadius: '8px', border: 'none', background: '#0d9488', fontSize: '13px', fontWeight: 650, color: '#fff', cursor: isSubmitting ? 'wait' : 'pointer', opacity: isSubmitting ? 0.65 : 1 }}>{isSubmitting ? 'Saving request…' : 'Create request'}</button>
+              <button type="button" disabled={isSubmitting || isLoadingOrder} onClick={() => setShowAddModal(false)} style={{ minHeight: '42px', padding: '0 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" disabled={isSubmitting || isLoadingOrder} style={{ minHeight: '42px', padding: '0 18px', borderRadius: '8px', border: 'none', background: '#0d9488', fontSize: '13px', fontWeight: 650, color: '#fff', cursor: isSubmitting ? 'wait' : 'pointer', opacity: isSubmitting ? 0.65 : 1 }}>{isSubmitting ? 'Saving request…' : 'Create request'}</button>
               </div>
             </form>
           </section>

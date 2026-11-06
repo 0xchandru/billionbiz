@@ -19,7 +19,11 @@ export interface CartLineItem {
 
 interface StorefrontCartState {
   items: CartLineItem[];
+  storeSlug: string | null;
+  cartsByStore: Record<string, CartLineItem[]>;
+  legacyItems: CartLineItem[];
   isOpen: boolean;
+  setStoreSlug: (slug: string) => void;
   setIsOpen: (open: boolean) => void;
   addItem: (product: any, variant?: any, quantity?: number) => void;
   updateQuantity: (id: string, delta: number) => void;
@@ -33,7 +37,29 @@ export const useStorefrontCartStore = create<StorefrontCartState>()(
   persist(
     (set, get) => ({
       items: [],
+      storeSlug: null,
+      cartsByStore: {},
+      legacyItems: [],
       isOpen: false,
+      setStoreSlug: (slug: string) => {
+        const nextStoreSlug = String(slug || 'preview').trim().toLowerCase();
+        if (get().storeSlug === nextStoreSlug) return;
+
+        set((state) => {
+          const cartsByStore = { ...state.cartsByStore };
+          if (state.storeSlug) cartsByStore[state.storeSlug] = state.items;
+          // Keep unscoped legacy cart data in the persisted state for recovery,
+          // but never expose it to an arbitrary merchant store.
+          const legacyItems = state.storeSlug ? (state.legacyItems || []) : state.items;
+          return {
+            storeSlug: nextStoreSlug,
+            cartsByStore,
+            legacyItems,
+            items: cartsByStore[nextStoreSlug] || [],
+            isOpen: false
+          };
+        });
+      },
       setIsOpen: (open: boolean) => set({ isOpen: open }),
 
       addItem: (product: any, variant?: any, quantity = 1) => {

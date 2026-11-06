@@ -1,7 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { useStorefrontCartStore } from './storefrontCartStore';
 
-afterEach(() => useStorefrontCartStore.getState().clearCart());
+afterEach(() => {
+  const cart = useStorefrontCartStore.getState();
+  cart.clearCart();
+  cart.setStoreSlug('cart-scope-test-a');
+  cart.clearCart();
+  cart.setStoreSlug('cart-scope-test-b');
+  cart.clearCart();
+});
 
 describe('storefront cart measurement quantities', () => {
   it('starts at the product minimum and adds in valid increments', () => {
@@ -21,6 +28,20 @@ describe('storefront cart measurement quantities', () => {
 
     useStorefrontCartStore.getState().updateQuantity('tea-tea-variant', 1);
     expect(useStorefrontCartStore.getState().items[0].quantity).toBe(0.75);
+  });
+
+  it('keeps cart lines isolated when a browser moves between stores', () => {
+    const cart = useStorefrontCartStore.getState();
+    cart.setStoreSlug('cart-scope-test-a');
+    cart.clearCart();
+    cart.addItem({ id: 'store-a-product', name: 'Store A product', price_minor: 1000 });
+
+    cart.setStoreSlug('cart-scope-test-b');
+    expect(useStorefrontCartStore.getState().items).toHaveLength(0);
+    useStorefrontCartStore.getState().addItem({ id: 'store-b-product', name: 'Store B product', price_minor: 2000 });
+
+    cart.setStoreSlug('cart-scope-test-a');
+    expect(useStorefrontCartStore.getState().items.map((item) => item.productId)).toEqual(['store-a-product']);
   });
 
   it('removes a line when decrementing below its minimum', () => {

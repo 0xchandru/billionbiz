@@ -59,6 +59,11 @@ export const ProductDetailPageView: React.FC<ProductDetailPageViewProps> = ({
     : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&fit=crop'];
 
   const activeImage = images.includes(activeImageDraft) ? activeImageDraft : images[0];
+  const keyFeatures: string[] = Array.isArray(product.key_features) ? product.key_features.filter((feature: unknown) => typeof feature === 'string' && feature.trim()) : [];
+  const specifications: Array<[string, string]> = product.specifications && typeof product.specifications === 'object' && !Array.isArray(product.specifications)
+    ? Object.entries(product.specifications).map(([label, value]) => [label, String(value)])
+    : [];
+  const sizeChart = product.size_chart && typeof product.size_chart === 'object' ? product.size_chart : null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -168,6 +173,21 @@ export const ProductDetailPageView: React.FC<ProductDetailPageViewProps> = ({
               {product.description || 'Crafted with premium materials for maximum durability and effortless elegance.'}
             </p>
           </div>
+
+          {keyFeatures.length > 0 && <section aria-label="Key features" className="space-y-2 pt-4 border-t border-[var(--theme-border)]">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Key features</h3>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-slate-600 dark:text-slate-300">{keyFeatures.map((feature, index) => <li key={`${index}-${feature}`}>{feature}</li>)}</ul>
+          </section>}
+
+          {specifications.length > 0 && <section aria-label="Specifications" className="space-y-2 pt-4 border-t border-[var(--theme-border)]">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Specifications</h3>
+            <dl className="divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">{specifications.map(([label, value]) => <div key={label} className="grid grid-cols-2 gap-4 px-3 py-2"><dt className="font-medium text-slate-500 dark:text-slate-400">{label}</dt><dd className="text-slate-800 dark:text-slate-200">{value}</dd></div>)}</dl>
+          </section>}
+
+          {Array.isArray(sizeChart?.columns) && sizeChart.columns.length > 0 && Array.isArray(sizeChart.rows) && sizeChart.rows.length > 0 && <section aria-label="Size chart" className="space-y-2 pt-4 border-t border-[var(--theme-border)]">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Size chart</h3>
+            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700"><table className="w-full border-collapse text-left text-xs"><thead><tr className="bg-slate-50 dark:bg-slate-800">{sizeChart.columns.map((column: string) => <th key={column} className="px-3 py-2 font-semibold text-slate-600 dark:text-slate-300">{column}</th>)}</tr></thead><tbody>{sizeChart.rows.map((row: Record<string, string>, index: number) => <tr key={index} className="border-t border-slate-200 dark:border-slate-700">{sizeChart.columns.map((column: string) => <td key={column} className="px-3 py-2 text-slate-700 dark:text-slate-300">{row[column] || '—'}</td>)}</tr>)}</tbody></table></div>
+          </section>}
 
           {/* Guarantees */}
           <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[var(--theme-border)] text-xs text-slate-600 dark:text-slate-400">
