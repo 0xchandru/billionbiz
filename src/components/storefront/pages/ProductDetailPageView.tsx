@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingBag, ArrowLeft, Truck, RotateCcw } from 'lucide-react';
 import { useStorefrontCartStore } from '../../../store/storefrontCartStore';
+import { sanitizeHtml } from '../../../utils/sanitizeHtml';
 
 interface ProductDetailPageViewProps {
   product?: any;
@@ -53,7 +54,7 @@ export const ProductDetailPageView: React.FC<ProductDetailPageViewProps> = ({
   const quantityStep = Number(product.quantity_step || 1);
   const quantity = quantityDraft > 0 ? quantityDraft : minQuantity;
   const unit = product.selling_unit || 'pcs';
-  const isSoldOut = Boolean(selectedVariant?.stock_tracked && Number(selectedVariant.stock_available || 0) < quantity);
+  const isSoldOut = Boolean(selectedVariant?.stock_tracked && !selectedVariant?.continue_selling_when_out_of_stock && Number(selectedVariant.stock_available || 0) < quantity);
   const images = (product.media && product.media.length > 0)
     ? product.media.map((m: any) => m.url)
     : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&fit=crop'];
@@ -131,7 +132,7 @@ export const ProductDetailPageView: React.FC<ProductDetailPageViewProps> = ({
             </span>
           </div>
 
-          {variants.length > 1 && <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Options<select value={selectedVariant?.id || ''} onChange={(event) => { setSelectedVariantId(event.target.value); setQuantityDraft(0); }} className="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800">{variants.map((variant: any) => { const title = Object.values(variant.option_values || {}).filter(Boolean).join(' / ') || 'Default'; return <option key={variant.id} value={variant.id}>{title}{variant.stock_tracked && Number(variant.stock_available) <= 0 ? ' · Sold out' : ''}</option>; })}</select></label>}
+          {variants.length > 1 && <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Options<select value={selectedVariant?.id || ''} onChange={(event) => { setSelectedVariantId(event.target.value); setQuantityDraft(0); }} className="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800">{variants.map((variant: any) => { const title = Object.values(variant.option_values || {}).filter(Boolean).join(' / ') || 'Default'; const soldOut = variant.stock_tracked && !variant.continue_selling_when_out_of_stock && Number(variant.stock_available) <= 0; return <option key={variant.id} value={variant.id}>{title}{soldOut ? ' · Sold out' : ''}</option>; })}</select></label>}
 
           {/* Quantity selector & Add to Cart */}
           <div className="space-y-4 pt-4 border-t border-[var(--theme-border)]">
@@ -169,9 +170,7 @@ export const ProductDetailPageView: React.FC<ProductDetailPageViewProps> = ({
           {/* Description */}
           <div className="space-y-2 pt-4 border-t border-[var(--theme-border)]">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Product Overview</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-              {product.description || 'Crafted with premium materials for maximum durability and effortless elegance.'}
-            </p>
+            <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed product-description-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description || 'Crafted with premium materials for maximum durability and effortless elegance.') }} />
           </div>
 
           {keyFeatures.length > 0 && <section aria-label="Key features" className="space-y-2 pt-4 border-t border-[var(--theme-border)]">

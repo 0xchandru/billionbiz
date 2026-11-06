@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Plus, 
@@ -14,6 +14,7 @@ import { ErrorState } from '../components/common/ErrorState';
 import { buildVariantMatrix, buildVariantSku, normalizeVariantOptions } from '../utils/catalog/variantMatrix';
 import { formatProductSpecifications, formatSizeChart, parseProductSpecifications, parseSizeChart } from '../utils/catalog/productMetadata';
 import { BarcodePreview } from '../components/catalog/BarcodePreview';
+import { sanitizeHtml } from '../utils/sanitizeHtml';
 import './Products.css';
 
 const formatCurrency = (minor: number) => {
@@ -22,6 +23,7 @@ const formatCurrency = (minor: number) => {
 
 export const ProductsPage: React.FC = () => {
   type VariantDraft = { id?: string; sku: string; barcode: string; cost: string; weightGrams: string; optionValues: Record<string, string>; price: string; compareAt: string; initialStock?: string };
+  type MetafieldDraft = { namespace: string; key: string; value: string; type: string };
   const location = useLocation();
   const navigate = useNavigate();
   const isDedicatedProductEditor = location.pathname === '/products/new';
@@ -36,6 +38,7 @@ export const ProductsPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
   // New product form
@@ -47,6 +50,23 @@ export const ProductsPage: React.FC = () => {
   const [costPerItem, setCostPerItem] = useState('');
   const [weightGrams, setWeightGrams] = useState('');
   const [requiresShipping, setRequiresShipping] = useState(true);
+  const [isTaxable, setIsTaxable] = useState(true);
+  const [trackInventory, setTrackInventory] = useState(true);
+  const [continueSellingWhenOutOfStock, setContinueSellingWhenOutOfStock] = useState(false);
+  const [inventoryLocationId, setInventoryLocationId] = useState('');
+  const [productType, setProductType] = useState('');
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [tagsText, setTagsText] = useState('');
+  const [productMetafields, setProductMetafields] = useState<MetafieldDraft[]>([]);
+  const [categoryMetafields, setCategoryMetafields] = useState<MetafieldDraft[]>([]);
+  const [shippingLength, setShippingLength] = useState('');
+  const [shippingWidth, setShippingWidth] = useState('');
+  const [shippingHeight, setShippingHeight] = useState('');
+  const [dimensionUnit, setDimensionUnit] = useState('cm');
+  const [shippingPackageId, setShippingPackageId] = useState('');
+  const [countryOfOrigin, setCountryOfOrigin] = useState('IN');
+  const [hsCode, setHsCode] = useState('');
   const [initialStock, setInitialStock] = useState('0');
   const [description, setDescription] = useState('');
   const [keyFeaturesText, setKeyFeaturesText] = useState('');
@@ -63,6 +83,7 @@ export const ProductsPage: React.FC = () => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [variantDrafts, setVariantDrafts] = useState<VariantDraft[]>([]);
   const [newVariantOverrides, setNewVariantOverrides] = useState<Record<string, Partial<VariantDraft>>>({});
+  const descriptionEditorRef = useRef<HTMLDivElement>(null);
 
   const createVariantMatrix = useMemo(() => {
     try { return buildVariantMatrix(variantOptions); }
@@ -102,13 +123,20 @@ export const ProductsPage: React.FC = () => {
   };
 
   const loadProductOptions = async () => {
-    const [categoryResult, unitResult] = await Promise.allSettled([api.getCategories(), api.getSellingUnits()]);
+    const [categoryResult, unitResult, warehouseResult] = await Promise.allSettled([api.getCategories(), api.getSellingUnits(), api.getWarehouses()]);
     if (categoryResult.status === 'fulfilled') setCategories(categoryResult.value.categories || []);
     if (unitResult.status === 'fulfilled') setUnits((unitResult.value.units || []).filter((unit: any) => unit.is_enabled));
+    if (warehouseResult.status === 'fulfilled') {
+      const availableWarehouses = warehouseResult.value.warehouses || [];
+      setWarehouses(availableWarehouses);
+      setInventoryLocationId((current) => current || availableWarehouses.find((warehouse: any) => warehouse.is_default)?.id || availableWarehouses[0]?.id || '');
+    }
   };
 
   const resetProductForm = () => {
     setEditingProduct(null); setName(''); setBrand(''); setPrice(''); setInitialStock('0'); setDescription(''); setSku(''); setBarcode(''); setCostPerItem(''); setWeightGrams(''); setRequiresShipping(true); setKeyFeaturesText(''); setSpecificationsText(''); setSizeChartText(''); setCategoryIds([]);
+    setIsTaxable(true); setTrackInventory(true); setContinueSellingWhenOutOfStock(false); setProductType(''); setSeoTitle(''); setSeoDescription(''); setTagsText(''); setProductMetafields([]); setCategoryMetafields([]);
+    setShippingLength(''); setShippingWidth(''); setShippingHeight(''); setDimensionUnit('cm'); setShippingPackageId(''); setCountryOfOrigin('IN'); setHsCode(''); setInventoryLocationId((current) => current || warehouses.find((warehouse: any) => warehouse.is_default)?.id || warehouses[0]?.id || '');
     setSellingUnit('pcs'); setMinimumQuantity('1'); setQuantityStep('1'); setComparePrice('');
     setImageUrls(''); setVariantOptions([{ name: 'Size', values: '' }]); setVisibility('ACTIVE'); setVariantDrafts([]); setNewVariantOverrides({});
   };
@@ -122,6 +150,13 @@ export const ProductsPage: React.FC = () => {
     resetProductForm();
     if (product) {
       setEditingProduct(product); setName(product.name || ''); setBrand(product.brand || ''); setDescription(product.description || '');
+      setProductType(product.product_type === 'PHYSICAL' ? '' : product.product_type || '');
+      setIsTaxable(product.is_taxable !== false);
+      setSeoTitle(product.seo_title || ''); setSeoDescription(product.seo_description || '');
+      const storedAttributes = product.custom_attributes && typeof product.custom_attributes === 'object' ? product.custom_attributes : {};
+      setTagsText(Array.isArray(storedAttributes.tags) ? storedAttributes.tags.join(', ') : '');
+      setProductMetafields(Array.isArray(storedAttributes.metafields) ? storedAttributes.metafields.map((field: any) => ({ namespace: String(field.namespace || 'custom'), key: String(field.key || ''), value: String(field.value || ''), type: String(field.type || 'single_line_text_field') })) : []);
+      setCategoryMetafields(Array.isArray(storedAttributes.categoryMetafields) ? storedAttributes.categoryMetafields.map((field: any) => ({ namespace: String(field.namespace || 'category'), key: String(field.key || ''), value: String(field.value || ''), type: String(field.type || 'single_line_text_field') })) : []);
       const productVariants = product.variants || [];
       const firstVariant = productVariants[0];
       setSku(firstVariant?.sku || ''); setPrice(String(((firstVariant?.price_minor ?? 0) / 100).toFixed(2)));
@@ -146,6 +181,15 @@ export const ProductsPage: React.FC = () => {
       setBarcode(firstVariant?.barcode || ''); setCostPerItem(firstVariant?.cost_minor == null ? '' : String((firstVariant.cost_minor / 100).toFixed(2)));
       setWeightGrams(String(firstVariant?.weight_grams ?? product.shipping_profile?.weightGrams ?? 0));
       setRequiresShipping(product.shipping_profile?.requiresShipping !== false);
+      setTrackInventory(firstVariant?.track_inventory !== false);
+      setContinueSellingWhenOutOfStock(firstVariant?.continue_selling_when_out_of_stock === true);
+      setShippingLength(product.shipping_profile?.dimensions?.length == null ? '' : String(product.shipping_profile.dimensions.length));
+      setShippingWidth(product.shipping_profile?.dimensions?.width == null ? '' : String(product.shipping_profile.dimensions.width));
+      setShippingHeight(product.shipping_profile?.dimensions?.height == null ? '' : String(product.shipping_profile.dimensions.height));
+      setDimensionUnit(product.shipping_profile?.dimensions?.unit || 'cm');
+      setShippingPackageId(product.shipping_profile?.packageId || '');
+      setCountryOfOrigin(product.shipping_profile?.countryOfOrigin || 'IN');
+      setHsCode(product.shipping_profile?.hsCode || '');
       setKeyFeaturesText(Array.isArray(product.key_features) ? product.key_features.join('\n') : '');
       setSpecificationsText(formatProductSpecifications(product.specifications));
       setSizeChartText(formatSizeChart(product.size_chart));
@@ -171,6 +215,12 @@ export const ProductsPage: React.FC = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (isCreateOpen && descriptionEditorRef.current) {
+      descriptionEditorRef.current.innerHTML = sanitizeHtml(description);
+    }
+  }, [isCreateOpen, editingProduct?.id]);
+
+  useEffect(() => {
     loadData();
   }, [search]);
 
@@ -187,6 +237,19 @@ export const ProductsPage: React.FC = () => {
       const normalizedSpecifications = parseProductSpecifications(specificationsText);
       const normalizedSizeChart = parseSizeChart(sizeChartText);
       const normalizedKeyFeatures = keyFeaturesText.split(/\r?\n/).map((feature) => feature.trim()).filter(Boolean);
+      const normalizedDescription = sanitizeHtml(description);
+      const normalizedTags = [...new Set(tagsText.split(',').map((tag) => tag.trim()).filter(Boolean))];
+      const normalizeMetafields = (fields: MetafieldDraft[], namespaceDefault: string) => fields
+        .map((field) => ({ namespace: field.namespace.trim() || namespaceDefault, key: field.key.trim(), value: field.value.trim(), type: field.type || 'single_line_text_field' }))
+        .filter((field) => field.key && field.value);
+      const normalizedMetafields = normalizeMetafields(productMetafields, 'custom');
+      const normalizedCategoryMetafields = normalizeMetafields(categoryMetafields, 'category');
+      const metafieldKeys = normalizedMetafields.map((field) => `${field.namespace}.${field.key}`.toLowerCase());
+      if (new Set(metafieldKeys).size !== metafieldKeys.length) throw new Error('Metafield namespace and key combinations must be unique.');
+      const dimensions = { length: shippingLength.trim() ? Number(shippingLength) : null, width: shippingWidth.trim() ? Number(shippingWidth) : null, height: shippingHeight.trim() ? Number(shippingHeight) : null, unit: dimensionUnit };
+      for (const [label, value] of [['Length', dimensions.length], ['Width', dimensions.width], ['Height', dimensions.height]] as const) {
+        if (value !== null && (!Number.isFinite(value) || value < 0)) throw new Error(`${label} must be zero or greater.`);
+      }
       const normalizedCostMinor = costPerItem.trim() ? Math.round(Number(costPerItem) * 100) : null;
       const normalizedWeightGrams = Number(weightGrams) || 0;
       if (normalizedCostMinor !== null && (!Number.isFinite(normalizedCostMinor) || normalizedCostMinor < 0)) throw new Error('Enter a valid cost per item.');
@@ -200,6 +263,8 @@ export const ProductsPage: React.FC = () => {
         optionValues: variant.optionValues,
         priceMinor: Math.round(Number(variant.price) * 100),
         compareAtMinor: variant.compareAt ? Math.round(Number(variant.compareAt) * 100) : null,
+        trackInventory,
+        continueSellingWhenOutOfStock,
       })) : (hasVariants ? variantMatrix : [{ optionValues: {}, skuSuffix: '' }]).map((combination, index, combinations) => {
         const draft = getNewVariantDraft(combination, combinations.length);
         const variantPrice = draft.price.trim() ? Math.round(Number(draft.price) * 100) : priceMinor;
@@ -217,16 +282,32 @@ export const ProductsPage: React.FC = () => {
           priceMinor: variantPrice,
           compareAtMinor: draft.compareAt ? Math.round(Number(draft.compareAt) * 100) : null,
           initialStock: Math.max(0, Number(draft.initialStock) || 0),
+          trackInventory,
+          continueSellingWhenOutOfStock,
           position: index,
         };
       });
+      const existingAttributes = editingProduct?.custom_attributes && typeof editingProduct.custom_attributes === 'object' && !Array.isArray(editingProduct.custom_attributes) ? editingProduct.custom_attributes : {};
       const payload = {
         name,
         brand,
-        description,
+        description: normalizedDescription,
+        productType: productType.trim() || 'PHYSICAL',
+        seoTitle: seoTitle.trim() || name.trim(),
+        seoDescription: seoDescription.trim() || normalizedDescription.replace(/<[^>]*>/g, '').slice(0, 320),
+        isTaxable,
+        customAttributes: { ...existingAttributes, tags: normalizedTags, metafields: normalizedMetafields, categoryMetafields: normalizedCategoryMetafields },
+        inventoryLocationId: inventoryLocationId || undefined,
         priceMinor,
         initialStock: Number(initialStock) || 0, categoryIds, sellingUnit, minimumQuantity: Number(minimumQuantity), quantityStep: Number(quantityStep),
-        shippingProfile: { requiresShipping, weightGrams: normalizedWeightGrams }, specifications: normalizedSpecifications,
+        shippingProfile: {
+          requiresShipping,
+          weightGrams: normalizedWeightGrams,
+          dimensions: Object.values(dimensions).some((value) => value !== null && value !== dimensionUnit) ? dimensions : null,
+          packageId: shippingPackageId || null,
+          countryOfOrigin: countryOfOrigin || null,
+          hsCode: hsCode.trim() || null,
+        }, specifications: normalizedSpecifications,
         keyFeatures: normalizedKeyFeatures, sizeChart: normalizedSizeChart,
         media: imageUrls.split('\n').map((url) => url.trim()).filter(Boolean).map((url) => ({ url })), status: visibility,
         options: normalizedOptions,
@@ -255,6 +336,12 @@ export const ProductsPage: React.FC = () => {
     if (nextIndex < 0 || nextIndex >= items.length) return;
     [items[index], items[nextIndex]] = [items[nextIndex], items[index]];
     setImageUrls(items.join('\n'));
+  };
+
+  const formatProductDescription = (command: string) => {
+    descriptionEditorRef.current?.focus();
+    document.execCommand(command);
+    setDescription(descriptionEditorRef.current?.innerHTML || '');
   };
 
   const generateUniqueSku = async () => {
@@ -413,6 +500,7 @@ export const ProductsPage: React.FC = () => {
               {products.map((p) => {
                 const primaryVariant = p.variants?.[0] || {};
                 const totalStock = (p.variants || []).reduce((acc: number, v: any) => acc + (v.stock_available || 0), 0);
+                const inventoryNotTracked = (p.variants || []).length > 0 && p.variants.every((variant: any) => variant.track_inventory === false);
                 const primaryImage = typeof p.media?.[0] === 'string' ? p.media[0] : p.media?.[0]?.url;
                 const categoryNames = (p.categories || []).map((category: any) => category.name).filter(Boolean);
                 return (
@@ -469,10 +557,10 @@ export const ProductsPage: React.FC = () => {
                         borderRadius: '6px',
                         fontSize: '12px',
                         fontWeight: 600,
-                        background: totalStock > 5 ? '#dcfce7' : totalStock > 0 ? '#fef3c7' : '#fee2e2',
-                        color: totalStock > 5 ? '#15803d' : totalStock > 0 ? '#b45309' : '#b91c1c'
+                        background: inventoryNotTracked ? '#f1f5f9' : totalStock > 5 ? '#dcfce7' : totalStock > 0 ? '#fef3c7' : '#fee2e2',
+                        color: inventoryNotTracked ? '#475569' : totalStock > 5 ? '#15803d' : totalStock > 0 ? '#b45309' : '#b91c1c'
                       }}>
-                        {totalStock} in stock
+                        {inventoryNotTracked ? 'Not tracked' : `${totalStock} in stock`}
                       </span>
                     </td>
                     <td style={{ padding: '14px 18px', whiteSpace: 'nowrap' }}>
@@ -531,6 +619,10 @@ export const ProductsPage: React.FC = () => {
                 <select value={visibility} onChange={(event) => setVisibility(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, borderRadius: 8, border: '1px solid #e2e8f0' }}><option value="ACTIVE">Active</option><option value="DRAFT">Draft</option><option value="ARCHIVED">Archived</option></select>
               </label>
               <p className="product-editor-muted">Active products can appear in your storefront when a store is published.</p>
+              <div className="product-editor-side-divider" />
+              <strong className="product-editor-small-heading">Publishing</strong>
+              <span className="product-editor-publishing-state">Online storefront · {visibility === 'ACTIVE' ? 'Available' : 'Hidden'}</span>
+              <p className="product-editor-muted">Additional sales channels and catalogs are not connected to product publishing yet.</p>
             </div>
 
             <div className="product-editor-unit product-editor-card">
@@ -541,6 +633,13 @@ export const ProductsPage: React.FC = () => {
               </label>
             </div>
 
+            <div className="product-editor-type product-editor-card">
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Product type
+                <input maxLength={64} value={productType} onChange={(event) => setProductType(event.target.value)} placeholder="e.g. Bath soap" style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 6, padding: 9, borderRadius: 8, border: '1px solid #e2e8f0' }} />
+              </label>
+              <p className="product-editor-muted">Product type is a merchant-defined label. Category is managed separately above.</p>
+            </div>
+
             {sellingUnit !== 'pcs' && <div className="product-editor-quantity product-editor-card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Minimum quantity ({sellingUnit})<input type="number" min="0.001" step="0.001" value={minimumQuantity} onChange={(event) => setMinimumQuantity(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, border: '1px solid #e2e8f0', borderRadius: 8 }} /></label>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Quantity step ({sellingUnit})<input type="number" min="0.001" step="0.001" value={quantityStep} onChange={(event) => setQuantityStep(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, border: '1px solid #e2e8f0', borderRadius: 8 }} /></label>
@@ -548,30 +647,26 @@ export const ProductsPage: React.FC = () => {
 
             <section className="product-editor-organize product-editor-card" aria-label="Product organization">
               <div><h4>Collections</h4><button type="button" disabled aria-disabled="true">＋ Add collections</button><p>Collection assignment is not available in the current catalog API.</p></div>
-              <div><h4>Tags</h4><button type="button" disabled aria-disabled="true">＋ Add tags</button><p>Product tags are not available in the current catalog API.</p></div>
+              <div><h4>Tags</h4><label className="product-editor-tag-label">Comma-separated tags<input value={tagsText} onChange={(event) => setTagsText(event.target.value)} placeholder="seasonal, handmade, featured" /></label><p>Tags are saved as product metadata and can be used for catalog organization.</p></div>
             </section>
 
             <section className="product-editor-shipping product-editor-card" aria-label="Shipping details" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
               <strong style={{ fontSize: 14, color: '#0f172a' }}>Shipping</strong>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 13, color: '#334155' }}><input type="checkbox" checked={requiresShipping} onChange={(event) => setRequiresShipping(event.target.checked)} /> This is a physical product and requires shipping</label>
-              <label style={{ display: 'block', maxWidth: 260, marginTop: 10, fontSize: 12, fontWeight: 600, color: '#475569' }}>Default weight (grams)
-                <input disabled={!requiresShipping} type="number" min="0" step="1" value={weightGrams} onChange={(event) => setWeightGrams(event.target.value)} placeholder="0" style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 8, border: '1px solid #e2e8f0', borderRadius: 7 }} />
-              </label>
-              {requiresShipping && <p style={{ margin: '7px 0 0', fontSize: 11, color: '#64748b' }}>Use the variant details below to set a different weight for each variant.</p>}
+              <div className="product-editor-shipping-grid">
+                <label>Product weight (grams)<input disabled={!requiresShipping} type="number" min="0" step="1" value={weightGrams} onChange={(event) => setWeightGrams(event.target.value)} placeholder="0" /></label>
+                <div className="product-editor-dimensions"><span>Packed dimensions ({dimensionUnit})</span><div><label>Length<input disabled={!requiresShipping} type="number" min="0" step="0.1" value={shippingLength} onChange={(event) => setShippingLength(event.target.value)} placeholder="0" /></label><label>Width<input disabled={!requiresShipping} type="number" min="0" step="0.1" value={shippingWidth} onChange={(event) => setShippingWidth(event.target.value)} placeholder="0" /></label><label>Height<input disabled={!requiresShipping} type="number" min="0" step="0.1" value={shippingHeight} onChange={(event) => setShippingHeight(event.target.value)} placeholder="0" /></label><select aria-label="Dimension unit" disabled={!requiresShipping} value={dimensionUnit} onChange={(event) => setDimensionUnit(event.target.value)}><option value="cm">cm</option><option value="mm">mm</option><option value="in">in</option></select></div></div>
+                <label>Package profile reference<input disabled={!requiresShipping} value={shippingPackageId} onChange={(event) => setShippingPackageId(event.target.value)} placeholder="Optional package name" /></label>
+                <label>Country of origin<select disabled={!requiresShipping} value={countryOfOrigin} onChange={(event) => setCountryOfOrigin(event.target.value)}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CN">China</option><option value="AE">United Arab Emirates</option><option value="OTHER">Other / not specified</option></select></label>
+                <label>HS code<input disabled={!requiresShipping} value={hsCode} onChange={(event) => setHsCode(event.target.value)} maxLength={16} placeholder="Optional customs code" /></label>
+              </div>
+              <p style={{ margin: '9px 0 0', fontSize: 11, color: '#64748b' }}>These product shipping details are saved. Carrier labels and customs calculations still require a shipping integration.</p>
             </section>
 
-            {!editingProduct && <div className="product-editor-price product-editor-card" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+            <section className="product-editor-price product-editor-card" aria-label="Price and inventory" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>{sellingUnit === 'pcs' ? 'Price (INR)' : `Price per ${sellingUnit} (INR)`} *</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  required
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
-                />
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>{sellingUnit === 'pcs' ? 'Price (INR)' : `Price per ${sellingUnit} (INR)`} {editingProduct ? '' : '*'}</label>
+                <input type="number" min="0" step="0.01" required={!editingProduct} value={price} onChange={(e) => setPrice(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Compare price (INR)</label>
@@ -581,21 +676,22 @@ export const ProductsPage: React.FC = () => {
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Cost per item (INR)</label>
                 <input type="number" min="0" step="0.01" value={costPerItem} onChange={(event) => setCostPerItem(event.target.value)} placeholder="Optional" style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }} />
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Initial Stock Units</label>
-                <input
-                  type="number"
-                  min="0"
-                  step={sellingUnit === 'pcs' ? '1' : '0.001'}
-                  value={initialStock}
-                  onChange={(e) => setInitialStock(e.target.value)}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
-                />
-              </div>
-            </div>}
+              <label className="product-editor-tax-toggle"><input type="checkbox" checked={isTaxable} onChange={(event) => setIsTaxable(event.target.checked)} /> Charge tax on this product</label>
+              {editingProduct && <div className="product-editor-muted">Taxability is saved. Tax amounts depend on the store tax configuration.</div>}
+            </section>
+
+            <section className="product-editor-inventory product-editor-card" aria-label="Inventory details">
+              <div className="product-editor-section-title"><strong>Inventory</strong><span>Stock is tracked per variant at a selected location</span></div>
+              <label className="product-editor-toggle"><input type="checkbox" checked={trackInventory} onChange={(event) => setTrackInventory(event.target.checked)} /> Track quantity</label>
+              <label className="product-editor-toggle"><input type="checkbox" checked={continueSellingWhenOutOfStock} disabled={!trackInventory} onChange={(event) => setContinueSellingWhenOutOfStock(event.target.checked)} /> Continue selling when out of stock</label>
+              {warehouses.length > 0 ? <label className="product-editor-location">Inventory location
+                <select value={inventoryLocationId} onChange={(event) => setInventoryLocationId(event.target.value)}><option value="">Use default location</option>{warehouses.map((warehouse) => <option key={warehouse.id} value={warehouse.id}>{warehouse.name}{warehouse.is_default ? ' · Default' : ''}</option>)}</select>
+              </label> : <p className="product-editor-muted">No active inventory locations were returned. Initial stock will use the store default location.</p>}
+              {!editingProduct && <label className="product-editor-initial-stock">Initial stock for a single-variant product<input disabled={!trackInventory || createVariantMatrix.length > 0} type="number" min="0" step={sellingUnit === 'pcs' ? '1' : '0.001'} value={initialStock} onChange={(event) => setInitialStock(event.target.value)} /><span>For products with options, set starting stock in each variant row below.</span></label>}
+            </section>
 
             {editingProduct && variantDrafts.length > 0 && <section className="product-editor-existing-variants product-editor-card" aria-label="Variant details" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14 }}>
-              <div style={{ marginBottom: 10 }}><strong style={{ fontSize: 14, color: '#0f172a' }}>Variant details</strong><p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 12 }}>SKU, barcode, price, cost and shipping weight are stored per variant. Inventory is managed in Catalogue → Inventory.</p></div>
+              <div style={{ marginBottom: 10 }}><strong style={{ fontSize: 14, color: '#0f172a' }}>Variant details</strong><p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 12 }}>SKU, barcode, price, cost, stock policy and shipping weight are stored per variant. Inventory is managed in Catalogue → Inventory.</p></div>
               <div style={{ display: 'grid', gap: 8 }}>
                 {variantDrafts.map((variant, index) => <div key={variant.id || index} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, alignItems: 'end', padding: 10, background: '#f8fafc', borderRadius: 8 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', paddingBottom: 8 }}>{Object.values(variant.optionValues).filter(Boolean).join(' / ') || `Variant ${index + 1}`}</div>
@@ -678,13 +774,25 @@ export const ProductsPage: React.FC = () => {
 
             <div className="product-editor-description product-editor-card" style={{ marginBottom: '20px' }}>
               <div className="product-editor-section-title"><strong>Description</strong><span>Describe what makes this product special</span></div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Description</label>
-              <textarea
-                rows={3}
-                placeholder="Key product attributes and dimensions..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+              <div className="product-editor-rich-toolbar" role="toolbar" aria-label="Description formatting">
+                <button type="button" aria-label="Bold" onClick={() => formatProductDescription('bold')}><strong>B</strong></button>
+                <button type="button" aria-label="Italic" onClick={() => formatProductDescription('italic')}><em>I</em></button>
+                <button type="button" aria-label="Underline" onClick={() => formatProductDescription('underline')}><u>U</u></button>
+                <span />
+                <button type="button" aria-label="Bulleted list" onClick={() => formatProductDescription('insertUnorderedList')}>• List</button>
+                <button type="button" aria-label="Numbered list" onClick={() => formatProductDescription('insertOrderedList')}>1. List</button>
+                <button type="button" aria-label="Clear formatting" onClick={() => formatProductDescription('removeFormat')}>Clear</button>
+              </div>
+              <div
+                ref={descriptionEditorRef}
+                role="textbox"
+                aria-label="Description"
+                aria-multiline="true"
+                contentEditable
+                suppressContentEditableWarning
+                data-placeholder="Add a product description"
+                onInput={(event) => setDescription(event.currentTarget.innerHTML)}
+                className="product-editor-description-input"
               />
             </div>
 
@@ -699,6 +807,34 @@ export const ProductsPage: React.FC = () => {
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569' }}>Size chart (columns and rows separated by |)
                 <textarea rows={4} value={sizeChartText} onChange={(event) => setSizeChartText(event.target.value)} placeholder={'Size | Chest | Length\nS | 86 cm | 60 cm\nM | 92 cm | 64 cm'} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 9, border: '1px solid #e2e8f0', borderRadius: 7, resize: 'vertical' }} />
               </label>
+            </section>
+
+            <section className="product-editor-metafields product-editor-card" aria-label="Product metafields">
+              <div className="product-editor-section-title"><strong>Category metafields</strong><span>Optional values associated with the selected category</span></div>
+              {categoryMetafields.map((field, index) => <div className="product-editor-metafield-row" key={`category-${index}`}>
+                <input aria-label={`Category metafield ${index + 1} name`} value={field.key} onChange={(event) => setCategoryMetafields((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, key: event.target.value } : item))} placeholder="Name" />
+                <input aria-label={`Category metafield ${index + 1} value`} value={field.value} onChange={(event) => setCategoryMetafields((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} placeholder="Value" />
+                <button type="button" aria-label={`Remove category metafield ${index + 1}`} onClick={() => setCategoryMetafields((items) => items.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
+              </div>)}
+              <button className="product-editor-add-metafield" type="button" onClick={() => setCategoryMetafields((items) => [...items, { namespace: 'category', key: '', value: '', type: 'single_line_text_field' }])}>＋ Add category metafield</button>
+
+              <div className="product-editor-metafield-divider" />
+              <div className="product-editor-section-title"><strong>Product metafields</strong><span>Custom values saved with this product</span></div>
+              {productMetafields.map((field, index) => <div className="product-editor-metafield-row" key={`product-${index}`}>
+                <input aria-label={`Product metafield ${index + 1} namespace`} value={field.namespace} onChange={(event) => setProductMetafields((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, namespace: event.target.value } : item))} placeholder="Namespace" />
+                <input aria-label={`Product metafield ${index + 1} name`} value={field.key} onChange={(event) => setProductMetafields((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, key: event.target.value } : item))} placeholder="Name" />
+                <input aria-label={`Product metafield ${index + 1} value`} value={field.value} onChange={(event) => setProductMetafields((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, value: event.target.value } : item))} placeholder="Value" />
+                <button type="button" aria-label={`Remove product metafield ${index + 1}`} onClick={() => setProductMetafields((items) => items.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
+              </div>)}
+              <button className="product-editor-add-metafield" type="button" onClick={() => setProductMetafields((items) => [...items, { namespace: 'custom', key: '', value: '', type: 'single_line_text_field' }])}>＋ Add product metafield</button>
+              <p className="product-editor-muted">Metafields are stored as merchant-defined product attributes. Shopify category suggestions and typed validation are not connected.</p>
+            </section>
+
+            <section className="product-editor-seo product-editor-card" aria-label="Search engine listing">
+              <div className="product-editor-section-title"><strong>Search engine listing</strong><span>Preview how this product can appear in search</span></div>
+              <label>Page title<input maxLength={70} value={seoTitle} onChange={(event) => setSeoTitle(event.target.value)} placeholder={name || 'Product title'} /></label>
+              <label>Meta description<textarea maxLength={320} rows={3} value={seoDescription} onChange={(event) => setSeoDescription(event.target.value)} placeholder="Describe this product for search results" /></label>
+              <div className="product-editor-seo-preview"><strong>{seoTitle || name || 'Product title'}</strong><span>BillionBiz storefront</span><p>{seoDescription || description.replace(/<[^>]*>/g, '').slice(0, 160) || 'Your product description will appear here.'}</p><small>The product URL is generated when you save.</small></div>
             </section>
 
             <div className="product-editor-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>

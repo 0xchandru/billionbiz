@@ -12,12 +12,15 @@
     "media status"
     "title category"
     "description vendor"
-    "price unit"
+    "price type"
+    "inventory unit"
     "sku quantity"
     "organize organize"
     "variants variants"
     "shipping shipping"
     "details details"
+    "metafields metafields"
+    "seo seo"
     "actions actions";
   grid-auto-rows: min-content;
   gap: 16px 22px;
@@ -44,9 +47,13 @@
 .product-editor-status { grid-area: status; }
 .product-editor-category { grid-area: category; }
 .product-editor-vendor { grid-area: vendor; }
+.product-editor-type { grid-area: type; }
 .product-editor-unit { grid-area: unit; }
 .product-editor-quantity { grid-area: quantity; }
 .product-editor-organize { grid-area: organize; }
+.product-editor-inventory { grid-area: inventory; }
+.product-editor-metafields { grid-area: metafields; }
+.product-editor-seo { grid-area: seo; }
 
 .product-editor-breadcrumb {
   display: flex;
@@ -131,6 +138,9 @@
 
 .product-editor-status-indicator span.is-active { background: #23a148; }
 .product-editor-muted { margin: 10px 0 0; color: #72777b; font-size: 12px; line-height: 1.45; }
+.product-editor-side-divider { height: 1px; margin: 16px 0 13px; background: #e1e3e5; }
+.product-editor-small-heading { display: block; margin-bottom: 8px; color: #303438; font-size: 13px; }
+.product-editor-publishing-state { display: block; padding: 8px 10px; border: 1px solid #e1e3e5; border-radius: 8px; background: #f8f8f8; color: #3f4448; font-size: 12px; }
 
 .product-editor-section-title {
   display: flex;
@@ -196,6 +206,48 @@
 .product-editor-organize h4 { margin: 0 0 10px; color: #303438; font-size: 14px; }
 .product-editor-organize button { border: 0; border-radius: 7px; padding: 6px 10px; background: #f1f2f3; color: #6d7277; font-size: 12px; }
 .product-editor-organize p { margin: 8px 0 0; color: #72777b; font-size: 11px; line-height: 1.45; }
+.product-editor-tag-label { display: block; color: #687076; font-size: 11px; font-weight: 600; }
+.product-editor-tag-label input { display: block; width: 100%; box-sizing: border-box; margin-top: 5px; padding: 8px 9px; border: 1px solid #c9cccf; border-radius: 7px; color: #303438; font-size: 12px; font-weight: 400; }
+.product-editor-toggle { display: flex; align-items: center; gap: 9px; margin: 9px 0; color: #303438; font-size: 13px; }
+.product-editor-inventory input[type="checkbox"],
+.product-editor-price input[type="checkbox"] { width: 16px; height: 16px; accent-color: #008060; }
+.product-editor-location,
+.product-editor-initial-stock { display: block; max-width: 440px; margin-top: 12px; color: #4a4f53; font-size: 12px; font-weight: 600; }
+.product-editor-location select,
+.product-editor-initial-stock input { display: block; width: 100%; box-sizing: border-box; margin-top: 5px; padding: 8px 9px; border: 1px solid #c9cccf; border-radius: 7px; background: white; color: #303438; }
+.product-editor-initial-stock span { display: block; margin-top: 5px; color: #72777b; font-size: 11px; font-weight: 400; }
+.product-editor-tax-toggle { display: flex; align-items: center; gap: 8px; padding-top: 24px; color: #3f4448; font-size: 12px; font-weight: 600; }
+
+.product-editor-shipping-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.product-editor-shipping-grid > label,
+.product-editor-dimensions > span { display: block; color: #4a4f53; font-size: 12px; font-weight: 600; }
+.product-editor-shipping-grid input,
+.product-editor-shipping-grid select { display: block; width: 100%; box-sizing: border-box; min-width: 0; margin-top: 6px; padding: 8px 9px; border: 1px solid #c9cccf; border-radius: 7px; background: white; color: #303438; font-size: 12px; }
+.product-editor-dimensions > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 58px; gap: 6px; }
+.product-editor-dimensions label { color: #687076; font-size: 10px; font-weight: 500; }
+
+.product-editor-rich-toolbar { display: flex; align-items: center; gap: 4px; padding: 7px 8px; border: 1px solid #e1e3e5; border-bottom: 0; border-radius: 9px 9px 0 0; background: #fafafa; }
+.product-editor-rich-toolbar button { min-width: 30px; border: 0; border-radius: 5px; padding: 6px 8px; background: transparent; color: #4f5559; cursor: pointer; font-size: 12px; }
+.product-editor-rich-toolbar button:hover { background: #eceeef; }
+.product-editor-rich-toolbar span { width: 1px; height: 20px; margin: 0 4px; background: #dfe2e4; }
+.product-editor-description-input { min-height: 180px; padding: 14px; border: 1px solid #e1e3e5; border-radius: 0 0 9px 9px; background: #fff; color: #303438; font-size: 14px; line-height: 1.55; outline: none; }
+.product-editor-description-input:focus { border-color: #5c6ac4; box-shadow: 0 0 0 1px #5c6ac4; }
+.product-editor-description-input:empty::before { color: #8c9196; content: attr(data-placeholder); }
+
+.product-editor-metafield-divider { height: 1px; margin: 18px 0; background: #e1e3e5; }
+.product-editor-metafield-row { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(120px, 1.4fr) minmax(150px, 2fr) auto; gap: 8px; margin: 8px 0; }
+.product-editor-metafield-row input,
+.product-editor-seo > label input,
+.product-editor-seo > label textarea { min-width: 0; box-sizing: border-box; width: 100%; margin-top: 5px; padding: 8px 9px; border: 1px solid #c9cccf; border-radius: 7px; color: #303438; font-size: 12px; }
+.product-editor-metafield-row button,
+.product-editor-add-metafield { border: 1px solid #c9cccf; border-radius: 7px; padding: 7px 9px; background: white; color: #40464a; cursor: pointer; font-size: 11px; }
+.product-editor-add-metafield { margin-top: 6px; }
+.product-editor-seo > label { display: block; margin: 12px 0; color: #4a4f53; font-size: 12px; font-weight: 600; }
+.product-editor-seo-preview { margin-top: 14px; padding: 14px; border-radius: 9px; background: #f8f8f8; }
+.product-editor-seo-preview strong { display: block; overflow: hidden; color: #1a0dab; font-size: 16px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.product-editor-seo-preview span { display: block; margin-top: 4px; color: #5f6368; font-size: 12px; }
+.product-editor-seo-preview p { margin: 6px 0; color: #4d5156; font-size: 12px; line-height: 1.45; }
+.product-editor-seo-preview small { color: #72777b; font-size: 11px; }
 .product-editor-actions { position: sticky; bottom: 0; padding: 14px 0 0; border-top: 1px solid #e1e3e5; background: #f6f6f7; }
 .product-editor-actions button[type="submit"] { background: #008060 !important; }
 .product-editor-actions button[type="button"] { color: #303438; }
@@ -215,6 +267,8 @@
       "category"
       "vendor"
       "price"
+      "type"
+      "inventory"
       "unit"
       "quantity"
       "sku"
@@ -222,11 +276,15 @@
       "variants"
       "shipping"
       "details"
+      "metafields"
+      "seo"
       "actions";
     gap: 13px;
   }
 
   .product-editor-organize { grid-template-columns: minmax(0, 1fr); }
+  .product-editor-shipping-grid { grid-template-columns: minmax(0, 1fr); }
+  .product-editor-metafield-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
 @media (max-width: 560px) {
