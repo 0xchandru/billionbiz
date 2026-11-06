@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Plus, 
   Search, 
@@ -13,6 +14,7 @@ import { ErrorState } from '../components/common/ErrorState';
 import { buildVariantMatrix, buildVariantSku, normalizeVariantOptions } from '../utils/catalog/variantMatrix';
 import { formatProductSpecifications, formatSizeChart, parseProductSpecifications, parseSizeChart } from '../utils/catalog/productMetadata';
 import { BarcodePreview } from '../components/catalog/BarcodePreview';
+import './Products.css';
 
 const formatCurrency = (minor: number) => {
   return '₹' + (minor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -20,6 +22,9 @@ const formatCurrency = (minor: number) => {
 
 export const ProductsPage: React.FC = () => {
   type VariantDraft = { id?: string; sku: string; barcode: string; cost: string; weightGrams: string; optionValues: Record<string, string>; price: string; compareAt: string; initialStock?: string };
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isDedicatedProductEditor = location.pathname === '/products/new';
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -109,6 +114,10 @@ export const ProductsPage: React.FC = () => {
   };
 
   const openProduct = (product?: any) => {
+    if (!product && !isDedicatedProductEditor) {
+      navigate('/products/new');
+      return;
+    }
     void loadProductOptions();
     resetProductForm();
     if (product) {
@@ -145,6 +154,21 @@ export const ProductsPage: React.FC = () => {
     }
     setIsCreateOpen(true);
   };
+
+  const closeProductEditor = () => {
+    setIsCreateOpen(false);
+    if (isDedicatedProductEditor) navigate('/products');
+  };
+
+  useEffect(() => {
+    if (isDedicatedProductEditor) {
+      resetProductForm();
+      void loadProductOptions();
+      setIsCreateOpen(true);
+    } else {
+      setIsCreateOpen(false);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     loadData();
@@ -213,6 +237,7 @@ export const ProductsPage: React.FC = () => {
       setIsCreateOpen(false);
       resetProductForm();
       await loadData();
+      if (isDedicatedProductEditor) navigate('/products');
     } catch (err: any) {
       alert(err.message || 'Failed to create product');
     } finally {
@@ -273,7 +298,8 @@ export const ProductsPage: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'inherit' }}>
+    <div className={isDedicatedProductEditor ? 'products-page products-page-editor' : 'products-page'} style={{ padding: isDedicatedProductEditor ? '24px clamp(16px, 3vw, 40px)' : '24px 32px', maxWidth: isDedicatedProductEditor ? 'none' : '1440px', margin: '0 auto', fontFamily: 'inherit' }}>
+      {!isDedicatedProductEditor && <>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
@@ -366,7 +392,7 @@ export const ProductsPage: React.FC = () => {
             title="No products in catalog"
             description={search ? 'No products match your search criteria.' : 'Create sellable inventory items, set prices, and configure options.'}
             actionLabel="Add Product"
-            onAction={() => setIsCreateOpen(true)}
+            onAction={() => openProduct()}
           />
         ) : (
           <>
@@ -461,17 +487,21 @@ export const ProductsPage: React.FC = () => {
           </>
         )}
       </div>
+      </>}
 
-      {/* CREATE PRODUCT MODAL */}
+      {/* Product editor: modal for edits, dedicated page for creation */}
       {isCreateOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <form role="dialog" aria-modal="true" aria-labelledby="product-form-title" onSubmit={handleCreate} style={{ background: '#ffffff', borderRadius: '16px', width: '100%', maxWidth: '1180px', maxHeight: '92vh', overflowY: 'auto', padding: '24px clamp(16px, 3vw, 32px)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div className={isDedicatedProductEditor ? 'product-create-page' : 'product-create-backdrop'}>
+          <form className={isDedicatedProductEditor ? 'product-create-form product-create-form-page' : 'product-create-form'} role={isDedicatedProductEditor ? undefined : 'dialog'} aria-modal={isDedicatedProductEditor ? undefined : true} aria-labelledby="product-form-title" onSubmit={handleCreate}>
+            <div className="product-editor-heading">
+              {isDedicatedProductEditor && <div className="product-editor-breadcrumb"><button type="button" onClick={closeProductEditor} aria-label="Back to products">‹</button><span>Products</span><span aria-hidden="true">/</span><strong>Add product</strong></div>}
+              <div className="product-editor-title-row">
               <div><h3 id="product-form-title" style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>{editingProduct ? 'Edit Product' : 'Create New Product'}</h3><p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b' }}>Organize product details, pricing, variants, and media.</p></div>
-              <button type="button" aria-label="Close product editor" onClick={() => setIsCreateOpen(false)} style={{ cursor: 'pointer', color: '#64748b', background: 'transparent', border: 0, padding: 6 }}><X size={20} /></button>
+              {!isDedicatedProductEditor && <button type="button" aria-label="Close product editor" onClick={closeProductEditor} style={{ cursor: 'pointer', color: '#64748b', background: 'transparent', border: 0, padding: 6 }}><X size={20} /></button>}
+              </div>
             </div>
 
-            <div style={{ marginBottom: '14px' }}>
+            <div className="product-editor-title-field product-editor-card">
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Product Title *</label>
               <input
                 type="text"
@@ -483,11 +513,11 @@ export const ProductsPage: React.FC = () => {
               />
             </div>
 
-            <label style={{ display: 'block', marginBottom: 14, fontSize: 13, fontWeight: 600, color: '#334155' }}>Brand (optional)
+            <label className="product-editor-vendor product-editor-card" style={{ display: 'block', marginBottom: 14, fontSize: 13, fontWeight: 600, color: '#334155' }}>Vendor / brand (optional)
               <input value={brand} onChange={(event) => setBrand(event.target.value)} placeholder="Brand or maker" style={{ display: 'block', width: '100%', marginTop: 6, padding: '9px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }} />
             </label>
 
-            <div style={{ marginBottom: 14 }}>
+            <div className="product-editor-category product-editor-card" style={{ marginBottom: 14 }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#334155' }}>Categories (first selected is primary)</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxHeight: 96, overflow: 'auto', padding: 8, border: '1px solid #e2e8f0', borderRadius: 8 }}>
                 {categories.map((category) => <label key={category.id} style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 13 }}><input type="checkbox" checked={categoryIds.includes(category.id)} onChange={(event) => setCategoryIds((current) => event.target.checked ? [...current, category.id] : current.filter((id) => id !== category.id))} />{category.name}</label>)}
@@ -495,23 +525,33 @@ export const ProductsPage: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+            <div className="product-editor-status product-editor-card">
+              <div className="product-editor-status-indicator"><span className={visibility === 'ACTIVE' ? 'is-active' : ''} />{visibility === 'ACTIVE' ? 'Active' : visibility === 'DRAFT' ? 'Draft' : 'Archived'}</div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Status
+                <select value={visibility} onChange={(event) => setVisibility(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, borderRadius: 8, border: '1px solid #e2e8f0' }}><option value="ACTIVE">Active</option><option value="DRAFT">Draft</option><option value="ARCHIVED">Archived</option></select>
+              </label>
+              <p className="product-editor-muted">Active products can appear in your storefront when a store is published.</p>
+            </div>
+
+            <div className="product-editor-unit product-editor-card">
               <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Selling unit
                 <select value={sellingUnit} onChange={(event) => setSellingUnit(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, borderRadius: 8, border: '1px solid #e2e8f0' }}>
                   {(units.length ? units : [{ code: 'pcs', label: 'Pieces' }]).map((unit) => <option key={unit.code} value={unit.code}>{unit.label} ({unit.code})</option>)}
                 </select>
               </label>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Visibility
-                <select value={visibility} onChange={(event) => setVisibility(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, borderRadius: 8, border: '1px solid #e2e8f0' }}><option value="ACTIVE">Publish now</option><option value="DRAFT">Hidden / draft</option><option value="ARCHIVED">Archived</option></select>
-              </label>
             </div>
 
-            {sellingUnit !== 'pcs' && <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+            {sellingUnit !== 'pcs' && <div className="product-editor-quantity product-editor-card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Minimum quantity ({sellingUnit})<input type="number" min="0.001" step="0.001" value={minimumQuantity} onChange={(event) => setMinimumQuantity(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, border: '1px solid #e2e8f0', borderRadius: 8 }} /></label>
               <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>Quantity step ({sellingUnit})<input type="number" min="0.001" step="0.001" value={quantityStep} onChange={(event) => setQuantityStep(event.target.value)} style={{ display: 'block', width: '100%', marginTop: 6, padding: 9, border: '1px solid #e2e8f0', borderRadius: 8 }} /></label>
             </div>}
 
-            <section aria-label="Shipping details" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
+            <section className="product-editor-organize product-editor-card" aria-label="Product organization">
+              <div><h4>Collections</h4><button type="button" disabled aria-disabled="true">＋ Add collections</button><p>Collection assignment is not available in the current catalog API.</p></div>
+              <div><h4>Tags</h4><button type="button" disabled aria-disabled="true">＋ Add tags</button><p>Product tags are not available in the current catalog API.</p></div>
+            </section>
+
+            <section className="product-editor-shipping product-editor-card" aria-label="Shipping details" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
               <strong style={{ fontSize: 14, color: '#0f172a' }}>Shipping</strong>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 13, color: '#334155' }}><input type="checkbox" checked={requiresShipping} onChange={(event) => setRequiresShipping(event.target.checked)} /> This is a physical product and requires shipping</label>
               <label style={{ display: 'block', maxWidth: 260, marginTop: 10, fontSize: 12, fontWeight: 600, color: '#475569' }}>Default weight (grams)
@@ -520,7 +560,7 @@ export const ProductsPage: React.FC = () => {
               {requiresShipping && <p style={{ margin: '7px 0 0', fontSize: 11, color: '#64748b' }}>Use the variant details below to set a different weight for each variant.</p>}
             </section>
 
-            {!editingProduct && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+            {!editingProduct && <div className="product-editor-price product-editor-card" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '14px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>{sellingUnit === 'pcs' ? 'Price (INR)' : `Price per ${sellingUnit} (INR)`} *</label>
                 <input
@@ -554,7 +594,7 @@ export const ProductsPage: React.FC = () => {
               </div>
             </div>}
 
-            {editingProduct && variantDrafts.length > 0 && <section aria-label="Variant details" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+            {editingProduct && variantDrafts.length > 0 && <section className="product-editor-existing-variants product-editor-card" aria-label="Variant details" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14 }}>
               <div style={{ marginBottom: 10 }}><strong style={{ fontSize: 14, color: '#0f172a' }}>Variant details</strong><p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 12 }}>SKU, barcode, price, cost and shipping weight are stored per variant. Inventory is managed in Catalogue → Inventory.</p></div>
               <div style={{ display: 'grid', gap: 8 }}>
                 {variantDrafts.map((variant, index) => <div key={variant.id || index} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8, alignItems: 'end', padding: 10, background: '#f8fafc', borderRadius: 8 }}>
@@ -569,7 +609,7 @@ export const ProductsPage: React.FC = () => {
               </div>
             </section>}
 
-            {!editingProduct && <div style={{ marginBottom: '14px' }}>
+            {!editingProduct && <div className="product-editor-sku product-editor-card" style={{ marginBottom: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}><label htmlFor="product-primary-sku" style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>SKU base</label><button type="button" onClick={() => void generateUniqueSku()} style={{ border: '1px solid #cbd5e1', background: '#fff', color: '#334155', borderRadius: 7, padding: '6px 9px', cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>Generate unique SKU</button></div>
               <input id="product-primary-sku" type="text" placeholder="SKU-YYYYMMDD-000 (generated when blank)" value={sku} onChange={(e) => setSku(e.target.value)} style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }} />
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginTop: 10 }}>Barcode (optional)
@@ -577,7 +617,7 @@ export const ProductsPage: React.FC = () => {
               </label>
             </div>}
 
-            <section aria-label="Product variants" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
+            <section className="product-editor-variants product-editor-card" aria-label="Product variants" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                 <div><strong style={{ fontSize: 14, color: '#0f172a' }}>Variants</strong><p style={{ margin: '3px 0 0', fontSize: 12, color: '#64748b' }}>Add options such as Size and Color. BillionBiz creates up to 250 combinations with a unique SKU for each. Price and starting stock apply to each variant.</p></div>
                 {!editingProduct && variantOptions.length < 3 && <button type="button" onClick={() => setVariantOptions((items) => [...items, { name: items.length === 1 ? 'Color' : 'Material', values: '' }])} style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: 7, padding: '7px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add option</button>}
@@ -620,15 +660,24 @@ export const ProductsPage: React.FC = () => {
               </div>}
             </section>
 
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>Product image URLs (one per line; first image is primary)</label>
-              <textarea rows={2} value={imageUrls} onChange={(event) => setImageUrls(event.target.value)} placeholder="https://cdn.example.com/product.jpg" style={{ width: '100%', padding: 9, border: '1px solid #e2e8f0', borderRadius: 8, resize: 'vertical' }} />
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple disabled={uploadingImages} onChange={async (event) => { const files = Array.from(event.target.files || []); if (!files.length) return; setUploadingImages(true); try { const uploaded = await Promise.all(files.map((file) => api.uploadStoreMedia(file))); const current = imageUrls.split('\n').map((value) => value.trim()).filter(Boolean); setImageUrls([...current, ...uploaded.map((image) => image.url)].join('\n')); } catch (error: any) { alert(error.message || 'Image upload failed.'); } finally { setUploadingImages(false); event.target.value = ''; } }} style={{ marginTop: 8 }} />
+            <div className="product-editor-media product-editor-card" style={{ marginBottom: 14 }}>
+              <div className="product-editor-section-title"><strong>Media</strong><span>Add product photos</span></div>
+              <div className="product-editor-upload-zone">
+                <span className="product-editor-upload-icon">＋</span>
+                <strong>Upload images</strong>
+                <span>JPEG, PNG, WebP, GIF, or AVIF</span>
+                <input aria-label="Upload product images" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" multiple disabled={uploadingImages} onChange={async (event) => { const files = Array.from(event.target.files || []); if (!files.length) return; setUploadingImages(true); try { const uploaded = await Promise.all(files.map((file) => api.uploadStoreMedia(file))); const current = imageUrls.split('\n').map((value) => value.trim()).filter(Boolean); setImageUrls([...current, ...uploaded.map((image) => image.url)].join('\n')); } catch (error: any) { alert(error.message || 'Image upload failed.'); } finally { setUploadingImages(false); event.target.value = ''; } }} />
+              </div>
               {uploadingImages && <span style={{ display: 'block', fontSize: 12, color: '#64748b' }}>Uploading product images…</span>}
-              <div style={{ display: 'grid', gap: 5, marginTop: 8 }}>{imageUrls.split('\n').map((url) => url.trim()).filter(Boolean).map((url, index, list) => <div key={`${url}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{index === 0 ? 'Primary · ' : ''}{url}</span><button type="button" disabled={index === 0} onClick={() => reorderImage(index, -1)} aria-label="Move image up">↑</button><button type="button" disabled={index === list.length - 1} onClick={() => reorderImage(index, 1)} aria-label="Move image down">↓</button></div>)}</div>
+              {imageUrls.split('\n').map((url) => url.trim()).filter(Boolean).length > 0 && <div className="product-editor-image-grid">{imageUrls.split('\n').map((url) => url.trim()).filter(Boolean).map((url, index, list) => <div className="product-editor-image-tile" key={`${url}-${index}`}><img src={url} alt={`Product image ${index + 1}`} /><button type="button" disabled={index === 0} onClick={() => reorderImage(index, -1)} aria-label="Move image up">↑</button><button type="button" disabled={index === list.length - 1} onClick={() => reorderImage(index, 1)} aria-label="Move image down">↓</button><button type="button" onClick={() => setImageUrls(list.filter((_, imageIndex) => imageIndex !== index).join('\n'))} aria-label={`Remove image ${index + 1}`}>×</button></div>)}</div>}
+              <details className="product-editor-image-url"><summary>Add image by URL</summary>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#334155', margin: '10px 0 6px' }}>Image URLs (one per line; first image is primary)</label>
+              <textarea rows={2} value={imageUrls} onChange={(event) => setImageUrls(event.target.value)} placeholder="https://cdn.example.com/product.jpg" style={{ width: '100%', padding: 9, border: '1px solid #e2e8f0', borderRadius: 8, resize: 'vertical' }} />
+              </details>
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
+            <div className="product-editor-description product-editor-card" style={{ marginBottom: '20px' }}>
+              <div className="product-editor-section-title"><strong>Description</strong><span>Describe what makes this product special</span></div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Description</label>
               <textarea
                 rows={3}
@@ -639,7 +688,7 @@ export const ProductsPage: React.FC = () => {
               />
             </div>
 
-            <section aria-label="Product information for customers" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 18, background: '#fbfdff' }}>
+            <section className="product-editor-details product-editor-card" aria-label="Product information for customers" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 18, background: '#fbfdff' }}>
               <strong style={{ display: 'block', marginBottom: 10, fontSize: 14, color: '#0f172a' }}>Product information</strong>
               <label style={{ display: 'block', marginBottom: 12, fontSize: 12, fontWeight: 600, color: '#475569' }}>Key features (one per line)
                 <textarea rows={3} value={keyFeaturesText} onChange={(event) => setKeyFeaturesText(event.target.value)} placeholder={'Soft, breathable fabric\nMachine washable\nMade in India'} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 9, border: '1px solid #e2e8f0', borderRadius: 7, resize: 'vertical' }} />
@@ -652,10 +701,10 @@ export const ProductsPage: React.FC = () => {
               </label>
             </section>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <div className="product-editor-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button
                 type="button"
-                onClick={() => setIsCreateOpen(false)}
+                onClick={closeProductEditor}
                 style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
               >
                 Cancel

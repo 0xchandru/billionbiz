@@ -157,6 +157,7 @@ export const renderAdminRoutes = (): React.ReactElement => (
       <Route path="/appointments/resources" element={<ResourcesPage />} />
 
       {/* Products & Catalogue Section - Dedicated Individual Pages */}
+      <Route path="/products/new" element={<ProductsPage />} />
       <Route path="/products" element={<ProductsPage />} />
       <Route path="/products/categories" element={<CategoriesPage />} />
       <Route path="/products/bundles" element={<BundlesPage />} />
