@@ -10,6 +10,7 @@ import { api } from '../api/services';
 import { TableSkeleton } from '../components/common/SkeletonLoader';
 import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
+import './CommerceLists.css';
 
 type ManualOrderLine = {
   variantId: string;
@@ -298,22 +299,22 @@ export const OrdersPage: React.FC = () => {
   });
 
   const countUnfulfilled = orders.filter((o) => o.fulfillment_status === 'UNFULFILLED').length;
-  const countUnpaid = orders.filter((o) => o.payment_status === 'PENDING').length;
+  const countUnpaid = orders.filter((o) => o.payment_status === 'PENDING' || o.payment_status === 'FAILED').length;
   const countCompleted = orders.filter((o) => o.status === 'COMPLETED').length;
   const countCancelled = orders.filter((o) => o.status === 'CANCELLED').length;
   const totalRevenue = orders.reduce((acc, o) => acc + (o.total_minor || 0), 0);
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+    <div className="commerce-admin-page commerce-orders-page" style={{ padding: '24px 32px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       {/* Page Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="commerce-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <ShoppingCart size={26} color="#0d9488" />
-            Orders Management
+            <ShoppingCart size={24} color="#202223" />
+            Orders
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
-            Track, fulfill, and manage customer orders across online store, POS terminal, and digital channels.
+            Manage customer orders, payments, and fulfillment.
           </p>
         </div>
 
@@ -341,11 +342,12 @@ export const OrdersPage: React.FC = () => {
 
           <button
             onClick={openCreateOrderModal}
+            className="commerce-primary-action"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              backgroundColor: '#0d9488',
+              backgroundColor: '#1a1a1a',
               color: '#ffffff',
               border: 'none',
               borderRadius: '8px',
@@ -353,11 +355,11 @@ export const OrdersPage: React.FC = () => {
               fontSize: '14px',
               fontWeight: 600,
               cursor: 'pointer',
-              boxShadow: '0 1px 3px rgba(13, 148, 136, 0.25)'
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.12)'
             }}
           >
             <Plus size={16} />
-            Create Order
+            Create order
           </button>
         </div>
       </div>
@@ -390,116 +392,72 @@ export const OrdersPage: React.FC = () => {
       </div>
 
       {/* Local Tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
+      <div className="orders-view-tabs" role="tablist" aria-label="Filter orders">
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'all'}
+          className={activeTab === 'all' ? 'orders-view-tab orders-view-tab-active' : 'orders-view-tab'}
           onClick={() => setActiveTab('all')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'all' ? 600 : 500,
-            color: activeTab === 'all' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'all' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
         >
-          All Orders ({orders.length})
+          All <span>{orders.length}</span>
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'unfulfilled'}
+          className={activeTab === 'unfulfilled' ? 'orders-view-tab orders-view-tab-active' : 'orders-view-tab'}
           onClick={() => setActiveTab('unfulfilled')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'unfulfilled' ? 600 : 500,
-            color: activeTab === 'unfulfilled' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'unfulfilled' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
         >
-          Unfulfilled ({countUnfulfilled})
+          Unfulfilled <span>{countUnfulfilled}</span>
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'unpaid'}
+          className={activeTab === 'unpaid' ? 'orders-view-tab orders-view-tab-active' : 'orders-view-tab'}
           onClick={() => setActiveTab('unpaid')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'unpaid' ? 600 : 500,
-            color: activeTab === 'unpaid' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'unpaid' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
         >
-          Unpaid ({countUnpaid})
+          Unpaid <span>{countUnpaid}</span>
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'completed'}
+          className={activeTab === 'completed' ? 'orders-view-tab orders-view-tab-active' : 'orders-view-tab'}
           onClick={() => setActiveTab('completed')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'completed' ? 600 : 500,
-            color: activeTab === 'completed' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'completed' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
         >
-          Completed ({countCompleted})
+          Completed <span>{countCompleted}</span>
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'cancelled'}
+          className={activeTab === 'cancelled' ? 'orders-view-tab orders-view-tab-active' : 'orders-view-tab'}
           onClick={() => setActiveTab('cancelled')}
-          style={{
-            padding: '10px 16px',
-            fontSize: '14px',
-            fontWeight: activeTab === 'cancelled' ? 600 : 500,
-            color: activeTab === 'cancelled' ? '#0d9488' : '#64748b',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeTab === 'cancelled' ? '2px solid #0d9488' : '2px solid transparent',
-            cursor: 'pointer'
-          }}
         >
-          Cancelled ({countCancelled})
+          Cancelled <span>{countCancelled}</span>
         </button>
       </div>
 
       {/* Search and Filters */}
-      <div style={{ display: 'flex', gap: '14px', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <form onSubmit={handleSearchSubmit} style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+      <div className="orders-list-tools">
+        <form className="orders-search" onSubmit={handleSearchSubmit}>
           <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
+            aria-label="Search orders"
             placeholder="Search order number, customer name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '9px 12px 9px 36px',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-              fontSize: '13px',
-              outline: 'none',
-              backgroundColor: '#ffffff'
-            }}
           />
         </form>
 
         <select
+          aria-label="Filter orders by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{
-            padding: '8px 14px',
-            borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            fontSize: '13px',
-            outline: 'none',
-            backgroundColor: '#ffffff'
-          }}
+          className="orders-status-filter"
         >
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
@@ -529,7 +487,7 @@ export const OrdersPage: React.FC = () => {
           onAction={() => setShowCreateModal(true)}
         />
       ) : (
-        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="orders-table-card" style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontSize: '12px', textTransform: 'uppercase' }}>

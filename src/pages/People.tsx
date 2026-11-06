@@ -15,6 +15,7 @@ import {
 import { api } from '../api/services';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
+import './CommerceLists.css';
 
 const formatCurrency = (minor: number) => {
   return '₹' + (minor / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -24,6 +25,7 @@ export const PeoplePage: FC = () => {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [customerView, setCustomerView] = useState<'ALL' | 'REPEAT' | 'NO_ORDERS'>('ALL');
   const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
   const [customerDetails, setCustomerDetails] = useState<any | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -107,31 +109,38 @@ export const PeoplePage: FC = () => {
     }
   };
 
-  const filteredCustomers = customers;
+  const filteredCustomers = customers.filter((customer) => {
+    const totalOrders = Number(customer.total_orders || 0);
+    if (customerView === 'REPEAT') return totalOrders > 1;
+    if (customerView === 'NO_ORDERS') return totalOrders === 0;
+    return true;
+  });
+  const customerViewCount = (view: 'ALL' | 'REPEAT' | 'NO_ORDERS') => customers.filter((customer) => {
+    const totalOrders = Number(customer.total_orders || 0);
+    if (view === 'REPEAT') return totalOrders > 1;
+    if (view === 'NO_ORDERS') return totalOrders === 0;
+    return true;
+  }).length;
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
+    <div className="commerce-admin-page commerce-customers-page" style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto', color: '#0f172a' }}>
       {/* Top Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div className="commerce-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
-            <span>People & CRM</span>
-            <span>/</span>
-            <span style={{ color: '#083e47', fontWeight: 600 }}>Customers</span>
-          </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Customer Directory & Profiles</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Customers</h1>
           <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '14px' }}>
-            Authoritative directory of registered customer accounts, order history, and service clients.
+            Manage customer details, purchase history, and returning buyers.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
+          className="commerce-primary-action"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#083e47',
+            backgroundColor: '#1a1a1a',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
@@ -143,7 +152,7 @@ export const PeoplePage: FC = () => {
           }}
         >
           <Plus size={16} />
-          Add Customer
+          Add customer
         </button>
       </div>
 
@@ -168,26 +177,37 @@ export const PeoplePage: FC = () => {
       </div>
 
       {/* Search Bar Row */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '20px' }}>
-        <div style={{ position: 'relative', width: '320px' }}>
+      <div className="customer-list-tools">
+        <div className="customer-search">
           <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
           <input
             type="text"
+            aria-label="Search customers"
             placeholder="Search name, email, phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: '100%',
-              backgroundColor: '#ffffff',
-              border: '1px solid #cbd5e1',
-              borderRadius: '8px',
-              padding: '8px 12px 8px 36px',
-              color: '#0f172a',
-              fontSize: '13px',
-              outline: 'none'
-            }}
           />
         </div>
+        <span className="customer-result-count">{filteredCustomers.length} {filteredCustomers.length === 1 ? 'customer' : 'customers'}</span>
+      </div>
+
+      <div className="customer-view-tabs" role="tablist" aria-label="Customer quick views">
+        {([
+          ['ALL', 'All customers'],
+          ['REPEAT', 'Repeat buyers'],
+          ['NO_ORDERS', 'No orders'],
+        ] as const).map(([view, label]) => (
+          <button
+            key={view}
+            type="button"
+            role="tab"
+            aria-selected={customerView === view}
+            className={customerView === view ? 'customer-view-tab customer-view-tab-active' : 'customer-view-tab'}
+            onClick={() => setCustomerView(view)}
+          >
+            {label}<span>{customerViewCount(view)}</span>
+          </button>
+        ))}
       </div>
 
       {/* Content */}
@@ -196,26 +216,26 @@ export const PeoplePage: FC = () => {
       ) : filteredCustomers.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No Customers Found"
+          title={customers.length === 0 ? 'Add your first customer' : 'No customers found'}
           description={
-            search
-              ? 'No customer records match your filter criteria.'
-              : 'There are no customer records logged yet. Add your first customer profile manually or wait for online store checkouts.'
+            search || customerView !== 'ALL'
+              ? 'Try changing your search or customer view.'
+              : 'Add a customer profile or let customer details arrive with storefront checkouts.'
           }
-          actionLabel="Add Customer"
-          onAction={() => setIsAddModalOpen(true)}
+          actionLabel={customers.length === 0 ? 'Add customer' : undefined}
+          onAction={customers.length === 0 ? () => setIsAddModalOpen(true) : undefined}
         />
       ) : (
-        <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+        <div className="customer-table-card" style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' }}>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>CUSTOMER NAME</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>CONTACT DETAILS</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>TOTAL ORDERS</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>LIFETIME VALUE</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600 }}>REGISTERED</th>
-                <th style={{ padding: '14px 20px', fontWeight: 600, textAlign: 'right' }}>DETAILS</th>
+                <th style={{ padding: '14px 20px', fontWeight: 600 }}>Customer</th>
+                <th style={{ padding: '14px 20px', fontWeight: 600 }}>Contact</th>
+                <th style={{ padding: '14px 20px', fontWeight: 600 }}>Orders</th>
+                <th style={{ padding: '14px 20px', fontWeight: 600 }}>Lifetime value</th>
+                <th style={{ padding: '14px 20px', fontWeight: 600 }}>Added</th>
+                <th style={{ padding: '14px 20px', fontWeight: 600, textAlign: 'right' }}>Profile</th>
               </tr>
             </thead>
             <tbody>
@@ -265,7 +285,7 @@ export const PeoplePage: FC = () => {
                       style={{
                         backgroundColor: '#f1f5f9',
                         border: '1px solid #e2e8f0',
-                        color: '#083e47',
+                        color: '#202223',
                         padding: '6px 12px',
                         borderRadius: '6px',
                         fontSize: '12px',
