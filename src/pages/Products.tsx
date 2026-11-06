@@ -31,6 +31,7 @@ export const ProductsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DRAFT' | 'ARCHIVED'>('ALL');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isAdjustOpen, setIsAdjustOpen] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<any | null>(null);
@@ -89,6 +90,12 @@ export const ProductsPage: React.FC = () => {
     try { return buildVariantMatrix(variantOptions); }
     catch { return []; }
   }, [variantOptions]);
+  const filteredProducts = useMemo(() => statusFilter === 'ALL'
+    ? products
+    : products.filter((product) => String(product.status || '').toUpperCase() === statusFilter), [products, statusFilter]);
+  const productStatusCount = (status: 'ALL' | 'ACTIVE' | 'DRAFT' | 'ARCHIVED') => status === 'ALL'
+    ? products.length
+    : products.filter((product) => String(product.status || '').toUpperCase() === status).length;
   const variantKey = (optionValues: Record<string, string>) => Object.entries(optionValues)
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([key, value]) => `${key}:${value}`)
@@ -385,21 +392,19 @@ export const ProductsPage: React.FC = () => {
   };
 
   return (
-    <div className={isDedicatedProductEditor ? 'products-page products-page-editor' : 'products-page'} style={{ padding: isDedicatedProductEditor ? '24px clamp(16px, 3vw, 40px)' : '24px 32px', maxWidth: isDedicatedProductEditor ? 'none' : '1440px', margin: '0 auto', fontFamily: 'inherit' }}>
+    <div className={`products-page ${isDedicatedProductEditor ? 'products-page-editor' : 'products-page-list'}`} style={{ padding: isDedicatedProductEditor ? '24px clamp(16px, 3vw, 40px)' : '24px 32px', maxWidth: isDedicatedProductEditor ? 'none' : '1440px', margin: '0 auto', fontFamily: 'inherit' }}>
       {!isDedicatedProductEditor && <>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
-            <span>Catalogue</span>
-            <span>/</span>
-            <span style={{ color: '#083e47', fontWeight: 600 }}>Products</span>
+            <span style={{ color: '#202223', fontWeight: 600 }}>Products</span>
           </div>
           <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-            Product Catalogue
+            Products
           </h1>
           <p style={{ color: '#64748b', marginTop: '4px', fontSize: '14px' }}>
-            Manage sellable SKUs, multi-variant options, and storefront pricing.
+            Manage your products, pricing, variants, and inventory.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -431,7 +436,7 @@ export const ProductsPage: React.FC = () => {
               padding: '8px 16px',
               borderRadius: '8px',
               border: 'none',
-              background: '#0d9488',
+              background: '#1a1a1a',
               color: '#ffffff',
               fontSize: '13px',
               fontWeight: 600,
@@ -440,46 +445,59 @@ export const ProductsPage: React.FC = () => {
             }}
           >
             <Plus size={15} />
-            <span>Add Product</span>
+            <span>Add product</span>
           </button>
         </div>
       </div>
 
+      <nav className="product-list-tabs" aria-label="Filter products by status">
+        {([
+          ['ALL', 'All'],
+          ['ACTIVE', 'Active'],
+          ['DRAFT', 'Draft'],
+          ['ARCHIVED', 'Archived'],
+        ] as const).map(([status, label]) => (
+          <button
+            key={status}
+            type="button"
+            className={statusFilter === status ? 'product-list-tab product-list-tab-active' : 'product-list-tab'}
+            aria-pressed={statusFilter === status}
+            onClick={() => setStatusFilter(status)}
+          >
+            {label}<span>{productStatusCount(status)}</span>
+          </button>
+        ))}
+      </nav>
+
       {/* Search Bar */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: '480px' }}>
+      <div className="product-list-tools">
+        <div className="product-list-search">
           <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} />
           <input
             type="text"
             placeholder="Search products by title, SKU, or category..."
+            aria-label="Search products by title, SKU, or category"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 12px 10px 38px',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              backgroundColor: '#ffffff'
-            }}
           />
         </div>
+        <span className="product-list-result-count">{filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}</span>
       </div>
 
-      <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflowX: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div className="product-list-table-card">
         {loading ? (
           <div style={{ padding: '24px' }}>
             <TableSkeleton rows={5} columns={7} />
           </div>
         ) : loadError && products.length === 0 ? (
           <ErrorState title="Products couldn’t load" message={loadError} onRetry={() => void loadData()} />
-        ) : products.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <EmptyState
             icon={Box}
-            title="No products in catalog"
-            description={search ? 'No products match your search criteria.' : 'Create sellable inventory items, set prices, and configure options.'}
-            actionLabel="Add Product"
-            onAction={() => openProduct()}
+            title={products.length === 0 ? 'Add your products' : 'No products found'}
+            description={search || statusFilter !== 'ALL' ? 'Try changing your search or status filter.' : 'Start by adding the products you want to sell in your store.'}
+            actionLabel={products.length === 0 ? 'Add product' : undefined}
+            onAction={products.length === 0 ? () => openProduct() : undefined}
           />
         ) : (
           <>
@@ -497,7 +515,7 @@ export const ProductsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => {
+              {filteredProducts.map((p) => {
                 const primaryVariant = p.variants?.[0] || {};
                 const totalStock = (p.variants || []).reduce((acc: number, v: any) => acc + (v.stock_available || 0), 0);
                 const inventoryNotTracked = (p.variants || []).length > 0 && p.variants.every((variant: any) => variant.track_inventory === false);

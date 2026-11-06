@@ -66,10 +66,10 @@ export const navSections: NavSection[] = [
   },
   {
     id: 'catalogue',
-    label: 'Catalogue',
+    label: 'Products',
     icon: Package,
     items: [
-      { id: 'products', label: 'Products', path: '/products' },
+      { id: 'products', label: 'All products', path: '/products' },
       { id: 'categories', label: 'Categories', path: '/products/categories' },
       { id: 'bundles', label: 'Bundles', path: '/products/bundles' },
       { id: 'selling-units', label: 'Selling Units', path: '/products/units' },
@@ -79,7 +79,7 @@ export const navSections: NavSection[] = [
   },
   {
     id: 'team',
-    label: 'Team',
+    label: 'Staff',
     icon: ShieldCheck,
     items: [
       { id: 'team-members', label: 'Team Members', path: '/team' },
@@ -89,7 +89,7 @@ export const navSections: NavSection[] = [
   },
   {
     id: 'people',
-    label: 'People',
+    label: 'Customers',
     icon: Users,
     items: [
       { id: 'customers', label: 'Customers', path: '/people' },
@@ -308,7 +308,7 @@ export const Sidebar: FC<SidebarProps> = ({ mobileOpen, onClose }) => {
             >
               <div className={styles.itemLeft}>
                 <LayoutDashboard size={18} className={styles.itemIcon} />
-                <span className={styles.itemLabel}>Dashboard</span>
+                <span className={styles.itemLabel}>Home</span>
               </div>
             </Link>
           </div>

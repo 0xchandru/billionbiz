@@ -20,14 +20,14 @@
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
-  background-color: var(--color-bg-body);
+  background-color: #f6f6f7;
 }
 
 .contentInner {
-  padding: clamp(20px, 2.2vw, 32px);
+  padding: clamp(16px, 1.5vw, 24px);
   width: 100%;
   min-width: 0;
-  max-width: 1440px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 

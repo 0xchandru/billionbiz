@@ -1,7 +1,7 @@
 .sidebar {
-  width: 250px;
-  background-color: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  width: 224px;
+  background-color: #1a1a1a;
+  border-right: 1px solid #303030;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -11,7 +11,7 @@
   min-height: 0;
   position: relative;
   z-index: 20;
-  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.12);
 }
 
 /* Scrollable Nav Container with Minimal Sleek Scrollbar */
@@ -24,7 +24,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: #555 transparent;
 }
 
 .navContainer::-webkit-scrollbar {
@@ -36,12 +36,12 @@
 }
 
 .navContainer::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #555;
   border-radius: 9999px;
 }
 
 .navContainer::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #777;
 }
 
 .sectionHeaderWrap {
@@ -58,7 +58,7 @@
   padding: 8px 12px;
   border-radius: 8px;
   text-decoration: none;
-  color: #334155;
+  color: #e3e3e3;
   font-size: 13.5px;
   font-weight: 600;
   transition: all 0.15s ease;
@@ -66,18 +66,18 @@
 }
 
 .itemBtn:hover {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #2b2b2b;
+  color: #ffffff;
 }
 
 .itemActiveDirect {
-  background-color: #e6f4f1;
-  color: #083e47 !important;
+  background-color: #383838;
+  color: #ffffff !important;
   font-weight: 700;
 }
 
 .itemActiveDirect .itemIcon {
-  color: #083e47 !important;
+  color: #f5f5f5 !important;
 }
 
 /* Dropdown Accordion Header Button */
@@ -96,7 +96,7 @@
   border-radius: 8px;
   background: transparent;
   border: none;
-  color: #334155;
+  color: #e3e3e3;
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
@@ -104,17 +104,17 @@
 }
 
 .dropdownBtn:hover {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #2b2b2b;
+  color: #ffffff;
 }
 
 .dropdownBtnOpen {
-  color: #083e47;
+  color: #ffffff;
   font-weight: 700;
 }
 
 .dropdownBtnOpen .itemIcon {
-  color: #083e47;
+  color: #f5f5f5;
 }
 
 .itemLeft {
@@ -124,7 +124,7 @@
 }
 
 .itemIcon {
-  color: #64748b;
+  color: #b6b6b6;
   flex-shrink: 0;
   transition: color 0.15s ease;
 }
@@ -135,7 +135,7 @@
 }
 
 .chevronIcon {
-  color: #94a3b8;
+  color: #999999;
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
@@ -145,8 +145,8 @@
   display: flex;
   flex-direction: column;
   margin-left: 18px;
-  padding-left: 10px;
-  border-left: 1.5px solid #e2e8f0;
+  padding-left: 9px;
+  border-left: 1px solid #444444;
   margin-top: 2px;
   margin-bottom: 6px;
   gap: 2px;
@@ -159,29 +159,29 @@
   padding: 6px 12px;
   font-size: 13px;
   font-weight: 500;
-  color: #475569;
+  color: #c7c7c7;
   text-decoration: none;
   border-radius: 6px;
   transition: all 0.15s ease;
 }
 
 .subItem:hover {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #2b2b2b;
+  color: #ffffff;
 }
 
 /* Highlighted Active Sub-item Pill */
 .subItemActive {
-  background-color: #e6f4f1 !important;
-  color: #083e47 !important;
+  background-color: #383838 !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
 }
 
 /* DOCKED BOTTOM FOOTER: Static User Identity */
 .bottomFooter {
   padding: 14px 16px;
-  border-top: 1px solid #e2e8f0;
-  background-color: #ffffff;
+  border-top: 1px solid #303030;
+  background-color: #1a1a1a;
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -201,7 +201,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background-color: #083e47;
+  background-color: #35a853;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -220,7 +220,7 @@
 .profileName {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: #f5f5f5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -228,7 +228,7 @@
 
 .profileRole {
   font-size: 11px;
-  color: #64748b;
+  color: #a6a6a6;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -282,8 +282,8 @@
     justify-content: space-between;
     min-height: 54px;
     padding: 0 16px;
-    border-bottom: 1px solid #e2e8f0;
-    color: #0f172a;
+    border-bottom: 1px solid #303030;
+    color: #f5f5f5;
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -296,12 +296,12 @@
     width: 44px;
     height: 44px;
     border-radius: 8px;
-    color: #475569;
+    color: #e3e3e3;
     background: transparent;
   }
 
   .mobileCloseBtn:hover {
-    background: #f1f5f9;
+    background: #2b2b2b;
   }
 
   .navContainer {
