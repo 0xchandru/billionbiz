@@ -8,6 +8,7 @@ import {
 import { api } from '../api/services';
 import { TableSkeleton } from '../components/common/SkeletonLoader';
 import EmptyState from '../components/common/EmptyState';
+import './CommerceLists.css';
 
 export const InventoryPage: FC = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -104,25 +105,22 @@ export const InventoryPage: FC = () => {
   const outOfStockCount = allVariants.filter((v) => (v.available || 0) === 0).length;
 
   return (
-    <div style={{ padding: '28px 32px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
+    <div className="commerce-admin-page commerce-inventory-page" style={{ padding: '24px 32px', maxWidth: '1440px', margin: '0 auto', fontFamily: 'Inter, -apple-system, sans-serif' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="commerce-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
-            <span>Catalogue</span>
-            <span>/</span>
-            <span style={{ color: '#083e47', fontWeight: 600 }}>Stock & Inventory</span>
-          </div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Layers size={26} color="#0d9488" />
-            Stock Reconciliation & Inventory
+            <Layers size={24} color="#202223" />
+            Inventory
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
-            Live stock balance tracking, physical audit adjustments, and reorder warnings.
+            Track stock levels across your products and locations.
           </p>
         </div>
 
         <button
+          type="button"
+          className="commerce-primary-action"
           onClick={() => {
             if (allVariants.length > 0) {
               setSelectedVariantId(allVariants[0].id);
@@ -134,7 +132,7 @@ export const InventoryPage: FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backgroundColor: '#0d9488',
+            backgroundColor: '#1a1a1a',
             color: '#ffffff',
             border: 'none',
             borderRadius: '8px',
@@ -142,11 +140,11 @@ export const InventoryPage: FC = () => {
             fontSize: '14px',
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(13, 148, 136, 0.25)'
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.12)'
           }}
         >
           <Plus size={16} />
-          Adjust Stock
+          Adjust inventory
         </button>
       </div>
 
@@ -171,23 +169,15 @@ export const InventoryPage: FC = () => {
       </div>
 
       {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
+      <div className="inventory-list-tools">
+        <div className="inventory-search">
           <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
+            aria-label="Search inventory by product or SKU"
             placeholder="Search variant name or SKU..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '9px 12px 9px 36px',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-              fontSize: '13px',
-              outline: 'none',
-              backgroundColor: '#ffffff'
-            }}
           />
         </div>
       </div>
@@ -208,7 +198,7 @@ export const InventoryPage: FC = () => {
           }
         />
       ) : (
-        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="inventory-table-card" style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontSize: '12px', textTransform: 'uppercase' }}>

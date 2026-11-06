@@ -80,7 +80,8 @@
 }
 
 .orders-list-tools,
-.customer-list-tools {
+.customer-list-tools,
+.inventory-list-tools {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -89,13 +90,15 @@
 }
 
 .orders-search,
-.customer-search {
+.customer-search,
+.inventory-search {
   position: relative;
   width: min(100%, 480px);
 }
 
 .orders-search input,
-.customer-search input {
+.customer-search input,
+.inventory-search input {
   box-sizing: border-box;
   width: 100%;
   min-height: 36px;
@@ -110,20 +113,25 @@
 }
 
 .orders-search input:focus,
-.customer-search input:focus { border-color: #616a75 !important; box-shadow: 0 0 0 2px rgb(48 48 48 / 14%); }
+.customer-search input:focus,
+.inventory-search input:focus { border-color: #616a75 !important; box-shadow: 0 0 0 2px rgb(48 48 48 / 14%); }
 .orders-status-filter { min-height: 36px; padding: 7px 12px !important; border: 1px solid #c9cccf !important; border-radius: 8px !important; background: #fff; color: #303438; font-size: 13px !important; }
 .customer-search { width: min(100%, 480px) !important; }
+.inventory-search { width: min(100%, 480px); }
 .customer-result-count { flex-shrink: 0; color: #6d7277; font-size: 12px; }
 .orders-table-card { border-color: #e1e3e5 !important; border-radius: 12px !important; box-shadow: 0 1px 2px rgb(0 0 0 / 3%) !important; overflow-x: auto !important; }
 .customer-table-card { border-color: #e1e3e5 !important; border-radius: 12px !important; box-shadow: 0 1px 2px rgb(0 0 0 / 3%) !important; overflow-x: auto !important; }
+.inventory-table-card { border-color: #e1e3e5 !important; border-radius: 12px !important; box-shadow: 0 1px 2px rgb(0 0 0 / 3%) !important; overflow-x: auto !important; }
 
 @media (max-width: 768px) {
   .commerce-admin-page { padding: 16px !important; }
   .commerce-page-header { flex-wrap: wrap; }
   .commerce-primary-action { min-height: 40px; }
   .orders-list-tools,
-  .customer-list-tools { align-items: stretch; flex-wrap: wrap; }
+  .customer-list-tools,
+  .inventory-list-tools { align-items: stretch; flex-wrap: wrap; }
   .orders-search,
-  .customer-search { width: 100%; max-width: none; flex: 1 1 100%; }
+  .customer-search,
+  .inventory-search { width: 100%; max-width: none; flex: 1 1 100%; }
   .orders-status-filter { width: 100%; }
 }
