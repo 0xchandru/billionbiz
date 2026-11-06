@@ -677,7 +677,7 @@ export const ProductsPage: React.FC = () => {
                 <input type="number" min="0" step="0.01" value={costPerItem} onChange={(event) => setCostPerItem(event.target.value)} placeholder="Optional" style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }} />
               </div>
               <label className="product-editor-tax-toggle"><input type="checkbox" checked={isTaxable} onChange={(event) => setIsTaxable(event.target.checked)} /> Charge tax on this product</label>
-              {editingProduct && <div className="product-editor-muted">Taxability is saved. Tax amounts depend on the store tax configuration.</div>}
+              <div className="product-editor-muted">Taxability is saved on the product. Checkout tax calculation still depends on store configuration and is not connected yet.</div>
             </section>
 
             <section className="product-editor-inventory product-editor-card" aria-label="Inventory details">
