@@ -156,20 +156,15 @@ export const Dashboard = () => {
       {/* 1. Executive Header */}
       <div className={styles.headerRow}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>
-            <span>Workspace</span>
-            <span>/</span>
-            <span style={{ color: '#083e47', fontWeight: 600 }}>Executive Overview</span>
-          </div>
           <h1 className={styles.headerTitle}>
-            <span>{storeName || 'Merchant Business Console'}</span>
+            <span>{storeName || 'Home'}</span>
             <span className={styles.liveBadge}>
               <span className={styles.pulseDot} />
               <span>Live Sync</span>
             </span>
           </h1>
           <p className={styles.headerSubtitle}>
-            Unified operational overview across storefront commerce, POS counters, and service appointments.
+            See your store performance, orders, and daily activity.
           </p>
         </div>
 
@@ -225,10 +220,49 @@ export const Dashboard = () => {
         </div>
       )}
 
+      {totalProducts === 0 && totalOrders === 0 && (
+        <section className={styles.launchPanel} aria-labelledby="store-launch-title">
+          <div className={styles.launchHeading}>
+            <div>
+              <div className={styles.launchEyebrow}>GET STARTED</div>
+              <h2 id="store-launch-title">Get {storeName || 'your store'} ready to sell</h2>
+              <p>Complete a few essentials to help customers discover your products and check out.</p>
+            </div>
+            <span className={styles.launchStepCount}>3 steps</span>
+          </div>
+          <div className={styles.launchGrid}>
+            <Link to="/products/new" className={styles.launchCard}>
+              <span className={styles.launchIcon}><Package size={18} /></span>
+              <span className={styles.launchCopy}>
+                <strong>Add your first product</strong>
+                <span>Add a title, price, photos, and stock.</span>
+              </span>
+              <ArrowRight size={16} className={styles.launchArrow} />
+            </Link>
+            <Link to="/theme" className={styles.launchCard}>
+              <span className={styles.launchIcon}><Store size={18} /></span>
+              <span className={styles.launchCopy}>
+                <strong>Choose your store design</strong>
+                <span>Pick a theme, then customize your storefront.</span>
+              </span>
+              <ArrowRight size={16} className={styles.launchArrow} />
+            </Link>
+            <Link to="/settings/payments" className={styles.launchCard}>
+              <span className={styles.launchIcon}><DollarSign size={18} /></span>
+              <span className={styles.launchCopy}>
+                <strong>Review payment options</strong>
+                <span>Connect and verify a payment provider.</span>
+              </span>
+              <ArrowRight size={16} className={styles.launchArrow} />
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* 3. Actionable Operations Center */}
       <div className={styles.operationsBanner}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#f0fdfa', color: '#083e47', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#f1f2f3', color: '#202223', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Clock size={16} />
           </div>
           <div>
@@ -368,7 +402,7 @@ export const Dashboard = () => {
           <div className={styles.panelHeader}>
             <div>
               <h2 className={styles.panelTitle}>
-                <TrendingUp size={16} style={{ color: '#083e47' }} />
+                <TrendingUp size={16} style={{ color: '#202223' }} />
                 <span>Gross Revenue Performance</span>
               </h2>
               <div className={styles.panelSubtitle}>
@@ -397,8 +431,8 @@ export const Dashboard = () => {
                 <AreaChart data={salesTrends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#083e47" stopOpacity={0.22} />
-                      <stop offset="95%" stopColor="#083e47" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#202223" stopOpacity={0.18} />
+                      <stop offset="95%" stopColor="#202223" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -423,7 +457,7 @@ export const Dashboard = () => {
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="#083e47"
+                    stroke="#202223"
                     strokeWidth={2.2}
                     fillOpacity={1}
                     fill="url(#revenueFill)"
@@ -439,7 +473,7 @@ export const Dashboard = () => {
           <div className={styles.panelHeader}>
             <div>
               <h2 className={styles.panelTitle}>
-                <Package size={16} style={{ color: '#083e47' }} />
+                <Package size={16} style={{ color: '#202223' }} />
                 <span>Fulfillment Status</span>
               </h2>
               <div className={styles.panelSubtitle}>
@@ -516,7 +550,7 @@ export const Dashboard = () => {
           <div className={styles.panelHeader}>
             <div>
               <h2 className={styles.panelTitle}>
-                <ShoppingBag size={16} style={{ color: '#083e47' }} />
+                <ShoppingBag size={16} style={{ color: '#202223' }} />
                 <span>Recent Customer Orders</span>
               </h2>
               <div className={styles.panelSubtitle}>
@@ -587,7 +621,7 @@ export const Dashboard = () => {
           <div className={styles.panelHeader}>
             <div>
               <h2 className={styles.panelTitle}>
-                <Layers size={16} style={{ color: '#083e47' }} />
+                <Layers size={16} style={{ color: '#202223' }} />
                 <span>Top Performing Items</span>
               </h2>
               <div className={styles.panelSubtitle}>
@@ -607,7 +641,7 @@ export const Dashboard = () => {
                   fontWeight: 600,
                   cursor: 'pointer',
                   backgroundColor: topItemsTab === 'products' ? '#ffffff' : 'transparent',
-                  color: topItemsTab === 'products' ? '#083e47' : '#64748b',
+                  color: topItemsTab === 'products' ? '#202223' : '#64748b',
                   boxShadow: topItemsTab === 'products' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
                 }}
               >
@@ -623,7 +657,7 @@ export const Dashboard = () => {
                   fontWeight: 600,
                   cursor: 'pointer',
                   backgroundColor: topItemsTab === 'services' ? '#ffffff' : 'transparent',
-                  color: topItemsTab === 'services' ? '#083e47' : '#64748b',
+                  color: topItemsTab === 'services' ? '#202223' : '#64748b',
                   boxShadow: topItemsTab === 'services' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
                 }}
               >
@@ -713,7 +747,7 @@ export const Dashboard = () => {
           <div className={styles.panelHeader}>
             <div>
               <h2 className={styles.panelTitle}>
-                <Calendar size={16} style={{ color: '#083e47' }} />
+                <Calendar size={16} style={{ color: '#202223' }} />
                 <span>Upcoming & Recent Bookings</span>
               </h2>
               <div className={styles.panelSubtitle}>
@@ -744,7 +778,7 @@ export const Dashboard = () => {
                   >
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '13px', color: '#0f172a' }}>
-                        {b.customer_name} • <span style={{ color: '#083e47' }}>{b.service_name}</span>
+                        {b.customer_name} • <span style={{ color: '#202223' }}>{b.service_name}</span>
                       </div>
                       <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                         Specialist: {b.staff_name} • {new Date(b.start_time).toLocaleDateString()} at {new Date(b.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -780,7 +814,7 @@ export const Dashboard = () => {
           <div className={styles.panelHeader}>
             <div>
               <h2 className={styles.panelTitle}>
-                <Activity size={16} style={{ color: '#083e47' }} />
+                <Activity size={16} style={{ color: '#202223' }} />
                 <span>Operational Audit Stream</span>
               </h2>
               <div className={styles.panelSubtitle}>
@@ -807,7 +841,7 @@ export const Dashboard = () => {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#083e47' }} />
+                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#202223' }} />
                       <div>
                         <span style={{ fontWeight: 600, color: '#0f172a' }}>{act.action}</span>
                         <span style={{ color: '#64748b', marginLeft: '6px' }}>{act.target_type}</span>
