@@ -37,6 +37,7 @@ export const ProductsPage: React.FC = () => {
   const [selectedVariant, setSelectedVariant] = useState<any | null>(null);
   const [adjustQty, setAdjustQty] = useState(5);
   const [submitting, setSubmitting] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -79,7 +80,7 @@ export const ProductsPage: React.FC = () => {
   const [quantityStep, setQuantityStep] = useState('1');
   const [comparePrice, setComparePrice] = useState('');
   const [imageUrls, setImageUrls] = useState('');
-  const [variantOptions, setVariantOptions] = useState([{ name: 'Size', values: '' }]);
+  const [variantOptions, setVariantOptions] = useState<{ name: string; values: string }[]>([]);
   const [visibility, setVisibility] = useState('ACTIVE');
   const [uploadingImages, setUploadingImages] = useState(false);
   const [variantDrafts, setVariantDrafts] = useState<VariantDraft[]>([]);
@@ -145,7 +146,7 @@ export const ProductsPage: React.FC = () => {
     setIsTaxable(true); setTrackInventory(true); setContinueSellingWhenOutOfStock(false); setProductType(''); setSeoTitle(''); setSeoDescription(''); setTagsText(''); setProductMetafields([]); setCategoryMetafields([]);
     setShippingLength(''); setShippingWidth(''); setShippingHeight(''); setDimensionUnit('cm'); setShippingPackageId(''); setCountryOfOrigin('IN'); setHsCode(''); setInventoryLocationId((current) => current || warehouses.find((warehouse: any) => warehouse.is_default)?.id || warehouses[0]?.id || '');
     setSellingUnit('pcs'); setMinimumQuantity('1'); setQuantityStep('1'); setComparePrice('');
-    setImageUrls(''); setVariantOptions([{ name: 'Size', values: '' }]); setVisibility('ACTIVE'); setVariantDrafts([]); setNewVariantOverrides({});
+    setImageUrls(''); setVariantOptions([]); setVisibility('ACTIVE'); setVariantDrafts([]); setNewVariantOverrides({}); setIsDirty(false);
   };
 
   const openProduct = (product?: any) => {
@@ -179,9 +180,10 @@ export const ProductsPage: React.FC = () => {
         compareAt: variant.compare_at_minor == null ? '' : String((variant.compare_at_minor / 100).toFixed(2)),
       })));
       const productOptions = Array.isArray(product.options) ? product.options : [];
+      const inferredOptionName = Object.keys(firstVariant?.option_values || {})[0];
       setVariantOptions(productOptions.length
         ? productOptions.map((option: any) => ({ name: String(option.name || ''), values: Array.isArray(option.values) ? option.values.join(', ') : '' }))
-        : [{ name: Object.keys(firstVariant?.option_values || {})[0] || 'Size', values: [...new Set(productVariants.map((variant: any) => variant.option_values?.[Object.keys(firstVariant?.option_values || {})[0]]).filter(Boolean))].join(', ') }]);
+        : inferredOptionName ? [{ name: inferredOptionName, values: [...new Set(productVariants.map((variant: any) => variant.option_values?.[inferredOptionName]).filter(Boolean))].join(', ') }] : []);
       setCategoryIds((product.categories || []).map((category: any) => category.id));
       setSellingUnit(product.selling_unit || 'pcs'); setMinimumQuantity(String(product.minimum_quantity || 1));
       setQuantityStep(String(product.quantity_step || 1)); setComparePrice(firstVariant?.compare_at_minor == null ? '' : String((firstVariant.compare_at_minor / 100).toFixed(2)));
@@ -208,6 +210,7 @@ export const ProductsPage: React.FC = () => {
 
   const closeProductEditor = () => {
     setIsCreateOpen(false);
+    setIsDirty(false);
     if (isDedicatedProductEditor) navigate('/products');
   };
 
@@ -598,7 +601,7 @@ export const ProductsPage: React.FC = () => {
       {/* Product editor: modal for edits, dedicated page for creation */}
       {isCreateOpen && (
         <div className={isDedicatedProductEditor ? 'product-create-page' : 'product-create-backdrop'}>
-          <form className={isDedicatedProductEditor ? 'product-create-form product-create-form-page' : 'product-create-form'} role={isDedicatedProductEditor ? undefined : 'dialog'} aria-modal={isDedicatedProductEditor ? undefined : true} aria-labelledby="product-form-title" onSubmit={handleCreate}>
+          <form className={isDedicatedProductEditor ? 'product-create-form product-create-form-page' : 'product-create-form'} role={isDedicatedProductEditor ? undefined : 'dialog'} aria-modal={isDedicatedProductEditor ? undefined : true} aria-labelledby="product-form-title" onSubmit={handleCreate} onChange={() => setIsDirty(true)} onInput={() => setIsDirty(true)} onClick={(event) => { if ((event.target as HTMLElement).closest('button[type="button"]')) setIsDirty(true); }}>
             <div className="product-editor-heading">
               {isDedicatedProductEditor && <div className="product-editor-breadcrumb"><button type="button" onClick={closeProductEditor} aria-label="Back to products">‹</button><span>Products</span><span aria-hidden="true">/</span><strong>Add product</strong></div>}
               <div className="product-editor-title-row">
@@ -607,12 +610,14 @@ export const ProductsPage: React.FC = () => {
               </div>
             </div>
 
+            {isDedicatedProductEditor && isDirty && <div className="product-editor-savebar"><span>{submitting ? 'Saving product…' : editingProduct ? 'Unsaved changes' : 'Unsaved product'}</span><button type="button" onClick={closeProductEditor} disabled={submitting}>Discard</button><button type="submit" disabled={submitting}>{submitting ? 'Saving…' : 'Save'}</button></div>}
+
             <div className="product-editor-title-field product-editor-card">
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Product Title *</label>
+              <label className={isDedicatedProductEditor ? 'product-editor-sr-only' : ''} style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Product Title *</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Handmade Ceramic Mug"
+                placeholder={isDedicatedProductEditor ? 'Add product title' : 'e.g. Handmade Ceramic Mug'}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px' }}
@@ -731,20 +736,21 @@ export const ProductsPage: React.FC = () => {
               </label>
             </div>}
 
-            <section className="product-editor-variants product-editor-card" aria-label="Product variants" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
+            {(!editingProduct || variantOptions.length > 0) && <section className="product-editor-variants product-editor-card" aria-label="Product variants" style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, marginBottom: 14, background: '#fbfdff' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                <div><strong style={{ fontSize: 14, color: '#0f172a' }}>Variants</strong><p style={{ margin: '3px 0 0', fontSize: 12, color: '#64748b' }}>Add options such as Size and Color. BillionBiz creates up to 250 combinations with a unique SKU for each. Price and starting stock apply to each variant.</p></div>
-                {!editingProduct && variantOptions.length < 3 && <button type="button" onClick={() => setVariantOptions((items) => [...items, { name: items.length === 1 ? 'Color' : 'Material', values: '' }])} style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: 7, padding: '7px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add option</button>}
+                <div><strong style={{ fontSize: 14, color: '#0f172a' }}>Variants</strong>{variantOptions.length > 0 && <p style={{ margin: '3px 0 0', fontSize: 12, color: '#64748b' }}>Set options such as size or color, then manage each variant’s price and inventory.</p>}</div>
+                {!editingProduct && variantOptions.length > 0 && variantOptions.length < 3 && <button type="button" onClick={() => setVariantOptions((items) => [...items, { name: items.length === 1 ? 'Color' : 'Material', values: '' }])} style={{ border: '1px solid #cbd5cf', background: '#fff', borderRadius: 7, padding: '7px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>＋ Add another option</button>}
               </div>
+              {!editingProduct && variantOptions.length === 0 && <button className="product-editor-add-options" type="button" onClick={() => setVariantOptions([{ name: 'Size', values: '' }])}>＋ <span>Add options like size and color</span></button>}
               <div style={{ display: 'grid', gap: 8 }}>
-                {variantOptions.map((option, index) => <div key={`${index}-${option.name}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) minmax(180px, 2fr) auto', alignItems: 'end', gap: 8 }}>
+                {variantOptions.map((option, index) => <div className="product-editor-option-row" key={`${index}-${option.name}`}>
                   <label style={{ fontSize: 12, fontWeight: 600 }}>Option name<input disabled={Boolean(editingProduct)} aria-label={`Variant option ${index + 1} name`} value={option.name} onChange={(event) => setVariantOptions((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} placeholder={index === 0 ? 'Size' : 'Color'} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 8, border: '1px solid #e2e8f0', borderRadius: 7 }} /></label>
                   <label style={{ fontSize: 12, fontWeight: 600 }}>Values, comma separated<input disabled={Boolean(editingProduct)} aria-label={`Variant option ${index + 1} values`} value={option.values} onChange={(event) => setVariantOptions((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, values: event.target.value } : item))} placeholder={index === 0 ? 'Small, Medium, Large' : 'Black, White'} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 5, padding: 8, border: '1px solid #e2e8f0', borderRadius: 7 }} /></label>
-                  {!editingProduct && variantOptions.length > 1 ? <button type="button" aria-label={`Remove variant option ${index + 1}`} onClick={() => setVariantOptions((items) => items.filter((_, itemIndex) => itemIndex !== index))} style={{ height: 34, border: '1px solid #fecaca', background: '#fff7f7', color: '#b91c1c', borderRadius: 7, padding: '0 9px', cursor: 'pointer' }}>Remove</button> : <span />}
+                  {!editingProduct ? <button type="button" aria-label={`Remove variant option ${index + 1}`} onClick={() => setVariantOptions((items) => items.filter((_, itemIndex) => itemIndex !== index))} style={{ height: 34, border: '1px solid #e1e3e5', background: '#fff', color: '#5c6166', borderRadius: 7, padding: '0 9px', cursor: 'pointer' }}>Remove</button> : <span />}
                 </div>)}
               </div>
 
-              {!editingProduct && <div style={{ marginTop: 14 }}>
+              {!editingProduct && variantOptions.length > 0 && <div style={{ marginTop: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
                   <div><strong style={{ fontSize: 13, color: '#0f172a' }}>Variant inventory and pricing</strong><div style={{ marginTop: 3, fontSize: 11, color: '#64748b' }}>Set unique SKU, barcode, price, cost, starting stock, and shipping weight for each combination.</div></div>
                   <span style={{ whiteSpace: 'nowrap', borderRadius: 999, padding: '4px 8px', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 700 }}>{Math.max(1, createVariantMatrix.length)} variant{Math.max(1, createVariantMatrix.length) === 1 ? '' : 's'}</span>
@@ -772,7 +778,7 @@ export const ProductsPage: React.FC = () => {
                 </div>
                 {!createVariantMatrix.length && normalizeVariantOptions(variantOptions).length > 0 && <p style={{ margin: '6px 0 0', color: '#b45309', fontSize: 11 }}>The variant combination count is above the 250 variant limit. Reduce option values to continue.</p>}
               </div>}
-            </section>
+            </section>}
 
             <div className="product-editor-media product-editor-card" style={{ marginBottom: 14 }}>
               <div className="product-editor-section-title"><strong>Media</strong><span>Add product photos</span></div>
